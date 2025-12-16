@@ -56,12 +56,12 @@
             <!-- Actions -->
             <div class="flex items-center space-x-3">
                 <!-- Cart -->
-                <a href="{{ route('cart') }}" class="relative text-gray-700 hover:text-pink-600 transition">
+                <button onclick="openCartDrawer()" class="relative text-gray-700 hover:text-pink-600 transition">
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        0
+                        3
                     </span>
-                </a>
+                </button>
 
                 <!-- Mobile Menu Toggle -->
                 <button id="mobile-menu-toggle" class="md:hidden text-gray-700 hover:text-pink-600">

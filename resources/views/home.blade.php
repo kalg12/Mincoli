@@ -3,32 +3,80 @@
 @section('title', 'Inicio')
 
 @section('content')
-<!-- Hero Banner -->
-<section class="relative bg-gradient-to-br from-amber-50 to-pink-50 overflow-hidden">
-    <div class="container mx-auto px-4 py-16">
-        <div class="text-center max-w-4xl mx-auto">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                ¡Tus Favoritos de Facebook, Directo a tu Casa esta Navidad!
-            </h1>
-            <p class="text-xl text-gray-700 mb-8">
-                Haz tu pedido por Mensaje
-                <a href="#" class="inline-flex items-center text-blue-600 hover:text-blue-700">
-                    <i class="fab fa-facebook-messenger text-2xl mx-1"></i>
-                </a>
-            </p>
-            <div class="flex flex-wrap justify-center gap-4">
-                <a href="{{ route('shop') }}" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold px-8 py-3 rounded-lg transition inline-flex items-center">
-                    <i class="fas fa-shopping-bag mr-2"></i>
-                    Comprar Ahora
-                </a>
-                <a href="#categories" class="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-8 py-3 rounded-lg transition border-2 border-gray-300">
-                    Ver Categorías
-                </a>
+<!-- Hero Banner / Banners dinámicos -->
+<section class="relative bg-gradient-to-br from-amber-50 to-pink-50 overflow-hidden py-10">
+    <div class="container mx-auto px-4">
+        @if($banners->count())
+            <div class="relative max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-2xl">
+                @foreach($banners as $index => $banner)
+                <div class="banner-slide absolute inset-0 opacity-0 scale-95 transition duration-700 ease-out {{ $loop->first ? 'opacity-100 scale-100' : '' }}" data-banner-slide="{{ $index }}">
+                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="w-full h-[480px] object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col items-start justify-center px-8 md:px-16 lg:px-20 text-white max-w-2xl">
+                        <p class="text-sm uppercase tracking-[0.2em] text-pink-200 mb-3">Mincoli</p>
+                        <h1 class="text-4xl md:text-5xl font-bold leading-tight drop-shadow-lg mb-4">{{ $banner->title }}</h1>
+                        <p class="text-lg md:text-xl text-white/90 mb-8">{{ $banner->text }}</p>
+                        <div class="flex flex-wrap items-center gap-3">
+                            @if($banner->link_url)
+                            <a href="{{ $banner->link_url }}" target="_blank" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold px-6 py-3 rounded-lg transition inline-flex items-center shadow-lg">
+                                <i class="fas fa-shopping-bag mr-2"></i>
+                                Comprar Ahora
+                            </a>
+                            @endif
+                            <a href="{{ route('shop') }}" class="bg-white/90 hover:bg-white text-gray-900 font-semibold px-6 py-3 rounded-lg transition inline-flex items-center">
+                                <i class="fas fa-store mr-2 text-pink-600"></i>
+                                Ver Tienda
+                            </a>
+                            <a href="#categories" class="text-white/80 hover:text-white font-semibold inline-flex items-center">
+                                Ver Categorías
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+                @if($banners->count() > 1)
+                <div class="absolute inset-0 flex items-center justify-between px-4 md:px-6">
+                    <button type="button" class="banner-prev h-10 w-10 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center text-gray-700">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button type="button" class="banner-next h-10 w-10 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center text-gray-700">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
+                    @foreach($banners as $index => $banner)
+                    <button type="button" class="banner-dot h-2.5 w-2.5 rounded-full bg-white/50 hover:bg-white transition {{ $loop->first ? 'bg-white' : '' }}" data-banner-dot="{{ $index }}"></button>
+                    @endforeach
+                </div>
+                @endif
             </div>
-        </div>
+        @else
+            <div class="text-center max-w-3xl mx-auto py-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                    ¡Tus Favoritos de Facebook, Directo a tu Casa esta Navidad!
+                </h1>
+                <p class="text-xl text-gray-700 mb-8">
+                    Haz tu pedido por Mensaje
+                    <a href="#" class="inline-flex items-center text-blue-600 hover:text-blue-700">
+                        <i class="fab fa-facebook-messenger text-2xl mx-1"></i>
+                    </a>
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="{{ route('shop') }}" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold px-8 py-3 rounded-lg transition inline-flex items-center">
+                        <i class="fas fa-shopping-bag mr-2"></i>
+                        Comprar Ahora
+                    </a>
+                    <a href="#categories" class="bg-white hover:bg-gray-50 text-gray-900 font-semibold px-8 py-3 rounded-lg transition border-2 border-gray-300">
+                        Ver Categorías
+                    </a>
+                </div>
+            </div>
+        @endif
 
         <!-- Featured Products Preview -->
-        <div class="mt-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div class="mt-12 max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             @forelse($featuredProducts as $product)
             <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
                 @if($product->images->first())
@@ -52,10 +100,6 @@
             @endforelse
         </div>
     </div>
-
-    <!-- Decorative Elements -->
-    <div class="absolute top-0 right-0 w-64 h-64 bg-pink-200 rounded-full blur-3xl opacity-20 -z-10"></div>
-    <div class="absolute bottom-0 left-0 w-64 h-64 bg-amber-200 rounded-full blur-3xl opacity-20 -z-10"></div>
 </section>
 
 <!-- Categories Section -->
@@ -70,7 +114,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @forelse($categories as $category)
             <a href="{{ route('shop.category', $category->slug) }}" class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                 <div class="aspect-w-16 aspect-h-12 bg-gradient-to-br from-pink-100 to-purple-100">
@@ -185,4 +229,63 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const slides = Array.from(document.querySelectorAll('[data-banner-slide]'));
+        const dots = Array.from(document.querySelectorAll('[data-banner-dot]'));
+        const nextBtn = document.querySelector('.banner-next');
+        const prevBtn = document.querySelector('.banner-prev');
+        if (slides.length <= 1) return;
+
+        let current = 0;
+        let timer = null;
+
+        const setActive = (index) => {
+            slides.forEach((slide, i) => {
+                if (i === index) {
+                    slide.classList.add('opacity-100', 'scale-100');
+                    slide.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                } else {
+                    slide.classList.remove('opacity-100', 'scale-100');
+                    slide.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                }
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('bg-white', i === index);
+                dot.classList.toggle('bg-white/50', i !== index);
+            });
+            current = index;
+        };
+
+        const next = () => setActive((current + 1) % slides.length);
+        const prev = () => setActive((current - 1 + slides.length) % slides.length);
+
+        const restart = () => {
+            clearInterval(timer);
+            timer = setInterval(next, 6000);
+        };
+
+        nextBtn?.addEventListener('click', () => {
+            next();
+            restart();
+        });
+
+        prevBtn?.addEventListener('click', () => {
+            prev();
+            restart();
+        });
+
+        dots.forEach((dot, i) => {
+            dot.addEventListener('click', () => {
+                setActive(i);
+                restart();
+            });
+        });
+
+        timer = setInterval(next, 6000);
+    });
+</script>
+@endpush
 @endsection

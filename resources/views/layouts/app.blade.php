@@ -33,6 +33,9 @@
         @include('partials.footer')
     </div>
 
+    <!-- Cart Drawer -->
+    @include('partials.cart-drawer')
+
     @stack('scripts')
 </body>
 </html>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Banner;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -20,6 +21,8 @@ class HomeController extends Controller
             ->take(10)
             ->get();
 
-        return view('home', compact('categories', 'featuredProducts'));
+        $banners = Banner::active()->get();
+
+        return view('home', compact('categories', 'featuredProducts', 'banners'));
     }
 }

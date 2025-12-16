@@ -12,28 +12,8 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             [
-                'name' => 'Dulces',
-                'slug' => 'dulces',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Chocolates',
-                'slug' => 'chocolates',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Botanas',
-                'slug' => 'botanas',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Galletas',
-                'slug' => 'galletas',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Bebidas',
-                'slug' => 'bebidas',
+                'name' => 'Joyería',
+                'slug' => 'joyeria',
                 'is_active' => true,
             ],
             [
@@ -42,8 +22,8 @@ class CategorySeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'Joyería',
-                'slug' => 'joyeria',
+                'name' => 'Dulces',
+                'slug' => 'dulces',
                 'is_active' => true,
             ],
         ];
