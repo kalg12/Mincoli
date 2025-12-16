@@ -4,9 +4,9 @@
         <div class="flex flex-wrap items-center justify-between py-2 text-sm">
             <!-- Contact Info -->
             <div class="flex items-center space-x-6 text-gray-700">
-                <a href="tel:+525601110166" class="flex items-center hover:text-pink-600 transition">
+                <a href="tel:+5256117011660" class="flex items-center hover:text-pink-600 transition">
                     <i class="fas fa-phone-alt mr-2"></i>
-                    +52 5601110166
+                    +52 56 1170 1166
                 </a>
                 <a href="mailto:mincoli.ventas.online@outlook.com" class="hidden md:flex items-center hover:text-pink-600 transition">
                     <i class="fas fa-envelope mr-2"></i>

@@ -36,6 +36,9 @@
     <!-- Cart Drawer -->
     @include('partials.cart-drawer')
 
+    <!-- WhatsApp Floating Button -->
+    @include('partials.whatsapp-button')
+
     @stack('scripts')
 </body>
 </html>
