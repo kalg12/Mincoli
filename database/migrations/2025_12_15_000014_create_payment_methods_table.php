@@ -10,11 +10,14 @@ return new class extends Migration
     {
         Schema::create('payment_methods', function (Blueprint $table) {
             $table->id();
-            $table->enum('name', ['card', 'transfer']);
+            $table->string('name');
+            $table->string('code')->unique();
+            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('requires_verification')->default(false);
             $table->timestamps();
 
-            $table->index('name');
+            $table->index('code');
             $table->index('is_active');
         });
     }

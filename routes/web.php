@@ -4,9 +4,24 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\CartController;
+
+// Public Routes
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Shop Routes
+Route::get('/tienda', [ShopController::class, 'index'])->name('shop');
+Route::get('/tienda/categoria/{slug}', [ShopController::class, 'category'])->name('shop.category');
+Route::get('/tienda/producto/{slug}', [ShopController::class, 'product'])->name('shop.product');
+
+// Cart Routes
+Route::get('/carrito', [CartController::class, 'index'])->name('cart');
+Route::post('/carrito/agregar', [CartController::class, 'add'])->name('cart.add');
+Route::patch('/carrito/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/carrito/{id}', [CartController::class, 'remove'])->name('cart.remove');
+Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
