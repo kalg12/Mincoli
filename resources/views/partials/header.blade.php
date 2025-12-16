@@ -20,13 +20,13 @@
 
             <!-- Social Links -->
             <div class="flex items-center space-x-4">
-                <a href="#" class="text-gray-600 hover:text-pink-600 transition" aria-label="Facebook">
+                <a href="https://www.facebook.com/MincoliMx" target="_blank" rel="noopener" class="text-gray-600 hover:text-pink-600 transition" aria-label="Facebook">
                     <i class="fab fa-facebook-f"></i>
                 </a>
-                <a href="#" class="text-gray-600 hover:text-pink-600 transition" aria-label="Instagram">
+                <a href="https://www.instagram.com/mincolimx" target="_blank" rel="noopener" class="text-gray-600 hover:text-pink-600 transition" aria-label="Instagram">
                     <i class="fab fa-instagram"></i>
                 </a>
-                <a href="#" class="text-gray-600 hover:text-pink-600 transition" aria-label="TikTok">
+                <a href="https://www.tiktok.com/@thereal_mincoli_by_jaz" target="_blank" rel="noopener" class="text-gray-600 hover:text-pink-600 transition" aria-label="TikTok">
                     <i class="fab fa-tiktok"></i>
                 </a>
             </div>

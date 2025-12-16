@@ -215,16 +215,12 @@
             ¿Listo para hacer tu pedido?
         </h2>
         <p class="text-xl mb-8 opacity-90">
-            Contáctanos por WhatsApp o Facebook Messenger y te atenderemos de inmediato
+            Contáctanos por WhatsApp y te atenderemos de inmediato
         </p>
         <div class="flex flex-wrap justify-center gap-4">
-            <a href="https://wa.me/525601110166" target="_blank" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-4 rounded-lg transition inline-flex items-center text-lg">
+            <a href="https://wa.me/5256117011660" target="_blank" rel="noopener" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-4 rounded-lg transition inline-flex items-center text-lg">
                 <i class="fab fa-whatsapp mr-2 text-2xl"></i>
                 Enviar WhatsApp
-            </a>
-            <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg transition inline-flex items-center text-lg">
-                <i class="fab fa-facebook-messenger mr-2 text-2xl"></i>
-                Messenger
             </a>
         </div>
     </div>
