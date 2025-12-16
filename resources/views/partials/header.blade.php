@@ -40,7 +40,7 @@
         <div class="flex items-center justify-between py-3">
             <!-- Logo -->
             <a href="{{ route('home') }}" class="flex items-center">
-                <span class="text-2xl font-bold tracking-tight"><span class="text-pink-600">Min</span><span class="text-gray-900">coli</span></span>
+                <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="w-16 h-auto">
             </a>
 
             <!-- Desktop Navigation -->
