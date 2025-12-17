@@ -46,85 +46,67 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                        @forelse($products as $product)
                         <tr class="transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/70">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 flex-shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>
                                     <div>
-                                        <p class="font-semibold text-zinc-900 dark:text-white">Collar Aura</p>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-500">SKU: COL-001</p>
+                                        <p class="font-semibold text-zinc-900 dark:text-white">{{ $product->name }}</p>
+                                        <p class="text-xs text-zinc-500 dark:text-zinc-500">SKU: {{ $product->sku }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">Joyería</td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">$820</td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">14</td>
+                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">{{ $product->category->name ?? 'N/A' }}</td>
+                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">${{ number_format($product->price, 2) }}</td>
+                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">{{ $product->stock }}</td>
                             <td class="px-6 py-4">
-                                <span class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Publicado</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="@if($product->stock == 0) rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400 @elseif($product->stock <= 5) rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 @else rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 @endif" title="Color indica nivel de stock: Rojo=Crítico | Naranja=Bajo | Verde=Disponible">
+                                        @if($product->stock == 0)
+                                            Agotado
+                                        @elseif($product->stock <= 5)
+                                            Stock Bajo ({{ $product->stock }})
+                                        @else
+                                            Disponible
+                                        @endif
+                                    </span>
+                                    <span class="text-xs px-2 py-1 rounded-full @if($product->status == 'published') bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 @elseif($product->status == 'draft') bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400 @else bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 @endif">
+                                        {{ ucfirst($product->status) }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex justify-end gap-2">
-                                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</button>
-                                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Ver</button>
+                                    <a href="{{ route('dashboard.products.edit', $product->id) }}" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</a>
+                                    <form action="{{ route('dashboard.products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este producto?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-900 hover:bg-red-100/50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-700 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 dark:focus:ring-offset-zinc-900 transition-colors">Eliminar</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
-                        <tr class="transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/70">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="h-12 w-12 flex-shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>
-                                    <div>
-                                        <p class="font-semibold text-zinc-900 dark:text-white">Blusa Jade</p>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-500">SKU: BLU-002</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">Ropa</td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">$640</td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">8</td>
-                            <td class="px-6 py-4">
-                                <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stock bajo</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex justify-end gap-2">
-                                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</button>
-                                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Ver</button>
-                                </div>
-                            </td>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">No hay productos disponibles</td>
                         </tr>
-                        <tr class="transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/70">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="h-12 w-12 flex-shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>
-                                    <div>
-                                        <p class="font-semibold text-zinc-900 dark:text-white">Dulces Vero Mango</p>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-500">SKU: DUL-003</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">Dulces</td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">$35</td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">32</td>
-                            <td class="px-6 py-4">
-                                <span class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Publicado</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex justify-end gap-2">
-                                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</button>
-                                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Ver</button>
-                                </div>
-                            </td>
-                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
             <div class="flex items-center justify-between border-t border-zinc-200 px-6 py-4 dark:border-zinc-700">
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">Mostrando 3 de 42 productos</p>
+                <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                    @if($products->total() > 0)
+                        Mostrando {{ $products->firstItem() }} de {{ $products->total() }} productos
+                    @else
+                        Sin productos
+                    @endif
+                </p>
                 <div class="flex gap-2">
-                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Anterior</button>
-                    <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Siguiente</button>
+                    {{ $products->links() }}
                 </div>
             </div>
         </div>

@@ -134,12 +134,12 @@
                     <label class="font-semibold text-gray-900 mb-2 block">Cantidad:</label>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center border-2 border-gray-300 rounded-lg">
-                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100">
+                            <button type="button" onclick="decreaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
                                 <i class="fas fa-minus"></i>
                             </button>
-                            <input type="number" value="1" min="1"
+                            <input type="number" id="quantity" value="1" min="1" max="{{ $product->total_stock }}"
                                    class="w-16 text-center border-0 focus:ring-0">
-                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100">
+                            <button type="button" onclick="increaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -153,10 +153,15 @@
                 <!-- Action Buttons -->
                 <div class="space-y-3">
                     @if($product->total_stock > 0)
-                    <button class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-lg transition flex items-center justify-center">
-                        <i class="fas fa-shopping-cart mr-2"></i>
-                        Agregar al Carrito
-                    </button>
+                    <form action="{{ route('cart.add') }}" method="POST" class="space-y-3">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <input type="hidden" id="quantity_field" name="quantity" value="1">
+                        <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Agregar al Carrito
+                        </button>
+                    </form>
                     @endif
                     <a href="https://wa.me/525601110166?text=Hola, me interesa el producto: {{ $product->name }}"
                        target="_blank"
@@ -230,6 +235,50 @@
     function changeImage(url) {
         document.getElementById('main-image').src = url;
     }
+
+    function increaseQuantity() {
+        const input = document.getElementById('quantity');
+        const max = parseInt(input.max);
+        let current = parseInt(input.value);
+        if (current < max) {
+            input.value = current + 1;
+            updateQuantityField();
+        }
+    }
+
+    function decreaseQuantity() {
+        const input = document.getElementById('quantity');
+        let current = parseInt(input.value);
+        if (current > 1) {
+            input.value = current - 1;
+            updateQuantityField();
+        }
+    }
+
+    function updateQuantityField() {
+        const quantity = document.getElementById('quantity').value;
+        const field = document.getElementById('quantity_field');
+        if (field) {
+            field.value = quantity;
+        }
+    }
+
+    // Permitir cambio manual
+    document.getElementById('quantity')?.addEventListener('change', function() {
+        const max = parseInt(this.max);
+        const min = parseInt(this.min);
+        let value = parseInt(this.value);
+
+        if (isNaN(value) || value < min) {
+            this.value = min;
+        } else if (value > max) {
+            this.value = max;
+        }
+        updateQuantityField();
+    });
+
+    // Inicializar al cargar
+    document.addEventListener('DOMContentLoaded', updateQuantityField);
 </script>
 @endpush
 @endsection

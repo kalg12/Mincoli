@@ -40,28 +40,47 @@ Route::view('dashboard', 'dashboard')
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
     // Products
-    Route::get('/products', fn() => view('admin.products.index'))->name('products.index');
-    Route::get('/products/create', fn() => view('admin.products.create'))->name('products.create');
+    Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{id}/edit', [App\Http\Controllers\Admin\ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{id}', [App\Http\Controllers\Admin\ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{id}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('products.destroy');
 
     // Categories
-    Route::get('/categories', fn() => view('admin.categories.index'))->name('categories.index');
-    Route::get('/categories/create', fn() => view('admin.categories.create'))->name('categories.create');
+    Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [App\Http\Controllers\Admin\CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{id}/edit', [App\Http\Controllers\Admin\CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
 
     // Banners
-    Route::get('/banners', fn() => view('admin.banners.index'))->name('banners.index');
-    Route::get('/banners/create', fn() => view('admin.banners.create'))->name('banners.create');
+    Route::get('/banners', [App\Http\Controllers\Admin\BannerController::class, 'index'])->name('banners.index');
+    Route::get('/banners/create', [App\Http\Controllers\Admin\BannerController::class, 'create'])->name('banners.create');
+    Route::post('/banners', [App\Http\Controllers\Admin\BannerController::class, 'store'])->name('banners.store');
+    Route::get('/banners/{id}/edit', [App\Http\Controllers\Admin\BannerController::class, 'edit'])->name('banners.edit');
+    Route::put('/banners/{id}', [App\Http\Controllers\Admin\BannerController::class, 'update'])->name('banners.update');
+    Route::delete('/banners/{id}', [App\Http\Controllers\Admin\BannerController::class, 'destroy'])->name('banners.destroy');
 
     // Orders
-    Route::get('/orders', fn() => view('admin.orders.index'))->name('orders.index');
+    Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+    Route::put('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.updateStatus');
 
     // Customers
-    Route::get('/customers', fn() => view('admin.customers.index'))->name('customers.index');
+    Route::get('/customers', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'show'])->name('customers.show');
+    Route::put('/customers/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customers.update');
 
     // Payment Methods
     Route::get('/payment-methods', fn() => view('admin.payment-methods.index'))->name('payment-methods.index');
+    Route::get('/payment-methods/{method}/edit', fn($method) => view('admin.payment-methods.edit', compact('method')))->name('payment-methods.edit');
 
     // Shipping
     Route::get('/shipping', fn() => view('admin.shipping.index'))->name('shipping.index');
+    Route::get('/shipping/zones/create', fn() => view('admin.shipping.zones.create'))->name('shipping.zones.create');
+    Route::get('/shipping/zones/{id}/edit', fn($id) => view('admin.shipping.zones.edit', compact('id')))->name('shipping.zones.edit');
 });
 
 Route::middleware(['auth'])->group(function () {

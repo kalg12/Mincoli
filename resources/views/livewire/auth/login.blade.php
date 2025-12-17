@@ -5,6 +5,15 @@
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
+        <!-- Error Messages -->
+        @if ($errors->any())
+            <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20">
+                @foreach ($errors->all() as $error)
+                    <p class="text-sm font-medium text-red-700 dark:text-red-300">{{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
             @csrf
 

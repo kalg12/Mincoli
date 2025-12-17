@@ -62,7 +62,7 @@
                             <td class="px-6 py-4 font-semibold text-zinc-900 dark:text-white">$6,240</td>
                             <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">10/08/2025</td>
                             <td class="px-6 py-4">
-                                <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Ver perfil</button>
+                                <a href="{{ route('dashboard.customers.show', 1) }}" class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Ver perfil</a>
                             </td>
                         </tr>
                         <tr class="transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/70">
@@ -79,7 +79,7 @@
                             <td class="px-6 py-4 font-semibold text-zinc-900 dark:text-white">$2,150</td>
                             <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">15/11/2025</td>
                             <td class="px-6 py-4">
-                                <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Ver perfil</button>
+                                <a href="{{ route('dashboard.customers.show', 2) }}" class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Ver perfil</a>
                             </td>
                         </tr>
                         <tr class="transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/70">
@@ -96,7 +96,7 @@
                             <td class="px-6 py-4 font-semibold text-zinc-900 dark:text-white">$9,820</td>
                             <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">05/07/2025</td>
                             <td class="px-6 py-4">
-                                <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Ver perfil</button>
+                                <a href="{{ route('dashboard.customers.show', 3) }}" class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Ver perfil</a>
                             </td>
                         </tr>
                     </tbody>
@@ -107,8 +107,8 @@
             <div class="flex items-center justify-between border-t border-zinc-200 px-6 py-4 dark:border-zinc-700">
                 <p class="text-sm text-zinc-600 dark:text-zinc-400">Mostrando 3 de 4,812 clientes</p>
                 <div class="flex gap-2">
-                    <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Anterior</button>
-                    <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Siguiente</button>
+                    <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Anterior</button>
+                    <button class="transition-colors rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">Siguiente</button>
                 </div>
             </div>
         </div>

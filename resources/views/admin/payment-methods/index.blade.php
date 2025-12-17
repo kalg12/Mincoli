@@ -28,7 +28,7 @@
                     </label>
                 </div>
                 <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Procesa pagos con tarjeta de crédito y débito. Requiere configuración de Stripe o Conekta.</p>
-                <button class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</button>
+                <a href="{{ route('dashboard.payment-methods.edit', 'card') }}" class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</a>
             </div>
 
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
@@ -50,7 +50,7 @@
                     </label>
                 </div>
                 <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Recibe pagos por transferencia bancaria. Proporciona tus datos bancarios a los clientes.</p>
-                <button class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</button>
+                <a href="{{ route('dashboard.payment-methods.edit', 'transfer') }}" class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</a>
             </div>
 
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
@@ -72,7 +72,7 @@
                     </label>
                 </div>
                 <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Permite pagos en efectivo en tiendas OXXO. Requiere integración con Conekta.</p>
-                <button class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</button>
+                <a href="{{ route('dashboard.payment-methods.edit', 'oxxo') }}" class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</a>
             </div>
 
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
@@ -94,7 +94,7 @@
                     </label>
                 </div>
                 <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">Acepta pagos con PayPal. Los clientes pueden pagar sin salir de tu sitio.</p>
-                <button class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</button>
+                <a href="{{ route('dashboard.payment-methods.edit', 'paypal') }}" class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Configurar</a>
             </div>
         </div>
     </div>

@@ -5,6 +5,7 @@
                 <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Envíos</h1>
                 <p class="text-sm text-zinc-600 dark:text-zinc-400">Configura paqueterías y costos</p>
             </div>
+            <a href="{{ route('dashboard.shipping.zones.create') }}" class="rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 dark:bg-pink-500 dark:hover:bg-pink-600 dark:focus:ring-offset-zinc-900">Nueva zona</a>
         </div>
 
         <!-- Shipping Zones -->
@@ -17,7 +18,7 @@
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">Costo: $85 • Tiempo: 1-2 días</p>
                     </div>
                     <div class="flex gap-2">
-                        <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</button>
+                        <a href="{{ route('dashboard.shipping.zones.edit', 1) }}" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</a>
                     </div>
                 </div>
                 <div class="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
@@ -26,7 +27,7 @@
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">Costo: $150 • Tiempo: 2-3 días</p>
                     </div>
                     <div class="flex gap-2">
-                        <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</button>
+                        <a href="{{ route('dashboard.shipping.zones.edit', 2) }}" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</a>
                     </div>
                 </div>
                 <div class="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
@@ -35,7 +36,7 @@
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">Costo: $185+ • Tiempo: 3-5 días</p>
                     </div>
                     <div class="flex gap-2">
-                        <button class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</button>
+                        <a href="{{ route('dashboard.shipping.zones.edit', 3) }}" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</a>
                     </div>
                 </div>
             </div>

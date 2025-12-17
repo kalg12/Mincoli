@@ -17,7 +17,10 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->string('barcode')->unique()->nullable();
             $table->decimal('price', 10, 2);
-            $table->decimal('cost', 10, 2);
+            $table->decimal('cost', 10, 2)->default(0);
+            $table->decimal('sale_price', 10, 2)->nullable();
+            $table->integer('stock')->default(0);
+            $table->string('status')->default('draft');
             $table->decimal('iva_rate', 5, 2)->default(16.00);
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);

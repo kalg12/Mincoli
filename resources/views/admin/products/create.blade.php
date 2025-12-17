@@ -10,32 +10,37 @@
             </a>
         </div>
 
-        <form class="space-y-6">
+        <form action="{{ route('dashboard.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            @csrf
             <!-- Información básica -->
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                 <h2 class="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">Información básica</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Nombre del producto</label>
-                        <input type="text" placeholder="Ej: Collar Aura" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="text" name="name" value="{{ old('name') }}" placeholder="Ej: Collar Aura" required class="w-full rounded-lg border @error('name') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        @error('name')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Descripción</label>
-                        <textarea rows="4" placeholder="Describe las características del producto..." class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900"></textarea>
+                        <textarea name="description" rows="4" placeholder="Describe las características del producto..." class="w-full rounded-lg border @error('description') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">{{ old('description') }}</textarea>
+                        @error('description')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">SKU</label>
-                            <input type="text" placeholder="COL-001" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                            <input type="text" name="sku" value="{{ old('sku') }}" placeholder="COL-001" required class="w-full rounded-lg border @error('sku') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                            @error('sku')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Categoría</label>
-                            <select class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                                <option>Seleccionar categoría</option>
-                                <option>Joyería</option>
-                                <option>Ropa</option>
-                                <option>Dulces</option>
+                            <select name="category_id" required class="w-full rounded-lg border @error('category_id') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                <option value="">Seleccionar categoría</option>
+                                @foreach($categories ?? [] as $cat)
+                                    <option value="{{ $cat->id }}" @selected(old('category_id') == $cat->id)>{{ $cat->name }}</option>
+                                @endforeach
                             </select>
+                            @error('category_id')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         </div>
                     </div>
                 </div>
@@ -47,16 +52,28 @@
                 <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Precio</label>
-                        <input type="number" placeholder="0.00" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="number" name="price" step="0.01" min="0" value="{{ old('price') }}" placeholder="0.00" required class="w-full rounded-lg border @error('price') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        @error('price')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Precio oferta</label>
-                        <input type="number" placeholder="0.00" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="number" name="sale_price" step="0.01" min="0" value="{{ old('sale_price') }}" placeholder="0.00" class="w-full rounded-lg border @error('sale_price') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        @error('sale_price')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Stock</label>
-                        <input type="number" placeholder="0" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="number" name="stock" min="0" value="{{ old('stock') }}" placeholder="0" required class="w-full rounded-lg border @error('stock') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        @error('stock')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
+                </div>
+                <div class="mt-4">
+                    <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Estado</label>
+                    <select name="status" required class="w-full rounded-lg border @error('status') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                        <option value="published" @selected(old('status') == 'published')>Publicado</option>
+                        <option value="draft" @selected(old('status') == 'draft' || !old('status'))>Borrador</option>
+                        <option value="out_of_stock" @selected(old('status') == 'out_of_stock')>Agotado</option>
+                    </select>
+                    @error('status')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
             </div>
 

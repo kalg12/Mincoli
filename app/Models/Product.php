@@ -20,6 +20,9 @@ class Product extends Model
         'barcode',
         'price',
         'cost',
+        'sale_price',
+        'stock',
+        'status',
         'iva_rate',
         'is_active',
         'is_featured',
@@ -105,7 +108,11 @@ class Product extends Model
      */
     public function getTotalStockAttribute(): int
     {
-        return $this->variants->sum('stock');
+        // Si tiene variantes, suma su stock. Si no, usa el stock del producto.
+        if ($this->variants->count() > 0) {
+            return (int) $this->variants->sum('stock');
+        }
+        return (int) $this->stock;
     }
 
     /**

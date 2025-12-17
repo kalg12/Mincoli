@@ -130,6 +130,20 @@
             </flux:dropdown>
         </flux:header>
 
+        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            @if(session('success'))
+                <div class="mb-4 rounded-lg bg-green-100 p-4 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-4 rounded-lg bg-red-100 p-4 text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                    {{ session('error') }}
+                </div>
+            @endif
+        </div>
+
         {{ $slot }}
 
         @fluxScripts
