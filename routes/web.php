@@ -38,6 +38,32 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    // Products
+    Route::get('/products', fn() => view('admin.products.index'))->name('products.index');
+    Route::get('/products/create', fn() => view('admin.products.create'))->name('products.create');
+
+    // Categories
+    Route::get('/categories', fn() => view('admin.categories.index'))->name('categories.index');
+    Route::get('/categories/create', fn() => view('admin.categories.create'))->name('categories.create');
+
+    // Banners
+    Route::get('/banners', fn() => view('admin.banners.index'))->name('banners.index');
+    Route::get('/banners/create', fn() => view('admin.banners.create'))->name('banners.create');
+
+    // Orders
+    Route::get('/orders', fn() => view('admin.orders.index'))->name('orders.index');
+
+    // Customers
+    Route::get('/customers', fn() => view('admin.customers.index'))->name('customers.index');
+
+    // Payment Methods
+    Route::get('/payment-methods', fn() => view('admin.payment-methods.index'))->name('payment-methods.index');
+
+    // Shipping
+    Route::get('/shipping', fn() => view('admin.shipping.index'))->name('shipping.index');
+});
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

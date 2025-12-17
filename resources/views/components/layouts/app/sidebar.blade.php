@@ -12,22 +12,26 @@
             </a>
 
             <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+                <flux:navlist.group :heading="__('Contenido')" class="grid">
+                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>Dashboard</flux:navlist.item>
+                    <flux:navlist.item icon="shopping-bag" :href="route('dashboard.products.index')" :current="request()->routeIs('dashboard.products.*')" wire:navigate>Productos</flux:navlist.item>
+                    <flux:navlist.item icon="folder" :href="route('dashboard.categories.index')" :current="request()->routeIs('dashboard.categories.*')" wire:navigate>Categorías</flux:navlist.item>
+                    <flux:navlist.item icon="photo" :href="route('dashboard.banners.index')" :current="request()->routeIs('dashboard.banners.*')" wire:navigate>Banners</flux:navlist.item>
+                </flux:navlist.group>
+
+                <flux:navlist.group :heading="__('Ventas')" class="grid">
+                    <flux:navlist.item icon="shopping-cart" :href="route('dashboard.orders.index')" :current="request()->routeIs('dashboard.orders.*')" wire:navigate>Pedidos</flux:navlist.item>
+                    <flux:navlist.item icon="user-group" :href="route('dashboard.customers.index')" :current="request()->routeIs('dashboard.customers.*')" wire:navigate>Clientes</flux:navlist.item>
+                    <flux:navlist.item icon="credit-card" :href="route('dashboard.payment-methods.index')" :current="request()->routeIs('dashboard.payment-methods.*')" wire:navigate>Métodos de pago</flux:navlist.item>
+                    <flux:navlist.item icon="truck" :href="route('dashboard.shipping.index')" :current="request()->routeIs('dashboard.shipping.*')" wire:navigate>Envíos</flux:navlist.item>
+                </flux:navlist.group>
+
+                <flux:navlist.group :heading="__('Configuración')" class="grid">
+                    <flux:navlist.item icon="cog-6-tooth" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate>Ajustes</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:spacer />
-
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
-                </flux:navlist.item>
-
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-                </flux:navlist.item>
-            </flux:navlist>
 
             <!-- Desktop User Menu -->
             <flux:dropdown class="hidden lg:block" position="bottom" align="start">
