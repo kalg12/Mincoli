@@ -170,7 +170,11 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
-        return response()->json(['success' => true, 'message' => 'Carrito actualizado']);
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Carrito actualizado']);
+        }
+
+        return back()->with('success', 'Carrito actualizado');
     }
 
     public function remove($id)

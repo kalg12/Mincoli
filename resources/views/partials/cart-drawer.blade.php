@@ -141,14 +141,14 @@ function renderCart() {
                             </button>
                         </div>
                         <p class="text-xs text-gray-500 mb-2">${item.product.sku}</p>
-                        
+
                         <!-- Price Display with Discount -->
                         <div class="mb-2">
                             <span class="text-lg font-bold text-pink-600">$${(parseFloat(item.unit_price) || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
                             ${item.product.has_discount ? `<span class="text-base text-gray-500 line-through decoration-gray-500 decoration-1.5 ml-2">$${(parseFloat(item.product.original_price) || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>` : ''}
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
                             <button type="button" onclick="window.updateQuantity('${item.id}', ${item.quantity - 1})" class="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition">
