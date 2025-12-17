@@ -126,19 +126,35 @@
                             @endif
                         </div>
                         <div class="p-4">
-                            <h3 class="text-sm font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem]">
+                            <h3 class="text-sm font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[2.5rem]">
                                 {{ $product->name }}
                             </h3>
-                            <div class="flex items-center justify-between">
-                                <span class="text-lg font-bold text-pink-600">
+                            @if($product->sale_price && $product->sale_price < $product->price)
+                            <div class="mb-2">
+                                <span class="text-xl font-bold text-pink-600">
+                                    ${{ number_format($product->sale_price, 2) }}
+                                </span>
+                                <span class="text-base text-gray-500 line-through decoration-gray-500 decoration-1.5 ml-2">
                                     ${{ number_format($product->price, 2) }}
                                 </span>
+                            </div>
+                            <div class="text-sm font-bold text-red-600 mb-2">
+                                -{{ round(((($product->price - $product->sale_price) / $product->price) * 100)) }}%
+                            </div>
+                            @else
+                            <div class="mb-2">
+                                <span class="text-xl font-bold text-pink-600">
+                                    ${{ number_format($product->price, 2) }}
+                                </span>
+                            </div>
+                            @endif
+                            <div class="flex items-center justify-between">
                                 @if($product->total_stock > 0)
-                                <span class="text-xs text-green-600 font-medium">
+                                <span class="text-xs text-green-600 font-medium flex-shrink-0">
                                     <i class="fas fa-check-circle"></i> Stock
                                 </span>
                                 @else
-                                <span class="text-xs text-red-600 font-medium">
+                                <span class="text-xs text-red-600 font-medium flex-shrink-0">
                                     Agotado
                                 </span>
                                 @endif

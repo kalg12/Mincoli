@@ -60,10 +60,27 @@
 
                 <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $product->name }}</h1>
 
-                <div class="flex items-center space-x-4 mb-6">
+                <div class="mb-6">
+                    @if($product->sale_price && $product->sale_price < $product->price)
+                    <span class="text-4xl font-bold text-pink-600">
+                        ${{ number_format($product->sale_price, 2) }}
+                    </span>
+                    <div class="flex items-center gap-3 mt-2">
+                        <span class="text-xl text-gray-500 line-through decoration-gray-500 decoration-2">
+                            ${{ number_format($product->price, 2) }}
+                        </span>
+                        <span class="text-lg font-bold text-red-600">
+                            -{{ round(((($product->price - $product->sale_price) / $product->price) * 100)) }}%
+                        </span>
+                    </div>
+                    @else
                     <span class="text-4xl font-bold text-pink-600">
                         ${{ number_format($product->price, 2) }}
                     </span>
+                    @endif
+                </div>
+
+                <div class="flex items-center space-x-4 mb-6 flex-wrap gap-4">
                     @if($product->total_stock > 0)
                     <span class="bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full">
                         <i class="fas fa-check-circle"></i> En Stock
@@ -114,10 +131,21 @@
                                 @if($variant->color) - {{ $variant->color }} @endif
                             </div>
                             @endif
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-pink-600 font-bold">
-                                    ${{ number_format($variant->effective_price, 2) }}
-                                </span>
+                            <div class="flex justify-between items-center mt-2 flex-wrap gap-2">
+                                <div class="flex items-baseline gap-2">
+                                    @if($variant->sale_price && $variant->sale_price < $variant->price)
+                                    <span class="text-pink-600 font-bold">
+                                        ${{ number_format($variant->sale_price, 2) }}
+                                    </span>
+                                    <span class="text-xs text-gray-400 line-through">
+                                        ${{ number_format($variant->price, 2) }}
+                                    </span>
+                                    @else
+                                    <span class="text-pink-600 font-bold">
+                                        ${{ number_format($variant->effective_price, 2) }}
+                                    </span>
+                                    @endif
+                                </div>
                                 <span class="text-xs {{ $variant->stock > 0 ? 'text-green-600' : 'text-red-600' }}">
                                     {{ $variant->stock > 0 ? 'Disponible' : 'Agotado' }}
                                 </span>
@@ -215,12 +243,28 @@
                         @endif
                     </div>
                     <div class="p-4">
-                        <h3 class="text-sm font-semibold text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem]">
+                        <h3 class="text-sm font-semibold text-gray-800 mb-3 line-clamp-2 min-h-[2.5rem]">
                             {{ $related->name }}
                         </h3>
-                        <span class="text-lg font-bold text-pink-600">
-                            ${{ number_format($related->price, 2) }}
-                        </span>
+                        @if($related->sale_price && $related->sale_price < $related->price)
+                        <div class="mb-2">
+                            <span class="text-lg font-bold text-pink-600">
+                                ${{ number_format($related->sale_price, 2) }}
+                            </span>
+                            <span class="text-base text-gray-500 line-through decoration-gray-500 decoration-1.5 ml-2">
+                                ${{ number_format($related->price, 2) }}
+                            </span>
+                        </div>
+                        <div class="text-xs font-bold text-red-600">
+                            -{{ round(((($related->price - $related->sale_price) / $related->price) * 100)) }}%
+                        </div>
+                        @else
+                        <div class="mb-2">
+                            <span class="text-lg font-bold text-pink-600">
+                                ${{ number_format($related->price, 2) }}
+                            </span>
+                        </div>
+                        @endif
                     </div>
                 </a>
             </div>

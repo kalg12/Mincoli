@@ -23,6 +23,7 @@ Route::post('/carrito/agregar', [CartController::class, 'add'])->name('cart.add'
 Route::patch('/carrito/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/carrito/{id}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
+Route::get('/api/carrito/datos', [CartController::class, 'getCartData'])->name('cart.data');
 
 // Pages Routes
 Route::get('/sobre-nosotros', [PagesController::class, 'about'])->name('about');

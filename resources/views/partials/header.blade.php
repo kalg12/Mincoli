@@ -35,7 +35,7 @@
 </div>
 
 <!-- Main Header -->
-<header class="bg-white/90 backdrop-blur sticky top-0 z-50 border-b border-gray-200">
+<header class="bg-white/90 backdrop-blur sticky top-0 z-40 border-b border-gray-200">
     <div class="container mx-auto px-4">
         <div class="flex items-center justify-between py-3">
             <!-- Logo -->
@@ -56,10 +56,10 @@
             <!-- Actions -->
             <div class="flex items-center space-x-3">
                 <!-- Cart -->
-                <button onclick="openCartDrawer()" class="relative text-gray-700 hover:text-pink-600 transition">
+                <button onclick="window.openCartDrawer()" class="relative text-gray-700 hover:text-pink-600 transition">
                     <i class="fas fa-shopping-cart text-lg"></i>
-                    <span class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        3
+                    <span id="header-cart-count" class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">
+                        0
                     </span>
                 </button>
 
