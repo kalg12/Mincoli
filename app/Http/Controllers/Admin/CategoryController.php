@@ -77,6 +77,32 @@ class CategoryController extends Controller
 
         return redirect()
             ->route('dashboard.categories.index')
-            ->with('success', 'Categoría eliminada correctamente');
+            ->with('success', 'Categoría movida a la papelera');
+    }
+
+    public function trash()
+    {
+        $categories = Category::onlyTrashed()->withCount('products')->latest('deleted_at')->get();
+        return view('admin.categories.trash', compact('categories'));
+    }
+
+    public function restore($id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->restore();
+
+        return redirect()
+            ->route('dashboard.categories.trash')
+            ->with('success', 'Categoría restaurada correctamente');
+    }
+
+    public function forceDelete($id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->forceDelete();
+
+        return redirect()
+            ->route('dashboard.categories.trash')
+            ->with('success', 'Categoría eliminada permanentemente');
     }
 }
