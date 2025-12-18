@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Services\RecommendationEngine;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -50,7 +51,7 @@ class CartController extends Controller
 
     public function add(Request $request)
     {
-        \Log::info('CartController@add called', [
+        Log::info('CartController@add called', [
             'data' => $request->all(),
             'method' => $request->method(),
             'expects_json' => $request->expectsJson()
@@ -64,7 +65,7 @@ class CartController extends Controller
 
             $product = Product::with('variants')->findOrFail($request->product_id);
 
-            \Log::info('Product found', [
+            Log::info('Product found', [
                 'product_id' => $product->id,
                 'name' => $product->name,
                 'stock' => $product->stock,
@@ -74,7 +75,7 @@ class CartController extends Controller
             // Verificar stock disponible
             $availableStock = $product->total_stock;
             if ($availableStock < $request->quantity) {
-                \Log::warning('Insufficient stock', [
+                Log::warning('Insufficient stock', [
                     'available' => $availableStock,
                     'requested' => $request->quantity
                 ]);
@@ -88,10 +89,10 @@ class CartController extends Controller
                 return back()->with('error', 'No hay suficiente stock disponible');
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation failed', ['errors' => $e->errors()]);
+            Log::error('Validation failed', ['errors' => $e->errors()]);
             throw $e;
         } catch (\Exception $e) {
-            \Log::error('Error in add method', [
+            Log::error('Error in add method', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -136,7 +137,7 @@ class CartController extends Controller
 
         session()->put('cart', $cart);
 
-        \Log::info('Product added to cart', [
+        Log::info('Product added to cart', [
             'cart_count' => count($cart),
             'product_id' => $request->product_id,
             'quantity' => $request->quantity

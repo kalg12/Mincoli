@@ -4,13 +4,17 @@
 
 @section('content')
 <!-- Hero Banner / Banners dinámicos -->
-<section class="relative bg-gradient-to-br from-amber-50 to-pink-50 overflow-hidden py-10">
-    <div class="container mx-auto px-4">
-        @if($banners->count())
-            <div class="relative max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-2xl">
+<section class="relative bg-gradient-to-br from-amber-50 to-pink-50 overflow-hidden">
+    <div class="w-full">
+        @if(isset($banners) && $banners->count() > 0)
+            <div class="relative w-full overflow-hidden shadow-2xl h-[500px] sm:h-[580px] lg:h-[700px]">
                 @foreach($banners as $index => $banner)
-                <div class="banner-slide absolute inset-0 opacity-0 scale-95 transition duration-700 ease-out {{ $loop->first ? 'opacity-100 scale-100' : '' }}" data-banner-slide="{{ $index }}">
-                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="w-full h-[480px] object-cover">
+                <div class="banner-slide absolute inset-0 transition duration-700 ease-out {{ $loop->first ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0' }}" data-banner-slide="{{ $index }}">
+                    @if($banner->image_url)
+                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="w-full h-full object-cover">
+                    @else
+                    <div class="w-full h-full bg-gradient-to-r from-pink-200 via-amber-100 to-white"></div>
+                    @endif
                     <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
                     <div class="absolute inset-0 flex flex-col items-start justify-center px-8 md:px-16 lg:px-20 text-white max-w-2xl">
                         <p class="text-sm uppercase tracking-[0.2em] text-pink-200 mb-3">Mincoli</p>
@@ -53,7 +57,7 @@
                 @endif
             </div>
         @else
-            <div class="text-center max-w-3xl mx-auto py-12">
+            <div class="text-center max-w-3xl mx-auto py-12 px-4">
                 <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
                     ¡Tus Favoritos de Facebook, Directo a tu Casa esta Navidad!
                 </h1>
@@ -74,31 +78,6 @@
                 </div>
             </div>
         @endif
-
-        <!-- Featured Products Preview -->
-        <div class="mt-12 max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            @forelse($featuredProducts as $product)
-            <div class="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition">
-                @if($product->images->first())
-                <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-32 object-contain mb-2">
-                @else
-                <div class="w-full h-32 bg-gray-200 rounded-lg mb-2 flex items-center justify-center">
-                    <i class="fas fa-image text-gray-400 text-3xl"></i>
-                </div>
-                @endif
-                <h3 class="text-sm font-semibold text-gray-800 truncate">{{ $product->name }}</h3>
-                <p class="text-pink-600 font-bold">${{ number_format($product->price, 2) }}</p>
-            </div>
-            @empty
-            @for($i = 0; $i < 6; $i++)
-            <div class="bg-white rounded-lg shadow-md p-4">
-                <div class="w-full h-32 bg-gray-200 rounded-lg mb-2"></div>
-                <div class="h-4 bg-gray-200 rounded mb-2"></div>
-                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-            </div>
-            @endfor
-            @endforelse
-        </div>
     </div>
 </section>
 

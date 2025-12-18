@@ -23,10 +23,10 @@ class Banner extends Model
     ];
 
     /**
-     * Get all active banners ordered by position
+     * Scope a query to only include active banners.
      */
-    public static function active()
+    public function scopeActive($query)
     {
-        return self::where('is_active', true)->orderBy('position');
+        return $query->where('is_active', true);
     }
 }

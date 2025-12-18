@@ -23,16 +23,19 @@ class BannerController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'text' => 'required|string|max:500',
             'link_url' => 'nullable|url',
             'position' => 'required|integer|min:1',
             'status' => 'required|in:active,scheduled,inactive',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,webp|max:5120',
         ]);
 
         $validated['is_active'] = $validated['status'] === 'active';
+        unset($validated['status']);
 
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('banners', 'public');
+            $path = $request->file('image')->store('banners', 'public');
+            $validated['image_url'] = '/storage/' . $path;
         }
 
         Banner::create($validated);
@@ -54,16 +57,19 @@ class BannerController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'text' => 'required|string|max:500',
             'link_url' => 'nullable|url',
             'position' => 'required|integer|min:1',
             'status' => 'required|in:active,scheduled,inactive',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,webp|max:5120',
         ]);
 
         $validated['is_active'] = $validated['status'] === 'active';
+        unset($validated['status']);
 
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('banners', 'public');
+            $path = $request->file('image')->store('banners', 'public');
+            $validated['image_url'] = '/storage/' . $path;
         }
 
         $banner->update($validated);

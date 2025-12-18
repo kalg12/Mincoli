@@ -21,7 +21,7 @@ class HomeController extends Controller
             ->take(10)
             ->get();
 
-        $banners = Banner::active()->get();
+        $banners = Banner::active()->orderBy('position')->get();
 
         return view('home', compact('categories', 'featuredProducts', 'banners'));
     }
