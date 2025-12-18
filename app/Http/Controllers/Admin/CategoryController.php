@@ -56,6 +56,7 @@ class CategoryController extends Controller
 
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $validated['status'] === 'active';
+        unset($validated['status']);
 
         $category->update($validated);
 
