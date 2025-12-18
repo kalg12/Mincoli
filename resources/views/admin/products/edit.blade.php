@@ -17,7 +17,7 @@
                 <!-- Información básica -->
                 <div class="space-y-4 bg-white p-6 dark:bg-zinc-900">
                     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Información básica</h2>
-                    <div class="grid gap-4 md:grid-cols-2">
+                    <div class="grid gap-4 md:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre</label>
                             <input type="text" name="name" value="{{ old('name', $product->name) }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900"/>
@@ -27,6 +27,11 @@
                             <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">SKU</label>
                             <input type="text" name="sku" value="{{ old('sku', $product->sku) }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900"/>
                             @error('sku')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código de barras <span class="text-xs text-zinc-500">(opcional)</span></label>
+                            <input type="text" name="barcode" value="{{ old('barcode', $product->barcode) }}" placeholder="123456789012" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900"/>
+                            @error('barcode')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         </div>
                     </div>
                     <div>

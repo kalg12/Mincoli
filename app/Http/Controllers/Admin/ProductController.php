@@ -30,6 +30,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|max:100|unique:products,sku',
+            'barcode' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
@@ -64,6 +65,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'required|string|max:100|unique:products,sku,' . $id,
+            'barcode' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
@@ -90,5 +92,22 @@ class ProductController extends Controller
         return redirect()
             ->route('dashboard.products.index')
             ->with('success', 'Producto eliminado correctamente');
+    }
+
+    public function toggleFeatured($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->is_featured = !$product->is_featured;
+        $product->save();
+
+        return back()->with('success', $product->is_featured ? 'Producto marcado como destacado' : 'Producto desmarcado como destacado');
+    }
+
+    public function printLabels(Request $request)
+    {
+        $productIds = $request->input('products', []);
+        $products = Product::with('category')->whereIn('id', $productIds)->get();
+
+        return view('admin.products.print-labels', compact('products'));
     }
 }

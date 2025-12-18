@@ -14,7 +14,7 @@
 
         <!-- Filters -->
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex gap-3">
+            <div class="flex gap-3 items-center">
                 <input type="text" placeholder="Buscar productos..." class="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
                 <select class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
                     <option>Todas las categorías</option>
@@ -28,6 +28,10 @@
                     <option>Borrador</option>
                     <option>Agotado</option>
                 </select>
+                <button onclick="printSelectedLabels()" class="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700">
+                    <svg class="inline-block h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Imprimir etiquetas
+                </button>
             </div>
         </div>
 
@@ -37,6 +41,9 @@
                 <table class="w-full text-sm">
                     <thead class="border-b border-zinc-200 text-left text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
                         <tr>
+                            <th class="px-6 py-4">
+                                <input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes(this)" class="rounded border-zinc-300 text-pink-600 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-700">
+                            </th>
                             <th class="px-6 py-4 font-medium">Producto</th>
                             <th class="px-6 py-4 font-medium">Categoría</th>
                             <th class="px-6 py-4 font-medium">Precio</th>
@@ -48,6 +55,9 @@
                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                         @forelse($products as $product)
                         <tr class="transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/70">
+                            <td class="px-6 py-4">
+                                <input type="checkbox" name="product_ids[]" value="{{ $product->id }}" class="product-checkbox rounded border-zinc-300 text-pink-600 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-700">
+                            </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="h-12 w-12 flex-shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>
@@ -78,6 +88,12 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex justify-end gap-2">
+                                    <form action="{{ route('dashboard.products.toggleFeatured', $product->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <button type="submit" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors" title="{{ $product->is_featured ? 'Quitar de destacados' : 'Marcar como destacado' }}">
+                                            <svg class="h-4 w-4 {{ $product->is_featured ? 'fill-yellow-400 text-yellow-400' : 'fill-none' }}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                        </button>
+                                    </form>
                                     <a href="{{ route('dashboard.products.edit', $product->id) }}" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors">Editar</a>
                                     <form action="{{ route('dashboard.products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este producto?');">
                                         @csrf
@@ -89,7 +105,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">No hay productos disponibles</td>
+                            <td colspan="7" class="px-6 py-8 text-center text-zinc-500 dark:text-zinc-400">No hay productos disponibles</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -111,4 +127,44 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleAllCheckboxes(source) {
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            checkboxes.forEach(checkbox => checkbox.checked = source.checked);
+        }
+
+        function printSelectedLabels() {
+            const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+            const productIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (productIds.length === 0) {
+                alert('Por favor selecciona al menos un producto');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route('dashboard.products.printLabels') }}';
+            form.target = '_blank';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+
+            productIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'products[]';
+                input.value = id;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+    </script>
 </x-layouts.app>
