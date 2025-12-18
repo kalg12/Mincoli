@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\SiteSetting;
 use App\Services\RecommendationEngine;
 use Illuminate\Support\Facades\Log;
 
@@ -32,7 +33,8 @@ class CartController extends Controller
         })->filter();
 
         $subtotal = $items->sum('subtotal');
-        $iva = $subtotal * 0.16;
+        $showIva = SiteSetting::get('store', 'show_iva', true);
+        $iva = $showIva ? ($subtotal * 0.16) : 0;
         $total = $subtotal + $iva;
 
         // Obtener recomendaciones inteligentes
@@ -43,7 +45,8 @@ class CartController extends Controller
             'cart' => (object)[
                 'subtotal' => $subtotal,
                 'total_iva' => $iva,
-                'total' => $total
+                'total' => $total,
+                'show_iva' => $showIva
             ],
             'recommendations' => $recommendations
         ]);
@@ -228,7 +231,8 @@ class CartController extends Controller
         })->filter();
 
         $subtotal = $items->sum('subtotal');
-        $iva = $subtotal * 0.16;
+        $showIva = SiteSetting::get('store', 'show_iva', true);
+        $iva = $showIva ? ($subtotal * 0.16) : 0;
         $total = $subtotal + $iva;
 
         // Obtener recomendaciones inteligentes
@@ -253,7 +257,8 @@ class CartController extends Controller
             'recommendations' => $recommendationsData,
             'subtotal' => $subtotal,
             'iva' => $iva,
-            'total' => $total
+            'total' => $total,
+            'show_iva' => $showIva
         ]);
     }
 }

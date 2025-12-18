@@ -109,10 +109,12 @@
                         <span>Subtotal:</span>
                         <span>${{ number_format($cart->subtotal, 2) }}</span>
                     </div>
+                    @if($cart->show_iva)
                     <div class="flex justify-between text-gray-700">
                         <span>IVA (16%):</span>
                         <span>${{ number_format($cart->total_iva, 2) }}</span>
                     </div>
+                    @endif
                     <div class="flex justify-between text-gray-700">
                         <span>Envío:</span>
                         <span>A calcular</span>

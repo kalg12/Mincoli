@@ -47,7 +47,7 @@
                 <span class="text-gray-600">Subtotal:</span>
                 <span id="cart-subtotal" class="font-medium">$0.00</span>
             </div>
-            <div class="flex justify-between">
+            <div id="cart-iva-row" class="flex justify-between">
                 <span class="text-gray-600">IVA (16%):</span>
                 <span id="cart-iva" class="font-medium">$0.00</span>
             </div>
@@ -76,7 +76,8 @@ window.cartData = {
     recommendations: [],
     subtotal: 0,
     iva: 0,
-    total: 0
+    total: 0,
+    show_iva: true
 };
 
 // Control de concurrencia
@@ -99,7 +100,8 @@ async function updateCart() {
             recommendations: data.recommendations || [],
             subtotal: parseFloat(data.subtotal),
             iva: parseFloat(data.iva),
-            total: parseFloat(data.total)
+            total: parseFloat(data.total),
+            show_iva: data.show_iva !== undefined ? data.show_iva : true
         };
 
         renderCart();
@@ -264,6 +266,17 @@ function updateTotals() {
     document.getElementById('cart-total').textContent = `$${window.cartData.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
     document.getElementById('cart-count').textContent = `(${window.cartData.items.length})`;
 
+    // Mostrar/ocultar línea de IVA según configuración
+    const ivaRow = document.getElementById('cart-iva-row');
+    if (ivaRow) {
+        // Ocultar si show_iva es false O si el IVA es 0
+        if (window.cartData.show_iva && window.cartData.iva > 0) {
+            ivaRow.style.display = 'flex';
+        } else {
+            ivaRow.style.display = 'none';
+        }
+    }
+
     // Actualizar contador del header
     updateHeaderCartCount(window.cartData.items.length);
 }
@@ -284,7 +297,8 @@ function updateHeaderCartCount(count) {
 // Recalcular totales localmente
 function recalculateTotals() {
     const subtotal = window.cartData.items.reduce((sum, item) => sum + parseFloat(item.subtotal || 0), 0);
-    const iva = subtotal * 0.16;
+    // Solo calcular IVA si está activado en la configuración
+    const iva = window.cartData.show_iva ? (subtotal * 0.16) : 0;
     const total = subtotal + iva;
 
     window.cartData.subtotal = subtotal;
@@ -442,6 +456,11 @@ document.getElementById('cart-drawer-overlay')?.addEventListener('click', window
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
+    // Ocultar IVA inicialmente hasta que se carguen los datos del servidor
+    const ivaRow = document.getElementById('cart-iva-row');
+    if (ivaRow) {
+        ivaRow.style.display = 'none';
+    }
     updateCart();
 });
 </script>

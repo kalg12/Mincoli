@@ -27,6 +27,7 @@
                 </flux:navlist.group>
 
                 <flux:navlist.group :heading="__('Configuración')" class="grid">
+                    <flux:navlist.item icon="cog-6-tooth" :href="route('dashboard.settings.index')" :current="request()->routeIs('dashboard.settings.*')" wire:navigate>Configuración Tienda</flux:navlist.item>
                     <flux:navlist.item icon="cog-6-tooth" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate>Ajustes</flux:navlist.item>
                 </flux:navlist.group>
             </flux:navlist>
