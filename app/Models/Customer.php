@@ -15,6 +15,13 @@ class Customer extends Model
         'phone',
         'name',
         'email',
+        'company',
+        'address',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'notes',
     ];
 
     protected $casts = [
@@ -62,5 +69,13 @@ class Customer extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Notes left by team members for this customer
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(CustomerNote::class);
     }
 }

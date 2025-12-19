@@ -80,8 +80,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
 
     // Customers
     Route::get('/customers', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/create', [App\Http\Controllers\Admin\CustomerController::class, 'create'])->name('customers.create');
+    Route::post('/customers', [App\Http\Controllers\Admin\CustomerController::class, 'store'])->name('customers.store');
     Route::get('/customers/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'show'])->name('customers.show');
     Route::put('/customers/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customers.update');
+    Route::post('/customers/{id}/notes', [App\Http\Controllers\Admin\CustomerController::class, 'addNote'])->name('customers.notes.store');
 
     // Payment Methods
     Route::get('/payment-methods', fn() => view('admin.payment-methods.index'))->name('payment-methods.index');
