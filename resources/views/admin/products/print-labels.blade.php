@@ -307,6 +307,43 @@
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
         }
 
+        /* Formatos térmicos */
+        .labels-grid.format-thermal-58 {
+            grid-template-columns: 1fr;
+            width: 58mm;
+            margin: 0 auto 30px;
+            gap: 4mm;
+        }
+
+        .labels-grid.format-thermal-80 {
+            grid-template-columns: 1fr;
+            width: 80mm;
+            margin: 0 auto 30px;
+            gap: 5mm;
+        }
+
+        .format-thermal-58 .label,
+        .format-thermal-80 .label {
+            padding: 12px;
+            box-shadow: none;
+            border: 1px dashed #e5e7eb;
+        }
+
+        .format-thermal-58 .product-name,
+        .format-thermal-80 .product-name {
+            font-size: 14px;
+        }
+
+        .format-thermal-58 .price-value,
+        .format-thermal-80 .price-value {
+            font-size: 18px;
+        }
+
+        .format-thermal-58 .barcode-container svg,
+        .format-thermal-80 .barcode-container svg {
+            max-height: 40px;
+        }
+
         .label {
             background: white;
             border-radius: 16px;
@@ -665,6 +702,30 @@
                 size: A4 portrait;
                 margin: 10mm;
             }
+
+            /* Forzar ancho térmico en impresión */
+            .labels-grid.format-thermal-58 {
+                width: 58mm !important;
+                grid-template-columns: 1fr !important;
+                gap: 4mm !important;
+                padding: 0 !important;
+            }
+
+            .labels-grid.format-thermal-80 {
+                width: 80mm !important;
+                grid-template-columns: 1fr !important;
+                gap: 5mm !important;
+                padding: 0 !important;
+            }
+
+            .format-thermal-58 .label,
+            .format-thermal-80 .label {
+                width: auto;
+                margin: 0;
+                border: 1px solid #e5e7eb !important;
+                padding: 10px !important;
+                box-shadow: none !important;
+            }
         }
     </style>
 </head>
@@ -687,10 +748,12 @@
                     </svg>
                     Configurar
                 </button>
-                <div class="format-selector">
+                <div class="format-selector" style="flex-wrap: wrap; gap: 6px;">
                     <button class="format-btn" onclick="changeFormat('small')">Pequeña</button>
                     <button class="format-btn active" onclick="changeFormat('medium')">Mediana</button>
                     <button class="format-btn" onclick="changeFormat('large')">Grande</button>
+                    <button class="format-btn" onclick="changeFormat('thermal58')">Térmica 58mm</button>
+                    <button class="format-btn" onclick="changeFormat('thermal80')">Térmica 80mm</button>
                 </div>
                 <button class="btn btn-print" onclick="window.print()">
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -702,8 +765,15 @@
         </div>
 
         <div class="settings-panel hidden" id="settingsPanel">
-            <h2 style="font-size: 18px; font-weight: 700; color: #1f2937; margin-bottom: 8px;">Personalizar Impresión</h2>
-            <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">Selecciona el formato y los datos que deseas incluir en la impresión</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 700; color: #1f2937;">Personalizar Impresion</h2>
+                    <p style="color: #6b7280; font-size: 14px;">Selecciona el formato y los datos que deseas incluir en la impresion</p>
+                </div>
+                <button type="button" onclick="clearAllToggles()" style="padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; color: #374151; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    Desmarcar todo
+                </button>
+            </div>
 
             <div class="settings-grid">
                 <div class="settings-section">
@@ -728,19 +798,19 @@
                     <h3>✨ Datos a Mostrar</h3>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-name" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-name" checked onchange="updatePreview()">
                             <label for="show-name">Nombre del producto</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-category" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-category" checked onchange="updatePreview()">
                             <label for="show-category">Categoría</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-sku" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-sku" checked onchange="updatePreview()">
                             <label for="show-sku">SKU</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-barcode" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-barcode" checked onchange="updatePreview()">
                             <label for="show-barcode">Código de barras</label>
                         </div>
                     </div>
@@ -750,19 +820,19 @@
                     <h3>💰 Información Comercial</h3>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-price" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-price" checked onchange="updatePreview()">
                             <label for="show-price">Precio</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-stock" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-stock" checked onchange="updatePreview()">
                             <label for="show-stock">Stock</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-status" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-status" checked onchange="updatePreview()">
                             <label for="show-status">Estado</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-qr" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-qr" checked onchange="updatePreview()">
                             <label for="show-qr">Código QR</label>
                         </div>
                     </div>
@@ -772,11 +842,11 @@
                     <h3>🏅 Badges y Extras</h3>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-featured" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-featured" checked onchange="updatePreview()">
                             <label for="show-featured">Badge destacado</label>
                         </div>
                         <div class="checkbox-item">
-                            <input type="checkbox" id="show-sale" checked onchange="updatePreview()">
+                            <input class="setting-toggle" type="checkbox" id="show-sale" checked onchange="updatePreview()">
                             <label for="show-sale">Badge oferta</label>
                         </div>
                     </div>
@@ -827,6 +897,11 @@
             document.querySelectorAll('.template-option').forEach(opt => opt.classList.remove('active'));
             document.getElementById('template-' + template).classList.add('active');
             renderTemplate();
+        }
+
+        function clearAllToggles() {
+            document.querySelectorAll('.setting-toggle').forEach(cb => cb.checked = false);
+            updatePreview();
         }
 
         function renderTemplate() {
@@ -1064,9 +1139,13 @@
             const grid = document.getElementById('labelsGrid');
             const buttons = document.querySelectorAll('.format-btn');
 
-            grid.classList.remove('format-small', 'format-medium', 'format-large');
+            grid.classList.remove('format-small', 'format-medium', 'format-large', 'format-thermal-58', 'format-thermal-80');
 
-            if (format !== 'medium') {
+            if (format === 'thermal58') {
+                grid.classList.add('format-thermal-58');
+            } else if (format === 'thermal80') {
+                grid.classList.add('format-thermal-80');
+            } else if (format !== 'medium') {
                 grid.classList.add('format-' + format);
             }
 
