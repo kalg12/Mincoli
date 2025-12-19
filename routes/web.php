@@ -53,6 +53,14 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::put('/products/{id}', [App\Http\Controllers\Admin\ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('products.destroy');
     Route::post('/products/{id}/toggle-featured', [App\Http\Controllers\Admin\ProductController::class, 'toggleFeatured'])->name('products.toggleFeatured');
+    
+    // Product Variants
+    Route::post('/products/{id}/variants', [App\Http\Controllers\Admin\ProductController::class, 'storeVariant'])->name('products.variants.store');
+    Route::put('/products/{id}/variants/{variantId}', [App\Http\Controllers\Admin\ProductController::class, 'updateVariant'])->name('products.variants.update');
+    Route::delete('/products/{id}/variants/{variantId}', [App\Http\Controllers\Admin\ProductController::class, 'destroyVariant'])->name('products.variants.destroy');
+    
+    // Inventory Management
+    Route::post('/products/{id}/adjust-stock', [App\Http\Controllers\Admin\ProductController::class, 'adjustStock'])->name('products.adjustStock');
 
     // Categories
     Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
