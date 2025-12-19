@@ -805,7 +805,11 @@
     </div>
 
     <script>
-        const products = @json($products);
+        window.productsData = {!! json_encode($products) !!};
+    </script>
+
+    <script>
+        const products = window.productsData;
         let currentTemplate = 'labels';
         let copiesPerProduct = 1;
 

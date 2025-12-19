@@ -144,20 +144,16 @@
             }
 
             const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route('dashboard.products.printLabels') }}';
-            form.target = '_blank';
+        const printRoute = '{{ route("dashboard.products.printLabels") }}';
+        form.method = 'POST';
+        form.action = printRoute;
+        form.target = '_blank';
 
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = '{{ csrf_token() }}';
-            form.appendChild(csrfInput);
-
-            productIds.forEach(id => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'products[]';
+        const csrfInput = document.createElement('input');
+        const csrfToken = '{{ csrf_token() }}';
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
                 input.value = id;
                 form.appendChild(input);
             });
