@@ -34,7 +34,7 @@
 
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Información del Producto</h3>
-                        
+
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre <span class="text-red-500">*</span></label>
@@ -126,12 +126,67 @@
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Variantes del Producto</h3>
-                            <button onclick="openAddVariantModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                            <button onclick="openAddVariantPanel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                                 <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
                                 Agregar Variante
                             </button>
+                        </div>
+
+                        <!-- Panel inline para crear variante -->
+                        <div id="variantCreatePanel" class="hidden mb-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+                            <h4 class="text-md font-semibold text-zinc-900 dark:text-white mb-4">Crear Variante</h4>
+                            <form id="variantInlineForm" method="POST" action="/dashboard/products/{{ $product->id }}/variants" class="space-y-4">
+                                @csrf
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre <span class="text-red-500">*</span></label>
+                                        <input type="text" name="name" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                                    </div>
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Talla</label>
+                                        <input type="text" name="size" placeholder="XS, S, M, L, XL..." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    </div>
+                                </div>
+
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Color</label>
+                                        <div class="flex gap-2">
+                                            <input type="color" id="variantColorPicker" name="color" class="h-10 w-16 rounded border border-zinc-200 dark:border-zinc-700 cursor-pointer">
+                                            <input type="text" id="variantColorText" name="color_text" placeholder="#ffffff" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código de Barras</label>
+                                        <input type="text" name="barcode" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    </div>
+                                </div>
+
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">SKU <span class="text-red-500">*</span></label>
+                                        <input type="text" name="sku" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                                    </div>
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Precio</label>
+                                        <input type="number" name="price" step="0.01" placeholder="Usa el precio del producto si está vacío" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    </div>
+                                </div>
+
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Stock <span class="text-red-500">*</span></label>
+                                        <input type="number" name="stock" min="0" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="closeAddVariantPanel()" class="rounded-lg border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700">Cancelar</button>
+                                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Guardar Variante</button>
+                                </div>
+                            </form>
                         </div>
 
                         @if($product->variants->count() > 0)
@@ -185,7 +240,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                             </svg>
                             <p class="text-zinc-600 dark:text-zinc-400 mb-4">No hay variantes creadas aún</p>
-                            <button onclick="openAddVariantModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                            <button onclick="openAddVariantPanel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                                 Crear primera variante
                             </button>
                         </div>
@@ -204,10 +259,10 @@
                     <!-- Ajuste de stock -->
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-6">Ajustar Stock</h3>
-                        
+
                         <form method="POST" action="{{ route('dashboard.products.adjustStock', $product->id) }}" class="space-y-4 max-w-lg">
                             @csrf
-                            
+
                             @if($product->variants->count() > 0)
                             <div>
                                 <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Variante <span class="text-red-500">*</span></label>
@@ -275,8 +330,8 @@
                             <div class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
                                 <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Último Movimiento</p>
                                 <p class="text-sm text-zinc-900 dark:text-white font-medium">
-                                    @if($product->inventoryMovements->latest()->first())
-                                        {{ optional($product->inventoryMovements->latest()->first()->created_at)->format('d/m/Y H:i') }}
+                                    @if($product->inventoryMovements->first())
+                                        {{ optional($product->inventoryMovements->first()->created_at)->format('d/m/Y H:i') }}
                                     @else
                                         Sin movimientos
                                     @endif
@@ -334,7 +389,7 @@
         </div>
     </div>
 
-    @include('admin.products.variant-modal')
+
 
     <script>
         function switchTab(tabName) {
@@ -353,18 +408,26 @@
             event.target.classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
         }
 
-        function openAddVariantModal() {
-            alert('Modal para agregar variante - En desarrollo');
-        }
-
-        function editVariant(variantId) {
-            alert('Editar variante ' + variantId + ' - En desarrollo');
-        }
-
-        function deleteVariant(variantId) {
-            if (confirm('¿Eliminar esta variante?')) {
-                alert('Eliminando variante ' + variantId + ' - En desarrollo');
+        // Panel inline para crear variante
+        function openAddVariantPanel() {
+            const panel = document.getElementById('variantCreatePanel');
+            if (panel) {
+                panel.classList.remove('hidden');
+                // Sincronizar color picker y texto
+                const picker = document.getElementById('variantColorPicker');
+                const text = document.getElementById('variantColorText');
+                if (picker && text) {
+                    picker.addEventListener('input', e => { text.value = e.target.value; });
+                    text.addEventListener('input', e => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { picker.value = e.target.value; } });
+                }
+                // Scroll al panel
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+        }
+
+        function closeAddVariantPanel() {
+            const panel = document.getElementById('variantCreatePanel');
+            if (panel) panel.classList.add('hidden');
         }
     </script>
 </x-layouts.app>

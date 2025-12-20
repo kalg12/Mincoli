@@ -52,7 +52,13 @@ class ProductController extends Controller
 
     public function edit($id)
     {
-        $product = Product::with(['variants', 'inventoryMovements.variant'])->findOrFail($id);
+        $product = Product::with([
+            'variants',
+            'inventoryMovements' => function ($query) {
+                $query->latest('created_at')->limit(20);
+            },
+            'inventoryMovements.variant'
+        ])->findOrFail($id);
         $categories = Category::where('is_active', true)->get();
 
         return view('admin.products.edit', compact('product', 'categories'));

@@ -1,12 +1,12 @@
 <!-- Modal para agregar/editar variante -->
-<div id="variantModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
-        <div onclick="closeVariantModal()" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity dark:bg-gray-900 dark:bg-opacity-75"></div>
+<div id="variantModal" class="hidden fixed inset-0 z-50">
+    <div class="flex h-full w-full items-center justify-center p-4">
+        <!-- Background overlay (below panel) -->
+        <div onclick="closeVariantModal()" class="fixed inset-0 z-40 bg-gray-500 bg-opacity-75 transition-opacity dark:bg-gray-900 dark:bg-opacity-75"></div>
 
-        <!-- Modal panel -->
-        <div class="inline-block align-bottom bg-white dark:bg-zinc-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white dark:bg-zinc-900 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <!-- Modal panel (above overlay) -->
+        <div class="relative z-50 w-full sm:max-w-lg rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 shadow-xl">
+            <div class="px-6 py-5">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-medium text-zinc-900 dark:text-white" id="modalTitle">Agregar Variante</h3>
                     <button onclick="closeVariantModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
@@ -97,16 +97,18 @@
         const form = document.getElementById('variantForm');
         const modal = document.getElementById('variantModal');
         const modalTitle = document.getElementById('modalTitle');
-        
+
         form.reset();
         form.querySelector('input[name="_method"]').value = 'POST';
         document.getElementById('variantId').value = '';
         modalTitle.textContent = 'Agregar Variante';
-        
-        const productId = document.querySelector('[data-product-id]')?.getAttribute('data-product-id') || window.location.pathname.split('/').pop();
+
+        // Obtener el ID del producto de la URL: /dashboard/products/{id}/edit
+        const urlParts = window.location.pathname.split('/');
+        const productId = urlParts[urlParts.length - 2]; // El -2 porque el último es 'edit'
         const action = `/dashboard/products/${productId}/variants`;
         form.action = action;
-        
+
         modal.classList.remove('hidden');
     }
 
