@@ -132,10 +132,10 @@
                                 data-sale-price="{{ $variant->sale_price ?? '' }}"
                                 data-image="{{ $variant->images()->first()?->url ?? '' }}">
                             <div class="font-medium text-gray-900">{{ $variant->name }}</div>
-                            @if($variant->size || $variant->color)
+                            @if($variant->size || ($variant->color && !str_starts_with($variant->color, '#')))
                             <div class="text-sm text-gray-600">
                                 @if($variant->size) {{ $variant->size }} @endif
-                                @if($variant->color) - {{ $variant->color }} @endif
+                                @if($variant->color && !str_starts_with($variant->color, '#')) - {{ $variant->color }} @endif
                             </div>
                             @endif
                             <div class="flex justify-between items-center mt-2 flex-wrap gap-2">

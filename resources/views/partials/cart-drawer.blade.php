@@ -130,7 +130,7 @@ function renderCart() {
             <div class="flex items-start gap-3">
                 <div class="relative overflow-hidden bg-gray-100 rounded-lg w-20 h-20 flex-shrink-0">
                     ${item.product.image && item.product.image !== '/images/placeholder.jpg'
-                        ? `<img src="${item.product.image}" alt="${item.product.name}" class="w-full h-full object-contain p-1">`
+                        ? `<img src="${item.product.image}" alt="${item.product.name}" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'><i class=\\'fas fa-image text-gray-300 text-2xl\\'></i></div>'">`
                         : `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-image text-gray-300 text-2xl"></i></div>`
                     }
                 </div>
@@ -142,7 +142,7 @@ function renderCart() {
                                 <i class="fas fa-times text-sm"></i>
                             </button>
                         </div>
-                        ${item.variant ? `<p class="text-xs text-gray-700 mb-1">Variante: <span class="font-medium">${item.variant.name}</span>${(item.variant.size || item.variant.color) ? ` — ${item.variant.size || ''} ${item.variant.color ? '· ' + item.variant.color : ''}` : ''}</p>` : ''}
+                        ${item.variant ? `<p class="text-xs text-gray-700 mb-1">Variante: <span class="font-medium">${item.variant.name}</span>${(item.variant.size || (item.variant.color && !item.variant.color.startsWith('#'))) ? ` — ${item.variant.size || ''} ${item.variant.color && !item.variant.color.startsWith('#') ? '· ' + item.variant.color : ''}` : ''}</p>` : ''}
                         <p class="text-xs text-gray-500 mb-2">${item.variant && item.variant.sku ? item.variant.sku : item.product.sku}</p>
 
                         <!-- Price Display with Discount -->
@@ -192,16 +192,16 @@ function renderRecommendations() {
                <span class="text-xs line-through text-gray-500 decoration-gray-500 decoration-1">$${parseFloat(rec.original_price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>`
             : `<span class="text-xs font-bold text-pink-600">$${parseFloat(rec.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>`;
 
-        // Imagen
+        // Imagen (igual al carrito)
         const imageHtml = rec.image && rec.image !== '/images/placeholder.jpg'
-            ? `<img src="${rec.image}" alt="${rec.name}" class="w-full h-full object-contain p-2">`
+            ? `<img src="${rec.image}" alt="${rec.name}" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\'><i class=\\'fas fa-image text-gray-300 text-2xl\\'></i></div>'">`
             : `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-image text-gray-300 text-2xl"></i></div>`;
 
         // Selector de variantes
         let actionHtml = '';
         if (rec.has_variants) {
             const variantOptions = (rec.variants || []).map(v => {
-                const variantLabel = v.name + (v.size ? ` — ${v.size}` : '') + (v.color ? ` · ${v.color}` : '');
+                const variantLabel = v.name + (v.size ? ` — ${v.size}` : '') + (v.color && !v.color.startsWith('#') ? ` · ${v.color}` : '');
                 const stockStatus = v.stock > 0 ? '' : ' (Agotado)';
                 const disabled = v.stock <= 0 ? 'disabled' : '';
                 return `<option value="${v.id}" ${disabled}>${variantLabel}${stockStatus}</option>`;
@@ -224,20 +224,21 @@ function renderRecommendations() {
         }
 
         return `
-        <div class="bg-gradient-to-r from-gray-50 to-white rounded-lg p-3 hover:shadow-lg transition border border-gray-200 hover:border-pink-300">
-            <div class="flex gap-3 items-start">
+        <div class="bg-white rounded-lg p-3 hover:shadow-md transition border border-gray-200 hover:border-pink-300">
+            <div class="flex items-start gap-3">
                 <div class="relative overflow-hidden bg-gray-100 rounded-lg w-20 h-20 flex-shrink-0">
                     ${imageHtml}
                 </div>
-                <div class="flex-1 min-w-0">
-                    <a href="/tienda/producto/${rec.slug}" class="text-xs font-semibold text-gray-900 hover:text-pink-600 line-clamp-2 block transition">
-                        ${rec.name}
-                    </a>
-                    <div class="mt-1 flex items-center justify-between">
+                <div class="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                        <a href="/tienda/producto/${rec.slug}" class="text-xs font-semibold text-gray-900 hover:text-pink-600 line-clamp-2 block transition mb-1">
+                            ${rec.name}
+                        </a>
                         <div class="flex items-baseline gap-1">${priceHtml}</div>
-                        ${!rec.has_variants ? actionHtml : ''}
                     </div>
-                    ${rec.has_variants ? actionHtml : ''}
+                    <div class="mt-2">
+                        ${rec.has_variants ? actionHtml : actionHtml}
+                    </div>
                 </div>
             </div>
         </div>`;
@@ -308,10 +309,9 @@ function updateTotals() {
     document.getElementById('cart-total').textContent = `$${window.cartData.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
     document.getElementById('cart-count').textContent = `(${window.cartData.items.length})`;
 
-    // Mostrar/ocultar línea de IVA según configuración
+    // Controlar visibilidad del IVA: solo mostrar si está activado Y el valor es > 0
     const ivaRow = document.getElementById('cart-iva-row');
     if (ivaRow) {
-        // Ocultar si show_iva es false O si el IVA es 0
         if (window.cartData.show_iva && window.cartData.iva > 0) {
             ivaRow.style.display = 'flex';
         } else {
@@ -346,6 +346,8 @@ function recalculateTotals() {
     window.cartData.subtotal = subtotal;
     window.cartData.iva = iva;
     window.cartData.total = total;
+
+    updateTotals();
 }
 
 // Actualizar cantidad (con optimistic UI y cola de solicitudes)

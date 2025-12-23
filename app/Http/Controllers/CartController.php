@@ -342,6 +342,7 @@ class CartController extends Controller
                 'stock' => $product->stock,
                 'has_variants' => $product->variants->count() > 0,
                 'variants' => $product->variants->map(function ($v) use ($product) {
+                    $productBaseImage = $product->images->first()?->url ?? '/images/placeholder.jpg';
                     return [
                         'id' => $v->id,
                         'name' => $v->name,
@@ -351,7 +352,7 @@ class CartController extends Controller
                         'sale_price' => $v->sale_price,
                         'stock' => $v->stock,
                         'sku' => $v->sku,
-                        'image' => $v->images()->first()?->url ?? null,
+                        'image' => $v->images()->first()?->url ?? $productBaseImage,
                     ];
                 })->values(),
             ];

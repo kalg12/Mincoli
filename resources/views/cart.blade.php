@@ -31,7 +31,11 @@
                             @if($imageUrl)
                             <img src="{{ $imageUrl }}"
                                  alt="{{ $item->product->name }}"
-                                 class="w-full h-full object-contain p-2">
+                                 class="w-full h-full object-contain p-2"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="w-full h-full items-center justify-center" style="display: none;">
+                                <i class="fas fa-image text-gray-300 text-3xl"></i>
+                            </div>
                             @else
                             <div class="w-full h-full flex items-center justify-center">
                                 <i class="fas fa-image text-gray-300 text-3xl"></i>
@@ -46,8 +50,8 @@
                             @if($item->variant)
                                 <p class="text-sm text-gray-700 mb-1">
                                     Variante: <span class="font-medium">{{ $item->variant->name }}</span>
-                                    @if($item->variant->size || $item->variant->color)
-                                        <span class="text-gray-600">— {{ $item->variant->size }} {{ $item->variant->color ? '· '.$item->variant->color : '' }}</span>
+                                    @if($item->variant->size || ($item->variant->color && !str_starts_with($item->variant->color, '#')))
+                                        <span class="text-gray-600">— {{ $item->variant->size }} {{ ($item->variant->color && !str_starts_with($item->variant->color, '#')) ? '· '.$item->variant->color : '' }}</span>
                                     @endif
                                 </p>
                                 <p class="text-sm text-gray-600 mb-3">SKU: {{ $item->variant->sku ?? $item->product->sku }}</p>
