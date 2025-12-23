@@ -67,33 +67,41 @@ class ProductController extends Controller
         $payload['is_featured'] = $request->boolean('is_featured');
         $payload['cost'] = $validated['cost'] ?? ($validated['price'] * 0.6);
 
-        $product = Product::create($payload);
+        $product = DB::transaction(function () use ($payload, $request) {
+            $product = Product::create($payload);
 
-        $position = 0;
+            $position = 0;
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('product-images', 'public');
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('product-images', 'public');
 
-            /** @var FilesystemAdapter $publicDisk */
-            $publicDisk = Storage::disk('public');
+                /** @var FilesystemAdapter $publicDisk */
+                $publicDisk = Storage::disk('public');
 
-            ProductImage::create([
-                'product_id' => $product->id,
-                'url' => $publicDisk->url($path),
-                'position' => $position++,
-            ]);
-        }
-
-        if ($request->filled('image_url')) {
-            $storedUrl = $this->downloadAndStoreDriveImage($request->input('image_url'));
-            if ($storedUrl) {
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'url' => $storedUrl,
-                    'position' => $position,
+                    'url' => $publicDisk->url($path),
+                    'position' => $position++,
                 ]);
             }
-        }
+
+            if ($request->filled('image_url')) {
+                $storedUrl = $this->downloadAndStoreDriveImage($request->input('image_url'));
+                if ($storedUrl) {
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'url' => $storedUrl,
+                        'position' => $position,
+                    ]);
+                }
+            }
+
+            if (($product->stock ?? 0) > 0) {
+                $this->recordMovement($product, null, 'in', (int) $product->stock, 'Stock inicial');
+            }
+
+            return $product;
+        });
 
         return redirect()
             ->route('dashboard.products.index')
@@ -117,6 +125,7 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
+        $previousStock = (int) $product->stock;
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -142,33 +151,44 @@ class ProductController extends Controller
             $payload['slug'] = $this->generateUniqueSlug($validated['name'], $product->id);
         }
 
-        $product->update($payload);
+        DB::transaction(function () use ($product, $payload, $request, $previousStock) {
+            $product->update($payload);
 
-        $position = ($product->images()->max('position') ?? -1) + 1;
+            $position = ($product->images()->max('position') ?? -1) + 1;
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('product-images', 'public');
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('product-images', 'public');
 
-            /** @var FilesystemAdapter $publicDisk */
-            $publicDisk = Storage::disk('public');
+                /** @var FilesystemAdapter $publicDisk */
+                $publicDisk = Storage::disk('public');
 
-            ProductImage::create([
-                'product_id' => $product->id,
-                'url' => $publicDisk->url($path),
-                'position' => $position++,
-            ]);
-        }
-
-        if ($request->filled('image_url')) {
-            $storedUrl = $this->downloadAndStoreDriveImage($request->input('image_url'));
-            if ($storedUrl) {
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'url' => $storedUrl,
-                    'position' => $position,
+                    'url' => $publicDisk->url($path),
+                    'position' => $position++,
                 ]);
             }
-        }
+
+            if ($request->filled('image_url')) {
+                $storedUrl = $this->downloadAndStoreDriveImage($request->input('image_url'));
+                if ($storedUrl) {
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'url' => $storedUrl,
+                        'position' => $position,
+                    ]);
+                }
+            }
+
+            if (array_key_exists('stock', $payload)) {
+                $newStock = (int) $payload['stock'];
+                $diff = $newStock - $previousStock;
+                if ($diff !== 0) {
+                    $type = $diff > 0 ? 'in' : 'out';
+                    $this->recordMovement($product, null, $type, abs($diff), 'Actualización de stock del producto');
+                }
+            }
+        });
 
         $hasNewImage = $request->hasFile('image') || $request->filled('image_url');
         $message = $hasNewImage ? 'Producto e imagen actualizados correctamente' : 'Producto actualizado correctamente';
@@ -281,21 +301,27 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:5120',
         ]);
 
-        $variant = $product->variants()->create($validated);
+        DB::transaction(function () use ($product, $validated, $request, $productId) {
+            $variant = $product->variants()->create($validated);
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('product-images', 'public');
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('product-images', 'public');
 
-            /** @var FilesystemAdapter $publicDisk */
-            $publicDisk = Storage::disk('public');
+                /** @var FilesystemAdapter $publicDisk */
+                $publicDisk = Storage::disk('public');
 
-            ProductImage::create([
-                'product_id' => $productId,
-                'variant_id' => $variant->id,
-                'url' => $publicDisk->url($path),
-                'position' => 0,
-            ]);
-        }
+                ProductImage::create([
+                    'product_id' => $productId,
+                    'variant_id' => $variant->id,
+                    'url' => $publicDisk->url($path),
+                    'position' => 0,
+                ]);
+            }
+
+            if (($variant->stock ?? 0) > 0) {
+                $this->recordMovement($product, $variant, 'in', (int) $variant->stock, 'Stock inicial de variante');
+            }
+        });
 
         return redirect()
             ->route('dashboard.products.edit', $productId)
@@ -306,6 +332,7 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($productId);
         $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
+        $previousStock = (int) $variant->stock;
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -318,21 +345,30 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:5120',
         ]);
 
-        $variant->update($validated);
+        DB::transaction(function () use ($variant, $validated, $request, $product, $productId, $previousStock) {
+            $variant->update($validated);
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('product-images', 'public');
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('product-images', 'public');
 
-            /** @var FilesystemAdapter $publicDisk */
-            $publicDisk = Storage::disk('public');
+                /** @var FilesystemAdapter $publicDisk */
+                $publicDisk = Storage::disk('public');
 
-            ProductImage::create([
-                'product_id' => $productId,
-                'variant_id' => $variant->id,
-                'url' => $publicDisk->url($path),
-                'position' => 0,
-            ]);
-        }
+                ProductImage::create([
+                    'product_id' => $productId,
+                    'variant_id' => $variant->id,
+                    'url' => $publicDisk->url($path),
+                    'position' => 0,
+                ]);
+            }
+
+            $newStock = (int) $variant->stock;
+            $diff = $newStock - $previousStock;
+            if ($diff !== 0) {
+                $type = $diff > 0 ? 'in' : 'out';
+                $this->recordMovement($product, $variant, $type, abs($diff), 'Stock de variante actualizado');
+            }
+        });
 
         return back()->with('success', 'Variante actualizada correctamente');
     }
@@ -450,6 +486,21 @@ class ProductController extends Controller
         $products = Product::with('category')->whereIn('id', $productIds)->get();
 
         return view('admin.products.print-labels', compact('products'));
+    }
+
+    private function recordMovement(Product $product, ?ProductVariant $variant, string $type, int $quantity, string $reason): void
+    {
+        if ($quantity <= 0) {
+            return;
+        }
+
+        $product->inventoryMovements()->create([
+            'variant_id' => $variant?->id,
+            'type' => $type,
+            'quantity' => $quantity,
+            'reason' => $reason,
+            'created_by' => Auth::id(),
+        ]);
     }
 
     private function downloadAndStoreDriveImage(?string $url): ?string
