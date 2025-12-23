@@ -315,7 +315,7 @@ function updateTotals() {
         const shouldShow = window.cartData.show_iva && window.cartData.iva > 0;
         const currentDisplay = window.getComputedStyle(ivaRow).display;
         const isCurrentlyVisible = currentDisplay !== 'none';
-        
+
         // Solo cambiar si el estado deseado es diferente del actual
         if (shouldShow && !isCurrentlyVisible) {
             ivaRow.style.display = 'flex';
