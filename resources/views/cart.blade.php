@@ -27,8 +27,9 @@
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="flex items-start gap-4">
                         <div class="w-24 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-                            @if($item->product->images->first())
-                            <img src="{{ $item->product->images->first()->url }}"
+                            @php $imageUrl = $item->image_url ?? ($item->variant?->images()->first()?->url ?? $item->product->images->first()?->url); @endphp
+                            @if($imageUrl)
+                            <img src="{{ $imageUrl }}"
                                  alt="{{ $item->product->name }}"
                                  class="w-full h-full object-contain p-2">
                             @else
@@ -42,7 +43,17 @@
                                class="font-semibold text-gray-900 hover:text-pink-600 text-lg mb-1 block">
                                 {{ $item->product->name }}
                             </a>
-                            <p class="text-sm text-gray-600 mb-3">SKU: {{ $item->product->sku }}</p>
+                            @if($item->variant)
+                                <p class="text-sm text-gray-700 mb-1">
+                                    Variante: <span class="font-medium">{{ $item->variant->name }}</span>
+                                    @if($item->variant->size || $item->variant->color)
+                                        <span class="text-gray-600">— {{ $item->variant->size }} {{ $item->variant->color ? '· '.$item->variant->color : '' }}</span>
+                                    @endif
+                                </p>
+                                <p class="text-sm text-gray-600 mb-3">SKU: {{ $item->variant->sku ?? $item->product->sku }}</p>
+                            @else
+                                <p class="text-sm text-gray-600 mb-3">SKU: {{ $item->product->sku }}</p>
+                            @endif
 
                             <!-- Price with discount -->
                             <div class="mb-3">
@@ -63,11 +74,13 @@
                                         <i class="fas fa-minus text-sm"></i>
                                     </button>
                                     <span class="px-4 py-2 border-x-2 border-gray-300 font-semibold min-w-[3rem] text-center">{{ $item->quantity }}</span>
-                                    <button type="submit" name="quantity" value="{{ $item->quantity + 1 }}"
-                                            class="px-3 py-2 text-gray-600 hover:bg-gray-100 transition">
+                                    <button type="submit" name="quantity" value="{{ min($item->max_stock ?? $item->product->total_stock ?? 0, $item->quantity + 1) }}"
+                                            class="px-3 py-2 text-gray-600 hover:bg-gray-100 transition {{ ($item->quantity >= ($item->max_stock ?? $item->product->total_stock ?? 0)) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                            {{ ($item->quantity >= ($item->max_stock ?? $item->product->total_stock ?? 0)) ? 'disabled' : '' }}>
                                         <i class="fas fa-plus text-sm"></i>
                                     </button>
                                 </form>
+                                <div class="text-sm text-gray-600">{{ ($item->max_stock ?? $item->product->total_stock ?? 0) }} disponibles</div>
                                 <form action="{{ route('cart.remove', $item->id) }}" method="POST">
                                     @csrf
                                     @method('DELETE')

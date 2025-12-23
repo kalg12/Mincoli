@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -121,11 +124,22 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:100',
             'price' => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|max:5120',
         ]);
 
         $validated['product_id'] = $productId;
+        $variant = $product->variants()->create($validated);
 
-        $product->variants()->create($validated);
+        // Imagen opcional de la variante
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/product-images');
+            ProductImage::create([
+                'product_id' => $productId,
+                'variant_id' => $variant->id,
+                'url' => Storage::url($path),
+                'position' => 0,
+            ]);
+        }
 
         return redirect()
             ->route('dashboard.products.edit', $productId)
@@ -145,9 +159,21 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:100',
             'price' => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|max:5120',
         ]);
 
         $variant->update($validated);
+
+        // Imagen opcional al actualizar
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/product-images');
+            ProductImage::create([
+                'product_id' => $productId,
+                'variant_id' => $variant->id,
+                'url' => Storage::url($path),
+                'position' => 0,
+            ]);
+        }
 
         return redirect()
             ->route('dashboard.products.edit', $productId)
@@ -202,7 +228,7 @@ class ProductController extends Controller
             'type' => $type,
             'quantity' => $quantity,
             'reason' => $validated['reason'],
-            'created_by' => auth()->id(),
+            'created_by' => Auth::id(),
         ]);
 
         return redirect()

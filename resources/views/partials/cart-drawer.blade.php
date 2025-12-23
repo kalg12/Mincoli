@@ -142,7 +142,8 @@ function renderCart() {
                                 <i class="fas fa-times text-sm"></i>
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mb-2">${item.product.sku}</p>
+                        ${item.variant ? `<p class="text-xs text-gray-700 mb-1">Variante: <span class="font-medium">${item.variant.name}</span>${(item.variant.size || item.variant.color) ? ` — ${item.variant.size || ''} ${item.variant.color ? '· ' + item.variant.color : ''}` : ''}</p>` : ''}
+                        <p class="text-xs text-gray-500 mb-2">${item.variant && item.variant.sku ? item.variant.sku : item.product.sku}</p>
 
                         <!-- Price Display with Discount -->
                         <div class="mb-2">
@@ -153,14 +154,15 @@ function renderCart() {
 
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
-                            <button type="button" onclick="window.updateQuantity('${item.id}', ${item.quantity - 1})" class="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition">
+                            <button type="button" onclick="window.updateQuantity('${item.id}', Math.max(1, ${item.quantity - 1}))" class="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition">
                                 <i class="fas fa-minus text-[10px]"></i>
                             </button>
                             <span class="px-3 py-1.5 text-sm font-semibold min-w-[2rem] text-center">${item.quantity}</span>
-                            <button type="button" onclick="window.updateQuantity('${item.id}', ${item.quantity + 1})" class="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition">
+                            <button type="button" ${item.quantity >= item.max_stock ? 'disabled' : ''} onclick="window.updateQuantity('${item.id}', Math.min(${item.max_stock}, ${item.quantity + 1}))" class="px-2.5 py-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition ${item.quantity >= item.max_stock ? 'opacity-50 cursor-not-allowed' : ''}">
                                 <i class="fas fa-plus text-[10px]"></i>
                             </button>
                         </div>
+                        <div class="text-xs text-gray-500">${item.max_stock > 0 ? (item.max_stock + ' disponibles') : 'Sin stock'}</div>
                         <div class="text-right">
                             <span class="text-sm font-bold text-pink-600">$${(parseFloat(item.subtotal) || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
                         </div>
@@ -315,6 +317,13 @@ window.updateQuantity = async function(itemId, newQuantity) {
 
     const itemIndex = window.cartData.items.findIndex(item => item.id === itemId);
     if (itemIndex === -1) return;
+
+    // Clamp to max stock
+    const maxStock = parseInt(window.cartData.items[itemIndex].max_stock || 0);
+    if (maxStock > 0 && newQuantity > maxStock) {
+        newQuantity = maxStock;
+        showToast('Alcanzaste el stock disponible', 'info');
+    }
 
     // Actualizar localmente (optimistic update)
     const newSubtotal = parseFloat(window.cartData.items[itemIndex].unit_price) * newQuantity;

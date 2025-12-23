@@ -23,12 +23,30 @@ class CartController extends Controller
             $product = Product::with(['images', 'variants'])->find($item['product_id']);
             if (!$product) return null;
 
+            $variant = null;
+            $unitPrice = $product->sale_price ?? $product->price;
+            $maxStock = $product->stock ?? $product->total_stock ?? 0;
+            $imageUrl = $product->images->first()?->url ?? '/images/placeholder.jpg';
+
+            if (!empty($item['variant_id'])) {
+                $variant = $product->variants->firstWhere('id', $item['variant_id']);
+                if ($variant) {
+                    // Si la variante tiene precio, usarlo
+                    $unitPrice = $variant->sale_price ?? ($variant->price ?? $unitPrice);
+                    $maxStock = (int) $variant->stock;
+                    $imageUrl = $variant->images()->first()?->url ?? $imageUrl;
+                }
+            }
+
             return (object)[
                 'id' => $item['id'],
                 'product' => $product,
+                'variant' => $variant,
                 'quantity' => $item['quantity'],
-                'unit_price' => $product->sale_price ?? $product->price,
-                'subtotal' => ($product->sale_price ?? $product->price) * $item['quantity']
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $item['quantity'],
+                'max_stock' => $maxStock,
+                'image_url' => $imageUrl
             ];
         })->filter();
 
@@ -63,7 +81,8 @@ class CartController extends Controller
         try {
             $request->validate([
                 'product_id' => 'required|exists:products,id',
-                'quantity' => 'required|integer|min:1'
+                'quantity' => 'required|integer|min:1',
+                'variant_id' => 'nullable|integer'
             ]);
 
             $product = Product::with('variants')->findOrFail($request->product_id);
@@ -75,8 +94,33 @@ class CartController extends Controller
                 'total_stock' => $product->total_stock
             ]);
 
-            // Verificar stock disponible
+            // Verificar stock disponible (si se selecciona variante, usar su stock)
             $availableStock = $product->total_stock;
+            $selectedVariantId = $request->input('variant_id');
+
+            // Si el producto tiene variantes, exigir selección de variante
+            if ($product->variants->count() > 0 && empty($selectedVariantId)) {
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Por favor selecciona una variante'
+                    ], 422);
+                }
+                return back()->with('error', 'Por favor selecciona una variante');
+            }
+            if ($selectedVariantId) {
+                $variant = $product->variants->firstWhere('id', (int)$selectedVariantId);
+                if (!$variant) {
+                    if (request()->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'La variante seleccionada no pertenece al producto'
+                        ], 422);
+                    }
+                    return back()->with('error', 'La variante seleccionada no pertenece al producto');
+                }
+                $availableStock = $variant->stock;
+            }
             if ($availableStock < $request->quantity) {
                 Log::warning('Insufficient stock', [
                     'available' => $availableStock,
@@ -104,10 +148,10 @@ class CartController extends Controller
 
         $cart = session()->get('cart', []);
 
-        // Verificar si el producto ya existe en el carrito
+        // Verificar si el producto (y variante si aplica) ya existe en el carrito
         $existingKey = null;
         foreach ($cart as $key => $item) {
-            if ($item['product_id'] == $request->product_id) {
+            if ($item['product_id'] == $request->product_id && (($item['variant_id'] ?? null) == ($selectedVariantId ?? null))) {
                 $existingKey = $key;
                 break;
             }
@@ -134,6 +178,7 @@ class CartController extends Controller
             $cart[] = [
                 'id' => uniqid(),
                 'product_id' => $request->product_id,
+                'variant_id' => $selectedVariantId,
                 'quantity' => $request->quantity
             ];
         }
@@ -164,21 +209,44 @@ class CartController extends Controller
         ]);
 
         $cart = session()->get('cart', []);
+        $updated = false;
+        $message = 'Carrito actualizado';
 
         foreach ($cart as $key => $item) {
             if ($item['id'] == $id) {
-                $cart[$key]['quantity'] = $request->quantity;
+                // Obtener producto y variante para validar stock
+                $product = Product::with('variants')->find($item['product_id']);
+                if (!$product) break;
+
+                $availableStock = $product->total_stock;
+                if (!empty($item['variant_id'])) {
+                    $variant = $product->variants->firstWhere('id', $item['variant_id']);
+                    if ($variant) {
+                        $availableStock = (int) $variant->stock;
+                    }
+                }
+
+                $newQty = (int) $request->quantity;
+                if ($newQty > $availableStock) {
+                    $newQty = max(1, (int) $availableStock);
+                    $message = 'Cantidad ajustada al stock disponible';
+                }
+
+                $cart[$key]['quantity'] = $newQty;
+                $updated = true;
                 break;
             }
         }
 
-        session()->put('cart', $cart);
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Carrito actualizado']);
+        if ($updated) {
+            session()->put('cart', $cart);
         }
 
-        return back()->with('success', 'Carrito actualizado');
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function remove($id)
@@ -212,7 +280,20 @@ class CartController extends Controller
             $product = Product::with(['images', 'variants'])->find($item['product_id']);
             if (!$product) return null;
 
+            $variant = null;
             $unitPrice = $product->sale_price ?? $product->price;
+            $maxStock = $product->stock ?? $product->total_stock ?? 0;
+            $imageUrl = $product->images->first()?->url ?? '/images/placeholder.jpg';
+
+            if (!empty($item['variant_id'])) {
+                $variant = $product->variants->firstWhere('id', $item['variant_id']);
+                if ($variant) {
+                    $unitPrice = $variant->sale_price ?? ($variant->price ?? $unitPrice);
+                    $maxStock = (int) $variant->stock;
+                    $imageUrl = $variant->images()->first()?->url ?? $imageUrl;
+                }
+            }
+
             $quantity = $item['quantity'];
 
             return [
@@ -222,11 +303,19 @@ class CartController extends Controller
                     'name' => $product->name,
                     'sku' => $product->sku,
                     'slug' => $product->slug,
-                    'image' => $product->images->first()?->url ?? '/images/placeholder.jpg'
+                    'image' => $imageUrl
                 ],
+                'variant' => $variant ? [
+                    'id' => $variant->id,
+                    'name' => $variant->name,
+                    'sku' => $variant->sku,
+                    'size' => $variant->size,
+                    'color' => $variant->color
+                ] : null,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
-                'subtotal' => $unitPrice * $quantity
+                'subtotal' => $unitPrice * $quantity,
+                'max_stock' => $maxStock
             ];
         })->filter();
 

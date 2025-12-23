@@ -16,7 +16,7 @@
                     </button>
                 </div>
 
-                <form id="variantForm" method="POST" class="space-y-4">
+                <form id="variantForm" method="POST" class="space-y-4" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="_method" value="POST">
                     <input type="hidden" id="variantId" name="variant_id" value="">
@@ -60,6 +60,11 @@
                             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Stock <span class="text-red-500">*</span></label>
                             <input type="number" name="stock" required min="0" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Imagen de la variante (opcional)</label>
+                        <input type="file" name="image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
                     </div>
                 </form>
             </div>

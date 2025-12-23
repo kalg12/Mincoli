@@ -14,13 +14,13 @@
         <!-- Tabs Navigation -->
         <div class="border-b border-zinc-200 bg-white px-6 dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex gap-8">
-                <button onclick="switchTab('general')" class="tab-btn py-4 px-1 border-b-2 border-blue-600 text-blue-600 font-medium dark:text-blue-400 dark:border-blue-400">
+                <button type="button" onclick="switchTab(event, 'general')" class="tab-btn py-4 px-1 border-b-2 border-blue-600 text-blue-600 font-medium dark:text-blue-400 dark:border-blue-400">
                     Información General
                 </button>
-                <button onclick="switchTab('variants')" class="tab-btn py-4 px-1 border-b-2 border-transparent text-zinc-600 font-medium hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+                <button type="button" onclick="switchTab(event, 'variants')" class="tab-btn py-4 px-1 border-b-2 border-transparent text-zinc-600 font-medium hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
                     Variantes ({{ $product->variants->count() }})
                 </button>
-                <button onclick="switchTab('inventory')" class="tab-btn py-4 px-1 border-b-2 border-transparent text-zinc-600 font-medium hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
+                <button type="button" onclick="switchTab(event, 'inventory')" class="tab-btn py-4 px-1 border-b-2 border-transparent text-zinc-600 font-medium hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
                     Inventario
                 </button>
             </div>
@@ -137,7 +137,7 @@
                         <!-- Panel inline para crear variante -->
                         <div id="variantCreatePanel" class="hidden mb-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                             <h4 class="text-md font-semibold text-zinc-900 dark:text-white mb-4">Crear Variante</h4>
-                            <form id="variantInlineForm" method="POST" action="/dashboard/products/{{ $product->id }}/variants" class="space-y-4">
+                            <form id="variantInlineForm" method="POST" action="/dashboard/products/{{ $product->id }}/variants" class="space-y-4" enctype="multipart/form-data">
                                 @csrf
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
@@ -180,6 +180,10 @@
                                         <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Stock <span class="text-red-500">*</span></label>
                                         <input type="number" name="stock" min="0" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
                                     </div>
+                                    <div>
+                                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Imagen de la variante (opcional)</label>
+                                        <input type="file" name="image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    </div>
                                 </div>
 
                                 <div class="flex justify-end gap-2">
@@ -210,7 +214,7 @@
                                         <td class="px-4 py-3 text-zinc-900 dark:text-white">
                                             @if($variant->color)
                                                 <span class="inline-flex items-center gap-2">
-                                                    <span class="w-4 h-4 rounded border border-zinc-300" style="background-color: {{ $variant->color }};"></span>
+                                                    <span class="w-4 h-4 rounded border border-zinc-300 js-variant-color" data-color="{{ $variant->color }}"></span>
                                                     {{ $variant->color }}
                                                 </span>
                                             @else
@@ -392,7 +396,14 @@
 
 
     <script>
-        function switchTab(tabName) {
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.js-variant-color').forEach(function (el) {
+                const color = el.getAttribute('data-color');
+                if (color) el.style.backgroundColor = color;
+            });
+        });
+
+        function switchTab(e, tabName) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.add('hidden');
@@ -404,8 +415,11 @@
 
             // Show selected tab
             document.getElementById(tabName).classList.remove('hidden');
-            event.target.classList.remove('border-transparent', 'text-zinc-600', 'dark:text-zinc-400');
-            event.target.classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
+            const activeBtn = e.currentTarget;
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-zinc-600', 'dark:text-zinc-400');
+                activeBtn.classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
+            }
         }
 
         // Panel inline para crear variante
@@ -417,8 +431,23 @@
                 const picker = document.getElementById('variantColorPicker');
                 const text = document.getElementById('variantColorText');
                 if (picker && text) {
-                    picker.addEventListener('input', e => { text.value = e.target.value; });
-                    text.addEventListener('input', e => { if (/^#[0-9A-F]{6}$/i.test(e.target.value)) { picker.value = e.target.value; } });
+                    if (!panel.dataset.bound) {
+                        panel.dataset.bound = '1';
+                        picker.addEventListener('input', function (e) {
+                            const target = e.target;
+                            if (target && 'value' in target) {
+                                text.value = target.value;
+                            }
+                        });
+                        text.addEventListener('input', function (e) {
+                            const target = e.target;
+                            if (target && 'value' in target) {
+                                if (/^#[0-9A-F]{6}$/i.test(target.value)) {
+                                    picker.value = target.value;
+                                }
+                            }
+                        });
+                    }
                 }
                 // Scroll al panel
                 panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
