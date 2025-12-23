@@ -133,16 +133,20 @@
 
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Imágenes</h3>
+                        @php
+                            $imageInputBorder = $errors->has('image') ? 'border-red-500' : 'border-zinc-200';
+                            $imageUrlInputBorder = $errors->has('image_url') ? 'border-red-500' : 'border-zinc-200';
+                        @endphp
                         <div class="grid md:grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Subir imagen</label>
-                                <input type="file" name="image" accept="image/*" class="w-full rounded-lg border @error('image') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                <input type="file" name="image" accept="image/*" class="w-full rounded-lg border {{ $imageInputBorder }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
                                 @error('image')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">PNG, JPG, WEBP hasta 5MB.</p>
                             </div>
                             <div class="space-y-2">
                                 <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Enlace público (Google Drive)</label>
-                                <input type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" class="w-full rounded-lg border @error('image_url') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                                <input type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" class="w-full rounded-lg border {{ $imageUrlInputBorder }} bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
                                 @error('image_url')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Pega el enlace público de Drive; se convierte a vista directa automáticamente.</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
@@ -151,11 +155,11 @@
                         <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-500">Las imágenes nuevas se añaden a las existentes (no se eliminan). La subida se coloca primero.</p>
 
                         @if($product->images->count() > 0)
-                        <div class="mt-6">
+                        <div id="currentImagesSection" class="mt-6">
                             <h4 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3">Imágenes actuales</h4>
-                            <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+                            <div id="currentImagesGrid" class="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
                                 @foreach($product->images as $image)
-                                <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center gap-2">
+                                <div data-image-card="1" data-image-id="{{ $image->id }}" class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center gap-2">
                                     <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-24 object-contain">
                                     <button type="button"
                                             class="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white"
@@ -567,56 +571,78 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.js-variant-color').forEach(function (el) {
-                const color = el.getAttribute('data-color');
-                if (color) el.style.backgroundColor = color;
-            });
-
-            // Bind variant action buttons without inline Blade JS to avoid editor diagnostics
-            document.querySelectorAll('.js-edit-variant').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = btn.getAttribute('data-variant-id');
-                    if (typeof editVariant === 'function' && id) {
-                        editVariant(Number(id));
-                    }
-                });
-            });
-
-            document.querySelectorAll('.js-delete-variant').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const id = btn.getAttribute('data-variant-id');
-                    if (typeof deleteVariant === 'function' && id) {
-                        deleteVariant(Number(id));
-                    }
-                });
-            });
-        });
-
-        function submitDeleteImage(button) {
+        async function submitDeleteImage(button) {
             var action = button.getAttribute('data-delete-image-action');
             if (!action) return;
             if (!confirm('¿Eliminar esta imagen?')) return;
 
-            var form = document.createElement('form');
-            form.method = 'POST';
-            form.action = action;
-            form.style.display = 'none';
+            // UX: avoid page reload/redirect; remove the card locally on success
+            button.disabled = true;
+            button.classList.add('opacity-60', 'cursor-not-allowed');
 
-            var token = document.createElement('input');
-            token.type = 'hidden';
-            token.name = '_token';
-            token.value = '{{ csrf_token() }}';
+            try {
+                var fd = new FormData();
+                fd.append('_token', '{{ csrf_token() }}');
+                fd.append('_method', 'DELETE');
 
-            var method = document.createElement('input');
-            method.type = 'hidden';
-            method.name = '_method';
-            method.value = 'DELETE';
+                var res = await fetch(action, {
+                    method: 'POST',
+                    body: fd,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json, text/plain, */*'
+                    },
+                    redirect: 'follow'
+                });
 
-            form.appendChild(token);
-            form.appendChild(method);
-            document.body.appendChild(form);
-            form.submit();
+                if (!res.ok) {
+                    throw new Error('Delete failed: ' + res.status);
+                }
+
+                var card = button.closest('[data-image-card]');
+                if (card) {
+                    card.remove();
+                }
+
+                var grid = document.getElementById('currentImagesGrid');
+                var section = document.getElementById('currentImagesSection');
+                if (grid && section) {
+                    var remaining = grid.querySelectorAll('[data-image-card]').length;
+                    if (remaining === 0) {
+                        // If it was the last image, hide the section so it can't "jump" the UI.
+                        section.classList.add('hidden');
+                    }
+                }
+            } catch (err) {
+                // Fallback: keep old behavior if fetch is blocked (no logic change)
+                console.error(err);
+
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = action;
+                form.style.display = 'none';
+
+                var token = document.createElement('input');
+                token.type = 'hidden';
+                token.name = '_token';
+                token.value = '{{ csrf_token() }}';
+
+                var method = document.createElement('input');
+                method.type = 'hidden';
+                method.name = '_method';
+                method.value = 'DELETE';
+
+                form.appendChild(token);
+                form.appendChild(method);
+                document.body.appendChild(form);
+                form.submit();
+            } finally {
+                // If we removed the card, the button may no longer exist in DOM; guard it.
+                if (button && button.classList) {
+                    button.disabled = false;
+                    button.classList.remove('opacity-60', 'cursor-not-allowed');
+                }
+            }
         }
 
         function switchTab(e, tabName) {
