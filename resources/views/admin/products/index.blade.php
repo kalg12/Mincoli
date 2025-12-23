@@ -85,7 +85,12 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <span class="@if($product->stock == 0) rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400 @elseif($product->stock <= 5) rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 @else rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 @endif" title="Color indica nivel de stock: Rojo=Crítico | Naranja=Bajo | Verde=Disponible">
+                                    <span @class([
+                                        'rounded-full px-2 py-1 text-xs font-semibold',
+                                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' => $product->stock == 0,
+                                        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' => ($product->stock > 0 && $product->stock <= 5),
+                                        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' => $product->stock > 5,
+                                    ]) title="Color indica nivel de stock: Rojo=Crítico | Naranja=Bajo | Verde=Disponible">
                                         @if($product->stock == 0)
                                             Agotado
                                         @elseif($product->stock <= 5)
@@ -94,7 +99,12 @@
                                             Disponible
                                         @endif
                                     </span>
-                                    <span class="text-xs px-2 py-1 rounded-full @if($product->status == 'published') bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 @elseif($product->status == 'draft') bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400 @else bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 @endif">
+                                    <span @class([
+                                        'text-xs px-2 py-1 rounded-full',
+                                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' => $product->status == 'published',
+                                        'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400' => $product->status == 'draft',
+                                        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' => !in_array($product->status, ['published', 'draft'], true),
+                                    ])>
                                         {{ ucfirst($product->status) }}
                                     </span>
                                 </div>
