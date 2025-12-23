@@ -35,7 +35,14 @@
                                 <input type="text" placeholder="Notas..." value="{{ $item->notes }}" class="w-full border rounded px-2 py-1 dark:bg-zinc-900 dark:border-zinc-700 text-sm" id="notes-{{ $item->id }}" />
                             </td>
                             <td class="px-4 py-2">
-                                <button class="px-3 py-1 rounded bg-primary-600 text-white" onclick="saveItem('{{ $token }}', {{ $item->id }})">Guardar</button>
+                                <button
+                                    class="px-3 py-1 rounded bg-primary-600 text-white"
+                                    data-token="{{ $token }}"
+                                    data-item-id="{{ $item->id }}"
+                                    onclick="saveItem(this.dataset.token, Number(this.dataset.itemId))"
+                                >
+                                    Guardar
+                                </button>
                             </td>
                         </tr>
                     @endforeach
