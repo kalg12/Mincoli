@@ -19,6 +19,12 @@
                     <flux:navlist.item icon="photo" :href="route('dashboard.banners.index')" :current="request()->routeIs('dashboard.banners.*')" wire:navigate>Banners</flux:navlist.item>
                 </flux:navlist.group>
 
+                <flux:navlist.group :heading="__('Inventario')" class="grid">
+                    <flux:navlist.item icon="cube" :href="route('dashboard.inventory.index')" :current="request()->routeIs('dashboard.inventory.index')" wire:navigate>Dashboard</flux:navlist.item>
+                    <flux:navlist.item icon="arrow-path" :href="route('dashboard.inventory.movements')" :current="request()->routeIs('dashboard.inventory.movements*')" wire:navigate>Movimientos</flux:navlist.item>
+                    <flux:navlist.item icon="clipboard-document-list" :href="route('dashboard.inventory.counts.index')" :current="request()->routeIs('dashboard.inventory.counts.*')" wire:navigate>Conteos Físicos</flux:navlist.item>
+                </flux:navlist.group>
+
                 <flux:navlist.group :heading="__('Ventas')" class="grid">
                     <flux:navlist.item icon="shopping-cart" :href="route('dashboard.orders.index')" :current="request()->routeIs('dashboard.orders.*')" wire:navigate>Pedidos</flux:navlist.item>
                     <flux:navlist.item icon="user-group" :href="route('dashboard.customers.index')" :current="request()->routeIs('dashboard.customers.*')" wire:navigate>Clientes</flux:navlist.item>

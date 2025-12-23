@@ -6,9 +6,14 @@
                     <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Productos</h1>
                     <p class="text-sm text-zinc-600 dark:text-zinc-400">Gestiona el catálogo completo de productos</p>
                 </div>
-                <a href="{{ route('dashboard.products.create') }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-zinc-900">
-                    Nuevo producto
-                </a>
+                <div class="flex gap-2">
+                    <a href="{{ route('dashboard.products.trash') }}" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900">
+                        Papelera
+                    </a>
+                    <a href="{{ route('dashboard.products.create') }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-zinc-900">
+                        Nuevo producto
+                    </a>
+                </div>
             </div>
         </div>
 

@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -22,9 +25,20 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products'));
     }
 
+    public function trash()
+    {
+        $products = Product::onlyTrashed()
+            ->with(['category', 'variants'])
+            ->latest('deleted_at')
+            ->paginate(15);
+
+        return view('admin.products.trash', compact('products'));
+    }
+
     public function create()
     {
         $categories = Category::where('is_active', true)->get();
+
         return view('admin.products.create', compact('categories'));
     }
 
@@ -37,16 +51,44 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
+            'cost' => 'nullable|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
             'status' => 'required|in:published,draft,out_of_stock',
+            'iva_rate' => 'nullable|numeric|min:0',
+            'image_url' => 'nullable|url|max:500',
+            'image' => 'nullable|image|max:5120',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $validated['status'] === 'published';
-        $validated['cost'] = $validated['price'] * 0.6;
+        $payload = $validated;
+        $payload['slug'] = $this->generateUniqueSlug($validated['name']);
+        $payload['is_active'] = $validated['status'] === 'published';
+        $payload['is_featured'] = $request->boolean('is_featured');
+        $payload['cost'] = $validated['cost'] ?? ($validated['price'] * 0.6);
 
-        Product::create($validated);
+        $product = Product::create($payload);
+
+        $position = 0;
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/product-images');
+            ProductImage::create([
+                'product_id' => $product->id,
+                'url' => Storage::url($path),
+                'position' => $position++,
+            ]);
+        }
+
+        if ($request->filled('image_url')) {
+            $storedUrl = $this->downloadAndStoreDriveImage($request->input('image_url'));
+            if ($storedUrl) {
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'url' => $storedUrl,
+                    'position' => $position,
+                ]);
+            }
+        }
 
         return redirect()
             ->route('dashboard.products.index')
@@ -57,11 +99,11 @@ class ProductController extends Controller
     {
         $product = Product::with([
             'variants',
-            'inventoryMovements' => function ($query) {
-                $query->latest('created_at')->limit(20);
-            },
-            'inventoryMovements.variant'
+            'images',
+            'inventoryMovements' => fn($query) => $query->latest('created_at')->limit(20),
+            'inventoryMovements.variant',
         ])->findOrFail($id);
+
         $categories = Category::where('is_active', true)->get();
 
         return view('admin.products.edit', compact('product', 'categories'));
@@ -78,18 +120,46 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
+            'cost' => 'nullable|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
-            // Stock puede no enviarse si el producto usa variantes
             'stock' => 'sometimes|integer|min:0',
             'status' => 'required|in:published,draft,out_of_stock',
+            'iva_rate' => 'nullable|numeric|min:0',
+            'image_url' => 'nullable|url|max:500',
+            'image' => 'nullable|image|max:5120',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $validated['status'] === 'published';
-        // Asegurar que el checkbox se persista correctamente aunque venga desmarcado
-        $validated['is_featured'] = $request->boolean('is_featured');
+        $payload = $validated;
+        $payload['is_active'] = $validated['status'] === 'published';
+        $payload['is_featured'] = $request->boolean('is_featured');
 
-        $product->update($validated);
+        if ($product->name !== $validated['name']) {
+            $payload['slug'] = $this->generateUniqueSlug($validated['name'], $product->id);
+        }
+
+        $product->update($payload);
+
+        $position = ($product->images()->max('position') ?? -1) + 1;
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/product-images');
+            ProductImage::create([
+                'product_id' => $product->id,
+                'url' => Storage::url($path),
+                'position' => $position++,
+            ]);
+        }
+
+        if ($request->filled('image_url')) {
+            $storedUrl = $this->downloadAndStoreDriveImage($request->input('image_url'));
+            if ($storedUrl) {
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'url' => $storedUrl,
+                    'position' => $position,
+                ]);
+            }
+        }
 
         return redirect()
             ->route('dashboard.products.index')
@@ -98,12 +168,81 @@ class ProductController extends Controller
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        $product = Product::with('variants')->findOrFail($id);
+
+        DB::transaction(function () use ($product) {
+            if ($product->variants->count() > 0) {
+                foreach ($product->variants as $variant) {
+                    if ($variant->stock > 0) {
+                        $product->inventoryMovements()->create([
+                            'variant_id' => $variant->id,
+                            'type' => 'out',
+                            'quantity' => $variant->stock,
+                            'reason' => 'Producto eliminado',
+                            'created_by' => Auth::id(),
+                        ]);
+                        $variant->update(['stock' => 0]);
+                    }
+                }
+            } elseif ($product->stock > 0) {
+                $product->inventoryMovements()->create([
+                    'variant_id' => null,
+                    'type' => 'out',
+                    'quantity' => $product->stock,
+                    'reason' => 'Producto eliminado',
+                    'created_by' => Auth::id(),
+                ]);
+                $product->update(['stock' => 0]);
+            }
+
+            $product->images()->delete();
+            $product->variants()->delete();
+            $product->delete();
+        });
 
         return redirect()
             ->route('dashboard.products.index')
             ->with('success', 'Producto eliminado correctamente');
+    }
+
+    public function restore($id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+
+        DB::transaction(function () use ($product) {
+            $product->restore();
+            $product->images()->withTrashed()->restore();
+            $product->variants()->withTrashed()->restore();
+        });
+
+        return redirect()
+            ->route('dashboard.products.trash')
+            ->with('success', 'Producto restaurado correctamente');
+    }
+
+    public function forceDelete($id)
+    {
+        $product = Product::onlyTrashed()
+            ->with(['images' => fn($q) => $q->withTrashed(), 'variants' => fn($q) => $q->withTrashed()])
+            ->findOrFail($id);
+
+        DB::transaction(function () use ($product) {
+            foreach ($product->images as $image) {
+                $original = $image->getRawOriginal('url') ?? $image->url;
+                if ($original && str_starts_with($original, '/storage/')) {
+                    $path = str_replace('/storage/', 'public/', $original);
+                    Storage::delete($path);
+                }
+            }
+
+            $product->images()->withTrashed()->forceDelete();
+            $product->variants()->withTrashed()->forceDelete();
+            $product->forceDelete();
+        });
+
+        return redirect()
+            ->route('dashboard.products.trash')
+            ->with('success', 'Producto eliminado permanentemente');
     }
 
     public function toggleFeatured($id)
@@ -130,10 +269,8 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:5120',
         ]);
 
-        $validated['product_id'] = $productId;
         $variant = $product->variants()->create($validated);
 
-        // Imagen opcional de la variante
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('public/product-images');
             ProductImage::create([
@@ -151,8 +288,8 @@ class ProductController extends Controller
 
     public function updateVariant(Request $request, $productId, $variantId)
     {
-        Product::findOrFail($productId);
-        $variant = \App\Models\ProductVariant::findOrFail($variantId);
+        $product = Product::findOrFail($productId);
+        $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -167,7 +304,6 @@ class ProductController extends Controller
 
         $variant->update($validated);
 
-        // Imagen opcional al actualizar
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('public/product-images');
             ProductImage::create([
@@ -178,61 +314,88 @@ class ProductController extends Controller
             ]);
         }
 
-        return redirect()
-            ->route('dashboard.products.edit', $productId)
-            ->with('success', 'Variante actualizada correctamente');
+        return back()->with('success', 'Variante actualizada correctamente');
     }
 
     public function destroyVariant($productId, $variantId)
     {
-        Product::findOrFail($productId);
-        \App\Models\ProductVariant::findOrFail($variantId)->delete();
+        $product = Product::findOrFail($productId);
+        $variant = ProductVariant::where('product_id', $product->id)->findOrFail($variantId);
 
-        return redirect()
-            ->route('dashboard.products.edit', $productId)
-            ->with('success', 'Variante eliminada correctamente');
+        DB::transaction(function () use ($product, $variant) {
+            if ($variant->stock > 0) {
+                $product->inventoryMovements()->create([
+                    'variant_id' => $variant->id,
+                    'type' => 'out',
+                    'quantity' => $variant->stock,
+                    'reason' => 'Variante eliminada',
+                    'created_by' => Auth::id(),
+                ]);
+                $variant->update(['stock' => 0]);
+            }
+
+            $variant->images()->delete();
+            $variant->delete();
+        });
+
+        return back()->with('success', 'Variante eliminada correctamente');
+    }
+
+    public function destroyImage($id, $imageId)
+    {
+        $image = ProductImage::where('product_id', $id)->findOrFail($imageId);
+
+        $originalUrl = $image->getRawOriginal('url') ?? $image->url;
+        if ($originalUrl && str_starts_with($originalUrl, '/storage/')) {
+            $path = str_replace('/storage/', 'public/', $originalUrl);
+            Storage::delete($path);
+        }
+
+        $image->delete();
+
+        return back()->with('success', 'Imagen eliminada correctamente');
     }
 
     public function adjustStock(Request $request, $productId)
     {
-        $product = Product::findOrFail($productId);
+        $product = Product::with('variants')->findOrFail($productId);
 
         $validated = $request->validate([
             'variant_id' => 'nullable|exists:product_variants,id',
-            'quantity' => 'required|integer|min:0',
-            'type' => 'required|in:entrada,salida',
-            'reason' => 'required|string|max:255',
+            'type' => 'required|in:in,out',
+            'quantity' => 'required|integer|min:1',
+            'reason' => 'required|string|max:100',
         ]);
 
-        $variantId = $validated['variant_id'];
-        $quantity = $validated['quantity'];
-        $type = $validated['type'];
-
-        // Actualizar stock de la variante
-        if ($variantId) {
-            $variant = \App\Models\ProductVariant::findOrFail($variantId);
-            if ($type === 'entrada') {
-                $variant->increment('stock', $quantity);
-            } else {
-                $variant->decrement('stock', $quantity);
+        DB::transaction(function () use ($product, $validated) {
+            $variant = null;
+            if (!empty($validated['variant_id'])) {
+                $variant = ProductVariant::where('product_id', $product->id)->findOrFail($validated['variant_id']);
             }
-        } else {
-            // Si no hay variante, actualizar el stock del producto directamente
-            if ($type === 'entrada') {
-                $product->increment('stock', $quantity);
-            } else {
-                $product->decrement('stock', $quantity);
-            }
-        }
 
-        // Registrar el movimiento de inventario
-        $product->inventoryMovements()->create([
-            'variant_id' => $variantId,
-            'type' => $type,
-            'quantity' => $quantity,
-            'reason' => $validated['reason'],
-            'created_by' => Auth::id(),
-        ]);
+            $isIn = $validated['type'] === 'in';
+            $qty = $validated['quantity'];
+
+            if ($variant) {
+                $newStock = $isIn
+                    ? $variant->stock + $qty
+                    : max(0, $variant->stock - $qty);
+                $variant->update(['stock' => $newStock]);
+            } else {
+                $newStock = $isIn
+                    ? $product->stock + $qty
+                    : max(0, $product->stock - $qty);
+                $product->update(['stock' => $newStock]);
+            }
+
+            $product->inventoryMovements()->create([
+                'variant_id' => $variant?->id,
+                'type' => $validated['type'],
+                'quantity' => $qty,
+                'reason' => $validated['reason'],
+                'created_by' => Auth::id(),
+            ]);
+        });
 
         return redirect()
             ->route('dashboard.products.edit', $productId)
@@ -245,5 +408,56 @@ class ProductController extends Controller
         $products = Product::with('category')->whereIn('id', $productIds)->get();
 
         return view('admin.products.print-labels', compact('products'));
+    }
+
+    private function downloadAndStoreDriveImage(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        $direct = ProductImage::resolveDriveUrl($url);
+        if (!$direct) {
+            return null;
+        }
+
+        $response = Http::timeout(10)->get($direct);
+        if (!$response->ok()) {
+            return null;
+        }
+
+        $contentType = $response->header('Content-Type');
+        $ext = 'jpg';
+        if ($contentType === 'image/png') {
+            $ext = 'png';
+        } elseif ($contentType === 'image/webp') {
+            $ext = 'webp';
+        } elseif ($contentType === 'image/jpeg' || $contentType === 'image/jpg') {
+            $ext = 'jpg';
+        }
+
+        $filename = 'product-images/' . uniqid('drive_', true) . '.' . $ext;
+        Storage::put('public/' . $filename, $response->body());
+
+        return Storage::url('public/' . $filename);
+    }
+
+    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'producto';
+        $slug = $base;
+        $i = 1;
+
+        while (
+            Product::withTrashed()
+                ->where('slug', $slug)
+                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
 }

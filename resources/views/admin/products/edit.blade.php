@@ -90,7 +90,7 @@
 
         <div class="px-6 pb-6">
             <div id="general" class="tab-content">
-                <form method="POST" action="{{ route('dashboard.products.update', $product->id) }}" class="space-y-6">
+                <form method="POST" action="{{ route('dashboard.products.update', $product->id) }}" class="space-y-6" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -129,6 +129,44 @@
                             <textarea name="description" rows="4" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">{{ old('description', $product->description) }}</textarea>
                             @error('description')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         </div>
+                    </div>
+
+                    <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Imágenes</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Subir imagen</label>
+                                <input type="file" name="image" accept="image/*" class="w-full rounded-lg border @error('image') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                @error('image')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                                <p class="text-xs text-zinc-500 dark:text-zinc-500">PNG, JPG, WEBP hasta 5MB.</p>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Enlace público (Google Drive)</label>
+                                <input type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" class="w-full rounded-lg border @error('image_url') border-red-500 @else border-zinc-200 @enderror bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                                @error('image_url')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                                <p class="text-xs text-zinc-500 dark:text-zinc-500">Pega el enlace público de Drive; se convierte a vista directa automáticamente.</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
+                            </div>
+                        </div>
+                        <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-500">Las imágenes nuevas se añaden a las existentes (no se eliminan). La subida se coloca primero.</p>
+
+                        @if($product->images->count() > 0)
+                        <div class="mt-6">
+                            <h4 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3">Imágenes actuales</h4>
+                            <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+                                @foreach($product->images as $image)
+                                <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center gap-2">
+                                    <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-24 object-contain">
+                                    <form method="POST" action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}" onsubmit="return confirm('¿Eliminar esta imagen?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white">Eliminar</button>
+                                    </form>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     <div class="grid gap-6 md:grid-cols-2">
@@ -419,8 +457,8 @@
                                 <div>
                                     <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Tipo <span class="text-red-500">*</span></label>
                                     <select name="type" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
-                                        <option value="entrada">Entrada (compra/devolución)</option>
-                                        <option value="salida">Salida (venta/daño)</option>
+                                        <option value="in">Entrada (compra/devolución)</option>
+                                        <option value="out">Salida (venta/daño)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -499,12 +537,12 @@
                                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                         <td class="px-4 py-3 text-zinc-900 dark:text-white text-xs">{{ optional($movement->created_at)->format('d/m/Y H:i') }}</td>
                                         <td class="px-4 py-3">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $movement->type === 'entrada' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' }}">
-                                                {{ ucfirst($movement->type) }}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $movement->type === 'in' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : ($movement->type === 'out' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300') }}">
+                                                {{ $movement->type === 'in' ? 'Entrada' : ($movement->type === 'out' ? 'Salida' : 'Ajuste') }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 font-semibold text-zinc-900 dark:text-white">
-                                            {{ $movement->type === 'entrada' ? '+' : '-' }}{{ $movement->quantity }}
+                                            {{ $movement->type === 'in' ? '+' : '-' }}{{ $movement->quantity }}
                                         </td>
                                         <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300 text-xs">{{ ucfirst($movement->reason ?? '—') }}</td>
                                         <td class="px-4 py-3 text-zinc-700 dark:text-zinc-300 text-xs">{{ $movement->variant?->name ?? 'Producto' }}</td>

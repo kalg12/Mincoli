@@ -40,19 +40,31 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    // Rutas de captura pública (fuera del panel)
+});
+
+// Captura pública de conteos (sin autenticación)
+Route::get('/inventory-capture/{token}', [App\Http\Controllers\Admin\InventoryController::class, 'publicCaptureForm'])->name('inventory.public.capture');
+Route::post('/inventory-capture/{token}/items/{item}', [App\Http\Controllers\Admin\InventoryController::class, 'savePublicCapture'])->name('inventory.public.items.save');
+
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
     // Settings
     Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
 
     // Products
     Route::get('/products', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/trash', [App\Http\Controllers\Admin\ProductController::class, 'trash'])->name('products.trash');
     Route::get('/products/create', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('products.create');
     Route::post('/products', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('products.store');
     Route::post('/products/print-labels', [App\Http\Controllers\Admin\ProductController::class, 'printLabels'])->name('products.printLabels');
     Route::get('/products/{id}/edit', [App\Http\Controllers\Admin\ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{id}', [App\Http\Controllers\Admin\ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{id}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/products/{id}/restore', [App\Http\Controllers\Admin\ProductController::class, 'restore'])->name('products.restore');
+    Route::delete('/products/{id}/force', [App\Http\Controllers\Admin\ProductController::class, 'forceDelete'])->name('products.forceDelete');
     Route::post('/products/{id}/toggle-featured', [App\Http\Controllers\Admin\ProductController::class, 'toggleFeatured'])->name('products.toggleFeatured');
+    Route::delete('/products/{id}/images/{imageId}', [App\Http\Controllers\Admin\ProductController::class, 'destroyImage'])->name('products.images.destroy');
 
     // Product Variants
     Route::post('/products/{id}/variants', [App\Http\Controllers\Admin\ProductController::class, 'storeVariant'])->name('products.variants.store');
@@ -61,6 +73,27 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
 
     // Inventory Management
     Route::post('/products/{id}/adjust-stock', [App\Http\Controllers\Admin\ProductController::class, 'adjustStock'])->name('products.adjustStock');
+
+    // Inventory Module
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('index');
+        Route::get('/movements', [App\Http\Controllers\Admin\InventoryController::class, 'movements'])->name('movements');
+        Route::get('/movements/create', [App\Http\Controllers\Admin\InventoryController::class, 'createMovement'])->name('movements.create');
+        Route::post('/movements', [App\Http\Controllers\Admin\InventoryController::class, 'storeMovement'])->name('movements.store');
+
+        // Conteos físicos
+        Route::get('/counts', [App\Http\Controllers\Admin\InventoryController::class, 'counts'])->name('counts.index');
+        Route::get('/counts/create', [App\Http\Controllers\Admin\InventoryController::class, 'createCount'])->name('counts.create');
+        Route::post('/counts', [App\Http\Controllers\Admin\InventoryController::class, 'storeCount'])->name('counts.store');
+        Route::get('/counts/{count}', [App\Http\Controllers\Admin\InventoryController::class, 'showCount'])->name('counts.show');
+        Route::post('/counts/{count}/start', [App\Http\Controllers\Admin\InventoryController::class, 'startCount'])->name('counts.start');
+        Route::get('/counts/{count}/capture', [App\Http\Controllers\Admin\InventoryController::class, 'captureForm'])->name('counts.capture');
+        Route::post('/counts/{count}/items/{item}', [App\Http\Controllers\Admin\InventoryController::class, 'saveCapture'])->name('counts.items.save');
+        Route::post('/counts/{count}/complete', [App\Http\Controllers\Admin\InventoryController::class, 'completeCount'])->name('counts.complete');
+        Route::post('/counts/{count}/reopen', [App\Http\Controllers\Admin\InventoryController::class, 'reopenCount'])->name('counts.reopen');
+        Route::post('/counts/{count}/review', [App\Http\Controllers\Admin\InventoryController::class, 'reviewCount'])->name('counts.review');
+        Route::get('/counts/{count}/export', [App\Http\Controllers\Admin\InventoryController::class, 'exportCount'])->name('counts.export');
+    });
 
     // Categories
     Route::get('/categories', [App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('categories.index');
