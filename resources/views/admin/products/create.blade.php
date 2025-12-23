@@ -108,7 +108,11 @@
                         <p class="text-xs text-zinc-500 dark:text-zinc-500">Puedes pegar el enlace tal cual de Drive (público). Lo convertimos a vista directa automáticamente.</p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
                         <div id="createImageUrlPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Vista previa del enlace</p>
+                            <div class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 mb-2">
+                                <span>Vista previa del enlace</span>
+                                <span id="createImageUrlStatus" class="hidden animate-pulse text-blue-600 dark:text-blue-400">Cargando...</span>
+                            </div>
+                            <p id="createImageUrlError" class="hidden text-xs text-red-600 dark:text-red-400 mb-2">No pudimos cargar la imagen. Verifica el enlace.</p>
                             <img id="createImageUrlPreviewImg" alt="Vista previa URL" class="w-full h-40 object-contain">
                         </div>
                     </div>
@@ -144,25 +148,60 @@
             });
         }
 
-        var driveInput = document.getElementById('create_image_url');
-        var urlCard = document.getElementById('createImageUrlPreviewCard');
-        var urlImg = document.getElementById('createImageUrlPreviewImg');
-        if (driveInput && urlCard && urlImg && !driveInput.dataset.bound) {
-            driveInput.dataset.bound = '1';
-            function extractDriveId(u) {
-                if (!u) return '';
-                var m = String(u).match(/\/file\/d\/([^\/]+)/);
-                if (m && m[1]) return m[1];
-                try { var urlObj = new URL(u); return urlObj.searchParams.get('id') || ''; } catch(_) { return ''; }
-            }
+            function bindUrlPreview(opts) {
+                var input = document.getElementById(opts.inputId);
+                var card = document.getElementById(opts.cardId);
+                var img = document.getElementById(opts.imgId);
+                var statusEl = document.getElementById(opts.statusId);
+                var errorEl = document.getElementById(opts.errorId);
+                if (!input || !card || !img || input.dataset.bound) return;
+                input.dataset.bound = '1';
+
+                function extractDriveId(u) {
+                    if (!u) return '';
+                    var m = String(u).match(/\/file\/d\/([^\/]+)/);
+                    if (m && m[1]) return m[1];
+                    try { var urlObj = new URL(u); return urlObj.searchParams.get('id') || ''; } catch(_) { return ''; }
+                }
             function normalizeDriveUrl(u) { var id = extractDriveId(u); return id ? ('https://drive.google.com/uc?export=download&id=' + id) : u; }
-            driveInput.addEventListener('blur', function(){
-                var v = driveInput.value ? driveInput.value.trim() : '';
-                if (!v) return;
-                if (v.includes('drive.google.com')) { driveInput.value = normalizeDriveUrl(v); }
-                urlImg.src = driveInput.value; urlCard.classList.remove('hidden');
-            });
+
+                function showLoading() { if (statusEl) statusEl.classList.remove('hidden'); if (errorEl) errorEl.classList.add('hidden'); }
+                function hideLoading() { if (statusEl) statusEl.classList.add('hidden'); }
+                function showError() { if (errorEl) errorEl.classList.remove('hidden'); }
+                function hideError() { if (errorEl) errorEl.classList.add('hidden'); }
+
+                function loadPreview() {
+                    var v = input.value ? input.value.trim() : '';
+                    if (!v) return;
+                if (v.includes('drive.google.com')) { v = normalizeDriveUrl(v); input.value = v; }
+                    hideError();
+                    showLoading();
+                var triedAlt = false;
+                img.onload = function(){ hideLoading(); card.classList.remove('hidden'); };
+                img.onerror = function(){
+                    if (!triedAlt && v.includes('drive.google.com')) {
+                        triedAlt = true;
+                        img.src = v.replace('export=download', 'export=view');
+                        return;
+                    }
+                    hideLoading();
+                    showError();
+                };
+                img.src = v;
+                card.classList.remove('hidden');
+                }
+
+                input.addEventListener('blur', loadPreview);
+            input.addEventListener('change', loadPreview);
         }
+
+        bindUrlPreview({
+            inputId: 'create_image_url',
+            cardId: 'createImageUrlPreviewCard',
+            imgId: 'createImageUrlPreviewImg',
+            statusId: 'createImageUrlStatus',
+            errorId: 'createImageUrlError'
+        });
     });
     </script>
 </x-layouts.app>

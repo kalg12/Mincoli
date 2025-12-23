@@ -376,6 +376,28 @@ class ProductController extends Controller
         return back()->with('success', 'Imagen eliminada correctamente');
     }
 
+    public function reorderImages(Request $request, $productId)
+    {
+        $product = Product::with('images')->findOrFail($productId);
+
+        $data = $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'integer|exists:product_images,id',
+        ]);
+
+        $order = array_values($data['order']);
+        DB::transaction(function () use ($order, $product) {
+            foreach ($order as $index => $imageId) {
+                $image = $product->images->firstWhere('id', $imageId);
+                if ($image) {
+                    $image->update(['position' => $index]);
+                }
+            }
+        });
+
+        return response()->json(['status' => 'ok']);
+    }
+
     public function adjustStock(Request $request, $productId)
     {
         $product = Product::with('variants')->findOrFail($productId);

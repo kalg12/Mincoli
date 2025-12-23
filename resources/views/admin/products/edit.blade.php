@@ -165,7 +165,11 @@
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Pega el enlace público de Drive; se normaliza automáticamente.</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
                                 <div id="imageUrlPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
-                                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Vista previa del enlace</p>
+                                    <div class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 mb-2">
+                                        <span>Vista previa del enlace</span>
+                                        <span id="imageUrlStatus" class="hidden animate-pulse text-blue-600 dark:text-blue-400">Cargando...</span>
+                                    </div>
+                                    <p id="imageUrlError" class="hidden text-xs text-red-600 dark:text-red-400 mb-2">No pudimos cargar la imagen. Verifica el enlace.</p>
                                     <img id="imageUrlPreviewImg" alt="Vista previa URL" class="w-full h-40 object-contain">
                                 </div>
                             </div>
@@ -175,14 +179,21 @@
 
                         @if($product->images->count() > 0)
                         <div id="currentImagesSection" class="mt-6">
-                            <h4 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3">Imágenes actuales</h4>
+                            <div class="flex items-center justify-between mb-3 gap-2">
+                                <h4 class="text-sm font-semibold text-zinc-900 dark:text-white">Imágenes actuales</h4>
+                                <div class="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <span>Arrastra para ordenar</span>
+                                    <button type="button" id="saveImagesOrderBtn" class="hidden rounded-md bg-blue-600 text-white px-3 py-1.5 hover:bg-blue-700 text-xs font-semibold">Guardar orden</button>
+                                </div>
+                            </div>
                             <div id="currentImagesGrid" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 @foreach($product->images as $image)
-                                <div data-image-card="1" data-image-id="{{ $image->id }}" class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden flex flex-col">
-                                    <div class="aspect-square bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center p-4">
-                                        <img src="{{ $image->url }}" alt="{{ $product->name }}" class="max-w-full max-h-full object-contain">
+                                <div data-image-card="1" data-image-id="{{ $image->id }}" draggable="true" class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden flex flex-col transition-shadow hover:shadow-md">
+                                    <div class="aspect-square bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center p-4 cursor-move">
+                                        <img src="{{ $image->url }}" alt="{{ $product->name }}" class="max-w-full max-h-full object-contain pointer-events-none select-none">
                                     </div>
-                                    <div class="p-3 border-t border-zinc-200 dark:border-zinc-700">
+                                    <div class="p-3 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-2">
+                                        <span class="text-[11px] text-zinc-500 dark:text-zinc-400">ID: {{ $image->id }}</span>
                                         <button type="button"
                                                 class="w-full px-3 py-2 text-xs font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                                                 data-delete-image-action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}"
@@ -724,41 +735,130 @@
             }
 
             // Normalize Google Drive "view" links into a direct download format (client-side helper)
-            var driveInput = document.getElementById('image_url');
-            if (driveInput && !driveInput.dataset.bound) {
-                driveInput.dataset.bound = '1';
+            function bindUrlPreview(opts) {
+                var input = document.getElementById(opts.inputId);
+                var card = document.getElementById(opts.cardId);
+                var img = document.getElementById(opts.imgId);
+                var statusEl = document.getElementById(opts.statusId);
+                var errorEl = document.getElementById(opts.errorId);
+                if (!input || !card || !img || input.dataset.bound) return;
+                input.dataset.bound = '1';
 
                 function extractDriveId(u) {
                     if (!u) return '';
                     var m = String(u).match(/\/file\/d\/([^\/]+)/);
                     if (m && m[1]) return m[1];
-
-                    try {
-                        var urlObj = new URL(u);
-                        var id = urlObj.searchParams.get('id');
-                        return id || '';
-                    } catch (_) {
-                        return '';
-                    }
+                    try { var urlObj = new URL(u); return urlObj.searchParams.get('id') || ''; } catch(_) { return ''; }
                 }
+                function normalizeDriveUrl(u) { var id = extractDriveId(u); return id ? ('https://drive.google.com/uc?export=download&id=' + id) : u; }
 
-                function normalizeDriveUrl(u) {
-                    var id = extractDriveId(u);
-                    if (!id) return u;
-                    return 'https://drive.google.com/uc?export=download&id=' + id;
-                }
+                function showLoading() { if (statusEl) statusEl.classList.remove('hidden'); if (errorEl) errorEl.classList.add('hidden'); }
+                function hideLoading() { if (statusEl) statusEl.classList.add('hidden'); }
+                function showError() { if (errorEl) errorEl.classList.remove('hidden'); }
+                function hideError() { if (errorEl) errorEl.classList.add('hidden'); }
 
-                driveInput.addEventListener('blur', function () {
-                    var v = driveInput.value ? driveInput.value.trim() : '';
+                function loadPreview() {
+                    var v = input.value ? input.value.trim() : '';
                     if (!v) return;
-                    if (v.includes('drive.google.com')) {
-                        driveInput.value = normalizeDriveUrl(v);
+                    if (v.includes('drive.google.com')) { v = normalizeDriveUrl(v); input.value = v; }
+                    hideError();
+                    showLoading();
+                    var triedAlt = false;
+                    img.onload = function(){ hideLoading(); card.classList.remove('hidden'); };
+                    img.onerror = function(){
+                        if (!triedAlt && v.includes('drive.google.com')) {
+                            triedAlt = true;
+                            img.src = v.replace('export=download', 'export=view');
+                            return;
+                        }
+                        hideLoading();
+                        showError();
+                    };
+                    img.src = v;
+                    card.classList.remove('hidden');
+                }
+
+                input.addEventListener('blur', loadPreview);
+                input.addEventListener('change', loadPreview);
+            }
+
+            bindUrlPreview({
+                inputId: 'image_url',
+                cardId: 'imageUrlPreviewCard',
+                imgId: 'imageUrlPreviewImg',
+                statusId: 'imageUrlStatus',
+                errorId: 'imageUrlError'
+            });
+
+            // Drag & drop ordering
+            var grid = document.getElementById('currentImagesGrid');
+            var saveBtn = document.getElementById('saveImagesOrderBtn');
+            var draggingEl = null;
+
+            function showSaveBtn() {
+                if (saveBtn) saveBtn.classList.remove('hidden');
+            }
+
+            function bindDraggable(card) {
+                card.addEventListener('dragstart', function (e) {
+                    draggingEl = card;
+                    card.classList.add('ring-2', 'ring-blue-500');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                card.addEventListener('dragend', function () {
+                    draggingEl = null;
+                    card.classList.remove('ring-2', 'ring-blue-500');
+                });
+                card.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    if (!draggingEl || draggingEl === card) return;
+                    var rect = card.getBoundingClientRect();
+                    var offset = e.clientY - rect.top;
+                    var half = rect.height / 2;
+                    if (offset > half) {
+                        card.after(draggingEl);
+                    } else {
+                        card.before(draggingEl);
                     }
-                    var urlPreviewCard = document.getElementById('imageUrlPreviewCard');
-                    var urlPreviewImg = document.getElementById('imageUrlPreviewImg');
-                    if (urlPreviewCard && urlPreviewImg) {
-                        urlPreviewImg.src = driveInput.value;
-                        urlPreviewCard.classList.remove('hidden');
+                    showSaveBtn();
+                });
+            }
+
+            if (grid) {
+                grid.querySelectorAll('[data-image-card]').forEach(bindDraggable);
+            }
+
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function () {
+                    if (!grid) return;
+                    var ids = Array.from(grid.querySelectorAll('[data-image-card]')).map(function (c) {
+                        return c.getAttribute('data-image-id');
+                    }).filter(Boolean);
+                    if (ids.length === 0) return;
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Guardando...';
+                    try {
+                        var res = await fetch('{{ route('dashboard.products.images.reorder', $product->id) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ order: ids })
+                        });
+                        if (!res.ok) throw new Error('Error HTTP ' + res.status);
+                        saveBtn.textContent = 'Orden guardado';
+                        setTimeout(function(){
+                            saveBtn.textContent = 'Guardar orden';
+                            saveBtn.classList.add('hidden');
+                        }, 1200);
+                    } catch (err) {
+                        console.error(err);
+                        alert('No se pudo guardar el orden. Intenta nuevamente.');
+                        saveBtn.textContent = 'Guardar orden';
+                    } finally {
+                        saveBtn.disabled = false;
                     }
                 });
             }
