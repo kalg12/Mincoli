@@ -157,11 +157,12 @@
                                 @foreach($product->images as $image)
                                 <div class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center gap-2">
                                     <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-24 object-contain">
-                                    <form method="POST" action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}" onsubmit="return confirm('¿Eliminar esta imagen?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white">Eliminar</button>
-                                    </form>
+                                    <button type="button"
+                                            class="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white"
+                                            data-delete-image-action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}"
+                                            onclick="submitDeleteImage(this)">
+                                        Eliminar
+                                    </button>
                                 </div>
                                 @endforeach
                             </div>
@@ -591,6 +592,32 @@
                 });
             });
         });
+
+        function submitDeleteImage(button) {
+            var action = button.getAttribute('data-delete-image-action');
+            if (!action) return;
+            if (!confirm('¿Eliminar esta imagen?')) return;
+
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = action;
+            form.style.display = 'none';
+
+            var token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = '{{ csrf_token() }}';
+
+            var method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'DELETE';
+
+            form.appendChild(token);
+            form.appendChild(method);
+            document.body.appendChild(form);
+            form.submit();
+        }
 
         function switchTab(e, tabName) {
             // Hide all tabs
