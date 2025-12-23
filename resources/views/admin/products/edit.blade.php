@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <!-- Modal editar variante -->
+        <!-- Modal editar variante (ÚNICO) -->
         <div id="variantEditModal" class="hidden fixed inset-0 z-50 items-center justify-center">
             <div class="absolute inset-0 bg-black/60" onclick="closeVariantEditModal()"></div>
             <div class="relative bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 border border-zinc-200 dark:border-zinc-700">
@@ -90,7 +90,7 @@
 
         <div class="px-6 pb-6">
             <div id="general" class="tab-content">
-                <form method="POST" action="{{ route('dashboard.products.update', $product->id) }}" class="space-y-6" enctype="multipart/form-data">
+                <form id="productEditForm" method="POST" action="{{ route('dashboard.products.update', $product->id) }}" class="space-y-6" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -133,40 +133,63 @@
 
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Imágenes</h3>
-                        @php
-                            $imageInputBorder = $errors->has('image') ? 'border-red-500' : 'border-zinc-200';
-                            $imageUrlInputBorder = $errors->has('image_url') ? 'border-red-500' : 'border-zinc-200';
-                        @endphp
+
                         <div class="grid md:grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Subir imagen</label>
-                                <input type="file" name="image" accept="image/*" class="w-full rounded-lg border {{ $imageInputBorder }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+
+                                <input id="image_file_input" type="file" name="image" accept="image/*" @class([
+                                    'w-full rounded-lg border bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900',
+                                    'border-zinc-200 dark:border-zinc-700' => !$errors->has('image'),
+                                    'border-red-500 dark:border-red-500' => $errors->has('image'),
+                                ])>
+
                                 @error('image')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">PNG, JPG, WEBP hasta 5MB.</p>
+                                <div id="imageLocalPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
+                                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Vista previa (no guardada)</p>
+                                    <img id="imageLocalPreviewImg" alt="Vista previa" class="w-full h-40 object-contain">
+                                </div>
                             </div>
+
                             <div class="space-y-2">
                                 <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Enlace público (Google Drive)</label>
-                                <input type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" class="w-full rounded-lg border {{ $imageUrlInputBorder }} bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+
+                                <input id="image_url" type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" @class([
+                                    'w-full rounded-lg border bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900',
+                                    'border-zinc-200 dark:border-zinc-700' => !$errors->has('image_url'),
+                                    'border-red-500 dark:border-red-500' => $errors->has('image_url'),
+                                ])>
+
                                 @error('image_url')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
-                                <p class="text-xs text-zinc-500 dark:text-zinc-500">Pega el enlace público de Drive; se convierte a vista directa automáticamente.</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-500">Pega el enlace público de Drive; se normaliza automáticamente.</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
+                                <div id="imageUrlPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
+                                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Vista previa del enlace</p>
+                                    <img id="imageUrlPreviewImg" alt="Vista previa URL" class="w-full h-40 object-contain">
+                                </div>
                             </div>
                         </div>
+
                         <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-500">Las imágenes nuevas se añaden a las existentes (no se eliminan). La subida se coloca primero.</p>
 
                         @if($product->images->count() > 0)
                         <div id="currentImagesSection" class="mt-6">
                             <h4 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3">Imágenes actuales</h4>
-                            <div id="currentImagesGrid" class="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+                            <div id="currentImagesGrid" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 @foreach($product->images as $image)
-                                <div data-image-card="1" data-image-id="{{ $image->id }}" class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 flex flex-col items-center gap-2">
-                                    <img src="{{ $image->url }}" alt="{{ $product->name }}" class="w-full h-24 object-contain">
-                                    <button type="button"
-                                            class="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white"
-                                            data-delete-image-action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}"
-                                            onclick="submitDeleteImage(this)">
-                                        Eliminar
-                                    </button>
+                                <div data-image-card="1" data-image-id="{{ $image->id }}" class="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden flex flex-col">
+                                    <div class="aspect-square bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center p-4">
+                                        <img src="{{ $image->url }}" alt="{{ $product->name }}" class="max-w-full max-h-full object-contain">
+                                    </div>
+                                    <div class="p-3 border-t border-zinc-200 dark:border-zinc-700">
+                                        <button type="button"
+                                                class="w-full px-3 py-2 text-xs font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                                                data-delete-image-action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}"
+                                                onclick="submitDeleteImage(this)">
+                                            Eliminar
+                                        </button>
+                                    </div>
                                 </div>
                                 @endforeach
                             </div>
@@ -230,68 +253,6 @@
                 <div class="space-y-6">
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="flex items-center justify-between mb-6">
-                <!-- Modal editar variante -->
-                <div id="variantEditModal" class="hidden fixed inset-0 z-50 items-center justify-center">
-                    <div class="absolute inset-0 bg-black/60" onclick="closeVariantEditModal()"></div>
-                    <div class="relative bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 border border-zinc-200 dark:border-zinc-700">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-lg font-semibold text-zinc-900 dark:text-white">Editar Variante</h4>
-                            <button class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300" onclick="closeVariantEditModal()">✕</button>
-                        </div>
-                        <form id="variantEditForm" method="POST" action="#" enctype="multipart/form-data" class="space-y-4">
-                            @csrf
-                            @method('PUT')
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre <span class="text-red-500">*</span></label>
-                                    <input type="text" name="name" id="vef_name" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Talla</label>
-                                    <input type="text" name="size" id="vef_size" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                </div>
-                            </div>
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Color</label>
-                                    <div class="flex gap-2">
-                                        <input type="color" id="vef_color_picker" class="h-10 w-16 rounded border border-zinc-200 dark:border-zinc-700 cursor-pointer">
-                                        <input type="text" name="color" id="vef_color_text" placeholder="#ffffff" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código de Barras</label>
-                                    <input type="text" name="barcode" id="vef_barcode" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                </div>
-                            </div>
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">SKU <span class="text-red-500">*</span></label>
-                                    <input type="text" name="sku" id="vef_sku" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Precio</label>
-                                    <input type="number" name="price" id="vef_price" step="0.01" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                </div>
-                            </div>
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Stock <span class="text-red-500">*</span></label>
-                                    <input type="number" name="stock" id="vef_stock" min="0" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
-                                </div>
-                                <div>
-                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Imagen (opcional)</label>
-                                    <input type="file" name="image" id="vef_image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                </div>
-                            </div>
-                            <div class="flex justify-end gap-2">
-                                <button type="button" onclick="closeVariantEditModal()" class="rounded-lg border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700">Cancelar</button>
-                                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Guardar cambios</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
                             <button onclick="openAddVariantPanel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                                 <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -568,15 +529,12 @@
         </div>
     </div>
 
-
-
     <script>
         async function submitDeleteImage(button) {
             var action = button.getAttribute('data-delete-image-action');
             if (!action) return;
             if (!confirm('¿Eliminar esta imagen?')) return;
 
-            // UX: avoid page reload/redirect; remove the card locally on success
             button.disabled = true;
             button.classList.add('opacity-60', 'cursor-not-allowed');
 
@@ -609,12 +567,10 @@
                 if (grid && section) {
                     var remaining = grid.querySelectorAll('[data-image-card]').length;
                     if (remaining === 0) {
-                        // If it was the last image, hide the section so it can't "jump" the UI.
                         section.classList.add('hidden');
                     }
                 }
             } catch (err) {
-                // Fallback: keep old behavior if fetch is blocked (no logic change)
                 console.error(err);
 
                 var form = document.createElement('form');
@@ -637,7 +593,6 @@
                 document.body.appendChild(form);
                 form.submit();
             } finally {
-                // If we removed the card, the button may no longer exist in DOM; guard it.
                 if (button && button.classList) {
                     button.disabled = false;
                     button.classList.remove('opacity-60', 'cursor-not-allowed');
@@ -646,16 +601,12 @@
         }
 
         function switchTab(e, tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
-            });
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
                 btn.classList.add('border-transparent', 'text-zinc-600', 'dark:text-zinc-400');
             });
 
-            // Show selected tab
             document.getElementById(tabName).classList.remove('hidden');
             const activeBtn = e.currentTarget;
             if (activeBtn) {
@@ -664,12 +615,11 @@
             }
         }
 
-        // Panel inline para crear variante
         function openAddVariantPanel() {
             const panel = document.getElementById('variantCreatePanel');
             if (panel) {
                 panel.classList.remove('hidden');
-                // Sincronizar color picker y texto
+
                 const picker = document.getElementById('variantColorPicker');
                 const text = document.getElementById('variantColorText');
                 if (picker && text) {
@@ -691,7 +641,7 @@
                         });
                     }
                 }
-                // Scroll al panel
+
                 panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
@@ -701,9 +651,7 @@
             if (panel) panel.classList.add('hidden');
         }
 
-        // Helpers para editar/eliminar variantes
         document.addEventListener('DOMContentLoaded', function() {
-            // Pintar color en chips si existe data-color
             document.querySelectorAll('.js-variant-color').forEach(function(el){
                 var c = el.getAttribute('data-color');
                 if (c) { el.style.backgroundColor = c; }
@@ -711,7 +659,6 @@
 
             var baseVariantsUrl = '/dashboard/products/{{ $product->id }}/variants';
 
-            // Eliminar variante
             document.querySelectorAll('.js-delete-variant').forEach(function(btn){
                 btn.addEventListener('click', function(){
                     var id = this.getAttribute('data-variant-id');
@@ -731,10 +678,90 @@
                 });
             });
 
-            // Editar variante (abrir modal y prellenar)
             document.querySelectorAll('.js-edit-variant').forEach(function(btn){
                 btn.addEventListener('click', function(){ editVariant(this); });
             });
+
+            // Vista previa de imagen local
+            var fileInput = document.getElementById('image_file_input');
+            var fileCard = document.getElementById('imageLocalPreviewCard');
+            var fileImg = document.getElementById('imageLocalPreviewImg');
+            if (fileInput && fileCard && fileImg && !fileInput.dataset.bound) {
+                fileInput.dataset.bound = '1';
+                fileInput.addEventListener('change', function(){
+                    var f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+                    if (!f) {
+                        fileCard.classList.add('hidden');
+                        return;
+                    }
+                    var url = URL.createObjectURL(f);
+                    fileImg.src = url;
+                    fileCard.classList.remove('hidden');
+                });
+            }
+
+            // Bind color sync for the Variant Edit modal ONCE (avoid stacking listeners)
+            var vefPicker = document.getElementById('vef_color_picker');
+            var vefText = document.getElementById('vef_color_text');
+            if (vefPicker && vefText && !vefPicker.dataset.bound) {
+                vefPicker.dataset.bound = '1';
+
+                vefPicker.addEventListener('input', function (e) {
+                    var t = e && e.target ? e.target : null;
+                    if (t && 'value' in t) {
+                        vefText.value = t.value;
+                    }
+                });
+
+                vefText.addEventListener('input', function (e) {
+                    var t = e && e.target ? e.target : null;
+                    if (t && 'value' in t) {
+                        if (/^#[0-9A-F]{6}$/i.test(t.value)) {
+                            vefPicker.value = t.value;
+                        }
+                    }
+                });
+            }
+
+            // Normalize Google Drive "view" links into a direct download format (client-side helper)
+            var driveInput = document.getElementById('image_url');
+            if (driveInput && !driveInput.dataset.bound) {
+                driveInput.dataset.bound = '1';
+
+                function extractDriveId(u) {
+                    if (!u) return '';
+                    var m = String(u).match(/\/file\/d\/([^\/]+)/);
+                    if (m && m[1]) return m[1];
+
+                    try {
+                        var urlObj = new URL(u);
+                        var id = urlObj.searchParams.get('id');
+                        return id || '';
+                    } catch (_) {
+                        return '';
+                    }
+                }
+
+                function normalizeDriveUrl(u) {
+                    var id = extractDriveId(u);
+                    if (!id) return u;
+                    return 'https://drive.google.com/uc?export=download&id=' + id;
+                }
+
+                driveInput.addEventListener('blur', function () {
+                    var v = driveInput.value ? driveInput.value.trim() : '';
+                    if (!v) return;
+                    if (v.includes('drive.google.com')) {
+                        driveInput.value = normalizeDriveUrl(v);
+                    }
+                    var urlPreviewCard = document.getElementById('imageUrlPreviewCard');
+                    var urlPreviewImg = document.getElementById('imageUrlPreviewImg');
+                    if (urlPreviewCard && urlPreviewImg) {
+                        urlPreviewImg.src = driveInput.value;
+                        urlPreviewCard.classList.remove('hidden');
+                    }
+                });
+            }
         });
 
         function editVariant(el){
@@ -764,7 +791,6 @@
             document.getElementById('vef_price').value = price || '';
             document.getElementById('vef_stock').value = stock || 0;
 
-            // Sincronizar color
             var picker = document.getElementById('vef_color_picker');
             var text = document.getElementById('vef_color_text');
             if (color) {
@@ -773,8 +799,6 @@
             } else {
                 text.value = '';
             }
-            picker.addEventListener('input', function(e){ text.value = e.target.value; });
-            text.addEventListener('input', function(e){ if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) picker.value = e.target.value; });
 
             if (modal) {
                 modal.classList.remove('hidden');

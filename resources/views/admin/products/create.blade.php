@@ -93,16 +93,24 @@
                 <div class="grid md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Subir imagen</label>
-                        <input type="file" name="image" accept="image/*" class="w-full rounded-lg border {{ $borderClass('image') }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                        <input id="create_image_file_input" type="file" name="image" accept="image/*" class="w-full rounded-lg border {{ $borderClass('image') }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
                         @error('image')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         <p class="text-xs text-zinc-500 dark:text-zinc-500">PNG, JPG, WEBP hasta 5MB.</p>
+                        <div id="createImageLocalPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Vista previa (no guardada)</p>
+                            <img id="createImageLocalPreviewImg" alt="Vista previa" class="w-full h-40 object-contain">
+                        </div>
                     </div>
                     <div class="space-y-2">
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Enlace público (Google Drive)</label>
-                        <input type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" class="w-full rounded-lg border {{ $borderClass('image_url') }} bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input id="create_image_url" type="url" name="image_url" value="{{ old('image_url') }}" placeholder="https://drive.google.com/file/d/ID/view?usp=sharing" class="w-full rounded-lg border {{ $borderClass('image_url') }} bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
                         @error('image_url')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         <p class="text-xs text-zinc-500 dark:text-zinc-500">Puedes pegar el enlace tal cual de Drive (público). Lo convertimos a vista directa automáticamente.</p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
+                        <div id="createImageUrlPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Vista previa del enlace</p>
+                            <img id="createImageUrlPreviewImg" alt="Vista previa URL" class="w-full h-40 object-contain">
+                        </div>
                     </div>
                 </div>
                 <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-500">Puedes usar cualquiera de las dos opciones o ambas; si subes archivo será la primera imagen.</p>
@@ -119,4 +127,42 @@
             </div>
         </form>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+        var fileInput = document.getElementById('create_image_file_input');
+        var fileCard = document.getElementById('createImageLocalPreviewCard');
+        var fileImg = document.getElementById('createImageLocalPreviewImg');
+        if (fileInput && fileCard && fileImg && !fileInput.dataset.bound) {
+            fileInput.dataset.bound = '1';
+            fileInput.addEventListener('change', function(){
+                var f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+                if (!f) { fileCard.classList.add('hidden'); return; }
+                var url = URL.createObjectURL(f);
+                fileImg.src = url;
+                fileCard.classList.remove('hidden');
+            });
+        }
+
+        var driveInput = document.getElementById('create_image_url');
+        var urlCard = document.getElementById('createImageUrlPreviewCard');
+        var urlImg = document.getElementById('createImageUrlPreviewImg');
+        if (driveInput && urlCard && urlImg && !driveInput.dataset.bound) {
+            driveInput.dataset.bound = '1';
+            function extractDriveId(u) {
+                if (!u) return '';
+                var m = String(u).match(/\/file\/d\/([^\/]+)/);
+                if (m && m[1]) return m[1];
+                try { var urlObj = new URL(u); return urlObj.searchParams.get('id') || ''; } catch(_) { return ''; }
+            }
+            function normalizeDriveUrl(u) { var id = extractDriveId(u); return id ? ('https://drive.google.com/uc?export=download&id=' + id) : u; }
+            driveInput.addEventListener('blur', function(){
+                var v = driveInput.value ? driveInput.value.trim() : '';
+                if (!v) return;
+                if (v.includes('drive.google.com')) { driveInput.value = normalizeDriveUrl(v); }
+                urlImg.src = driveInput.value; urlCard.classList.remove('hidden');
+            });
+        }
+    });
+    </script>
 </x-layouts.app>

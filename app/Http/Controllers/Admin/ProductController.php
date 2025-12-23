@@ -161,9 +161,12 @@ class ProductController extends Controller
             }
         }
 
+        $hasNewImage = $request->hasFile('image') || $request->filled('image_url');
+        $message = $hasNewImage ? 'Producto e imagen actualizados correctamente' : 'Producto actualizado correctamente';
+
         return redirect()
-            ->route('dashboard.products.index')
-            ->with('success', 'Producto actualizado correctamente');
+            ->route('dashboard.products.edit', $product->id)
+            ->with('success', $message);
     }
 
     public function destroy($id)
