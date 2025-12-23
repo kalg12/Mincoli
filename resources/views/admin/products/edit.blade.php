@@ -230,8 +230,8 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-right">
-                                            <button onclick="editVariant({{ $variant->id }})" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">Editar</button>
-                                            <button onclick="deleteVariant({{ $variant->id }})" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium ml-3">Eliminar</button>
+                                            <button type="button" data-variant-id="{{ $variant->id }}" class="js-edit-variant text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">Editar</button>
+                                            <button type="button" data-variant-id="{{ $variant->id }}" class="js-delete-variant text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium ml-3">Eliminar</button>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -400,6 +400,25 @@
             document.querySelectorAll('.js-variant-color').forEach(function (el) {
                 const color = el.getAttribute('data-color');
                 if (color) el.style.backgroundColor = color;
+            });
+
+            // Bind variant action buttons without inline Blade JS to avoid editor diagnostics
+            document.querySelectorAll('.js-edit-variant').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const id = btn.getAttribute('data-variant-id');
+                    if (typeof editVariant === 'function' && id) {
+                        editVariant(Number(id));
+                    }
+                });
+            });
+
+            document.querySelectorAll('.js-delete-variant').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const id = btn.getAttribute('data-variant-id');
+                    if (typeof deleteVariant === 'function' && id) {
+                        deleteVariant(Number(id));
+                    }
+                });
             });
         });
 
