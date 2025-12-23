@@ -309,12 +309,17 @@ function updateTotals() {
     document.getElementById('cart-total').textContent = `$${window.cartData.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}`;
     document.getElementById('cart-count').textContent = `(${window.cartData.items.length})`;
 
-    // Controlar visibilidad del IVA: solo mostrar si está activado Y el valor es > 0
+    // Controlar visibilidad del IVA SIN flash: solo cambiar si el estado es diferente
     const ivaRow = document.getElementById('cart-iva-row');
     if (ivaRow) {
-        if (window.cartData.show_iva && window.cartData.iva > 0) {
+        const shouldShow = window.cartData.show_iva && window.cartData.iva > 0;
+        const currentDisplay = window.getComputedStyle(ivaRow).display;
+        const isCurrentlyVisible = currentDisplay !== 'none';
+        
+        // Solo cambiar si el estado deseado es diferente del actual
+        if (shouldShow && !isCurrentlyVisible) {
             ivaRow.style.display = 'flex';
-        } else {
+        } else if (!shouldShow && isCurrentlyVisible) {
             ivaRow.style.display = 'none';
         }
     }
