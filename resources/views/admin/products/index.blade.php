@@ -66,7 +66,11 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <a href="{{ route('dashboard.products.edit', $product->id) }}" class="block h-12 w-12 flex-shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:ring-2 hover:ring-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"></a>
+                                    <a href="{{ route('dashboard.products.edit', $product->id) }}" class="block h-12 w-12 flex-shrink-0 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:ring-2 hover:ring-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-hidden">
+                                        @if($product->images->count() > 0)
+                                            <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
+                                        @endif
+                                    </a>
                                     <div>
                                         <a href="{{ route('dashboard.products.edit', $product->id) }}" class="font-semibold text-zinc-900 dark:text-white hover:underline">{{ $product->name }}</a>
                                         <p class="text-xs text-zinc-500 dark:text-zinc-500">SKU: {{ $product->sku }}</p>

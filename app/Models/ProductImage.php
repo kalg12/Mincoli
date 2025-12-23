@@ -52,6 +52,10 @@ class ProductImage extends Model
             return $url;
         }
 
+        if (str_contains($url, '/storage/public/')) {
+            return str_replace('/storage/public/', '/storage/', $url);
+        }
+
         // Si ya es un enlace directo de Drive
         if (str_contains($url, 'drive.google.com/uc?export=')) {
             return $url;

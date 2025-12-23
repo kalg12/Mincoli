@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Filesystem\FilesystemAdapter;
 
 class ProductController extends Controller
 {
@@ -71,10 +72,14 @@ class ProductController extends Controller
         $position = 0;
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/product-images');
+            $path = $request->file('image')->store('product-images', 'public');
+
+            /** @var FilesystemAdapter $publicDisk */
+            $publicDisk = Storage::disk('public');
+
             ProductImage::create([
                 'product_id' => $product->id,
-                'url' => Storage::url($path),
+                'url' => $publicDisk->url($path),
                 'position' => $position++,
             ]);
         }
@@ -142,10 +147,14 @@ class ProductController extends Controller
         $position = ($product->images()->max('position') ?? -1) + 1;
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/product-images');
+            $path = $request->file('image')->store('product-images', 'public');
+
+            /** @var FilesystemAdapter $publicDisk */
+            $publicDisk = Storage::disk('public');
+
             ProductImage::create([
                 'product_id' => $product->id,
-                'url' => Storage::url($path),
+                'url' => $publicDisk->url($path),
                 'position' => $position++,
             ]);
         }
@@ -232,9 +241,9 @@ class ProductController extends Controller
         DB::transaction(function () use ($product) {
             foreach ($product->images as $image) {
                 $original = $image->getRawOriginal('url') ?? $image->url;
-                if ($original && str_starts_with($original, '/storage/')) {
-                    $path = str_replace('/storage/', 'public/', $original);
-                    Storage::delete($path);
+                $path = $this->pathFromImageUrl($original);
+                if ($path) {
+                    Storage::disk('public')->delete($path);
                 }
             }
 
@@ -275,11 +284,15 @@ class ProductController extends Controller
         $variant = $product->variants()->create($validated);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/product-images');
+            $path = $request->file('image')->store('product-images', 'public');
+
+            /** @var FilesystemAdapter $publicDisk */
+            $publicDisk = Storage::disk('public');
+
             ProductImage::create([
                 'product_id' => $productId,
                 'variant_id' => $variant->id,
-                'url' => Storage::url($path),
+                'url' => $publicDisk->url($path),
                 'position' => 0,
             ]);
         }
@@ -308,11 +321,15 @@ class ProductController extends Controller
         $variant->update($validated);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/product-images');
+            $path = $request->file('image')->store('product-images', 'public');
+
+            /** @var FilesystemAdapter $publicDisk */
+            $publicDisk = Storage::disk('public');
+
             ProductImage::create([
                 'product_id' => $productId,
                 'variant_id' => $variant->id,
-                'url' => Storage::url($path),
+                'url' => $publicDisk->url($path),
                 'position' => 0,
             ]);
         }
@@ -349,9 +366,9 @@ class ProductController extends Controller
         $image = ProductImage::where('product_id', $id)->findOrFail($imageId);
 
         $originalUrl = $image->getRawOriginal('url') ?? $image->url;
-        if ($originalUrl && str_starts_with($originalUrl, '/storage/')) {
-            $path = str_replace('/storage/', 'public/', $originalUrl);
-            Storage::delete($path);
+        $path = $this->pathFromImageUrl($originalUrl);
+        if ($path) {
+            Storage::disk('public')->delete($path);
         }
 
         $image->delete();
@@ -440,9 +457,43 @@ class ProductController extends Controller
         }
 
         $filename = 'product-images/' . uniqid('drive_', true) . '.' . $ext;
-        Storage::put('public/' . $filename, $response->body());
 
-        return Storage::url('public/' . $filename);
+        /** @var FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk('public');
+
+        $publicDisk->put($filename, $response->body());
+
+        return $publicDisk->url($filename);
+    }
+
+    /**
+     * Extrae la ruta relativa del disco público a partir de una URL generada por Storage.
+     */
+    private function pathFromImageUrl(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        $normalized = $url;
+
+        if (str_contains($normalized, '/storage/public/')) {
+            $normalized = str_replace('/storage/public/', '/storage/', $normalized);
+        }
+
+        if (preg_match('~/storage/(.+)$~', $normalized, $matches)) {
+            return ltrim($matches[1], '/');
+        }
+
+        if (str_starts_with($normalized, 'storage/')) {
+            return ltrim(str_replace('storage/', '', $normalized), '/');
+        }
+
+        if (str_starts_with($normalized, 'public/')) {
+            return ltrim(str_replace('public/', '', $normalized), '/');
+        }
+
+        return null;
     }
 
     private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
