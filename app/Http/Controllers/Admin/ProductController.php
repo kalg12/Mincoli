@@ -79,12 +79,15 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            // Stock puede no enviarse si el producto usa variantes
+            'stock' => 'sometimes|integer|min:0',
             'status' => 'required|in:published,draft,out_of_stock',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = $validated['status'] === 'published';
+        // Asegurar que el checkbox se persista correctamente aunque venga desmarcado
+        $validated['is_featured'] = $request->boolean('is_featured');
 
         $product->update($validated);
 

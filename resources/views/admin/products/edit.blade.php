@@ -26,6 +26,68 @@
             </div>
         </div>
 
+        <!-- Modal editar variante -->
+        <div id="variantEditModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+            <div class="absolute inset-0 bg-black/60" onclick="closeVariantEditModal()"></div>
+            <div class="relative bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 border border-zinc-200 dark:border-zinc-700">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-zinc-900 dark:text-white">Editar Variante</h4>
+                    <button type="button" class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300" onclick="closeVariantEditModal()">✕</button>
+                </div>
+                <form id="variantEditForm" method="POST" action="#" enctype="multipart/form-data" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" id="vef_name" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Talla</label>
+                            <input type="text" name="size" id="vef_size" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Color</label>
+                            <div class="flex gap-2">
+                                <input type="color" id="vef_color_picker" class="h-10 w-16 rounded border border-zinc-200 dark:border-zinc-700 cursor-pointer">
+                                <input type="text" name="color" id="vef_color_text" placeholder="#ffffff" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código de Barras</label>
+                            <input type="text" name="barcode" id="vef_barcode" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">SKU <span class="text-red-500">*</span></label>
+                            <input type="text" name="sku" id="vef_sku" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Precio</label>
+                            <input type="number" name="price" id="vef_price" step="0.01" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Stock <span class="text-red-500">*</span></label>
+                            <input type="number" name="stock" id="vef_stock" min="0" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Imagen (opcional)</label>
+                            <input type="file" name="image" id="vef_image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeVariantEditModal()" class="rounded-lg border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700">Cancelar</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Guardar cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="px-6 pb-6">
             <div id="general" class="tab-content">
                 <form method="POST" action="{{ route('dashboard.products.update', $product->id) }}" class="space-y-6">
@@ -125,7 +187,68 @@
                 <div class="space-y-6">
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Variantes del Producto</h3>
+                <!-- Modal editar variante -->
+                <div id="variantEditModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+                    <div class="absolute inset-0 bg-black/60" onclick="closeVariantEditModal()"></div>
+                    <div class="relative bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 border border-zinc-200 dark:border-zinc-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-zinc-900 dark:text-white">Editar Variante</h4>
+                            <button class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300" onclick="closeVariantEditModal()">✕</button>
+                        </div>
+                        <form id="variantEditForm" method="POST" action="#" enctype="multipart/form-data" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre <span class="text-red-500">*</span></label>
+                                    <input type="text" name="name" id="vef_name" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Talla</label>
+                                    <input type="text" name="size" id="vef_size" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                </div>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Color</label>
+                                    <div class="flex gap-2">
+                                        <input type="color" id="vef_color_picker" class="h-10 w-16 rounded border border-zinc-200 dark:border-zinc-700 cursor-pointer">
+                                        <input type="text" name="color" id="vef_color_text" placeholder="#ffffff" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código de Barras</label>
+                                    <input type="text" name="barcode" id="vef_barcode" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                </div>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">SKU <span class="text-red-500">*</span></label>
+                                    <input type="text" name="sku" id="vef_sku" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Precio</label>
+                                    <input type="number" name="price" id="vef_price" step="0.01" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                </div>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Stock <span class="text-red-500">*</span></label>
+                                    <input type="number" name="stock" id="vef_stock" min="0" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required>
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Imagen (opcional)</label>
+                                    <input type="file" name="image" id="vef_image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <button type="button" onclick="closeVariantEditModal()" class="rounded-lg border border-zinc-300 dark:border-zinc-600 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700">Cancelar</button>
+                                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">Guardar cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                             <button onclick="openAddVariantPanel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                                 <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -230,7 +353,16 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-right">
-                                            <button type="button" data-variant-id="{{ $variant->id }}" class="js-edit-variant text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">Editar</button>
+                                            <button type="button"
+                                                data-variant-id="{{ $variant->id }}"
+                                                data-name="{{ $variant->name }}"
+                                                data-size="{{ $variant->size }}"
+                                                data-color="{{ $variant->color }}"
+                                                data-sku="{{ $variant->sku }}"
+                                                data-barcode="{{ $variant->barcode }}"
+                                                data-price="{{ $variant->price ?? '' }}"
+                                                data-stock="{{ $variant->stock }}"
+                                                class="js-edit-variant text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">Editar</button>
                                             <button type="button" data-variant-id="{{ $variant->id }}" class="js-delete-variant text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium ml-3">Eliminar</button>
                                         </td>
                                     </tr>
@@ -476,6 +608,95 @@
         function closeAddVariantPanel() {
             const panel = document.getElementById('variantCreatePanel');
             if (panel) panel.classList.add('hidden');
+        }
+
+        // Helpers para editar/eliminar variantes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Pintar color en chips si existe data-color
+            document.querySelectorAll('.js-variant-color').forEach(function(el){
+                var c = el.getAttribute('data-color');
+                if (c) { el.style.backgroundColor = c; }
+            });
+
+            var baseVariantsUrl = '/dashboard/products/{{ $product->id }}/variants';
+
+            // Eliminar variante
+            document.querySelectorAll('.js-delete-variant').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var id = this.getAttribute('data-variant-id');
+                    if (!id) return;
+                    if (!confirm('¿Eliminar esta variante?')) return;
+                    var form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = baseVariantsUrl + '/' + id;
+                    form.style.display = 'none';
+                    var token = document.createElement('input');
+                    token.type = 'hidden'; token.name = '_token'; token.value = '{{ csrf_token() }}';
+                    var method = document.createElement('input');
+                    method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE';
+                    form.appendChild(token); form.appendChild(method);
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            });
+
+            // Editar variante (abrir modal y prellenar)
+            document.querySelectorAll('.js-edit-variant').forEach(function(btn){
+                btn.addEventListener('click', function(){ editVariant(this); });
+            });
+        });
+
+        function editVariant(el){
+            var id = el.getAttribute('data-variant-id');
+            var name = el.getAttribute('data-name');
+            if (!name) {
+                var tr = el.closest ? el.closest('tr') : null;
+                var firstTd = tr ? tr.querySelector('td:nth-child(1)') : null;
+                name = firstTd && firstTd.textContent ? firstTd.textContent.trim() : '';
+            }
+            var color = el.getAttribute('data-color') || '';
+            var size = el.getAttribute('data-size') || '';
+            var sku = el.getAttribute('data-sku') || '';
+            var barcode = el.getAttribute('data-barcode') || '';
+            var price = el.getAttribute('data-price') || '';
+            var stock = el.getAttribute('data-stock') || '';
+
+            var modal = document.getElementById('variantEditModal');
+            var form = document.getElementById('variantEditForm');
+            var baseVariantsUrl = '/dashboard/products/{{ $product->id }}/variants';
+            form.action = baseVariantsUrl + '/' + id;
+
+            document.getElementById('vef_name').value = name || '';
+            document.getElementById('vef_size').value = size || '';
+            document.getElementById('vef_sku').value = sku || '';
+            document.getElementById('vef_barcode').value = barcode || '';
+            document.getElementById('vef_price').value = price || '';
+            document.getElementById('vef_stock').value = stock || 0;
+
+            // Sincronizar color
+            var picker = document.getElementById('vef_color_picker');
+            var text = document.getElementById('vef_color_text');
+            if (color) {
+                text.value = color;
+                if (/^#[0-9A-Fa-f]{6}$/.test(color)) picker.value = color;
+            } else {
+                text.value = '';
+            }
+            picker.addEventListener('input', function(e){ text.value = e.target.value; });
+            text.addEventListener('input', function(e){ if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) picker.value = e.target.value; });
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeVariantEditModal(){
+            var modal = document.getElementById('variantEditModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         }
     </script>
 </x-layouts.app>

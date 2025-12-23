@@ -185,39 +185,67 @@ function renderCart() {
 function renderRecommendations() {
     const container = document.getElementById('recommendations-list');
 
-    container.innerHTML = window.cartData.recommendations.map(rec => `
+    container.innerHTML = window.cartData.recommendations.map(rec => {
+        // Precio
+        const priceHtml = rec.has_discount
+            ? `<span class="text-xs font-bold text-pink-600">$${parseFloat(rec.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
+               <span class="text-xs line-through text-gray-500 decoration-gray-500 decoration-1">$${parseFloat(rec.original_price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>`
+            : `<span class="text-xs font-bold text-pink-600">$${parseFloat(rec.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>`;
+
+        // Imagen
+        const imageHtml = rec.image && rec.image !== '/images/placeholder.jpg'
+            ? `<img src="${rec.image}" alt="${rec.name}" class="w-full h-full object-contain p-2">`
+            : `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-image text-gray-300 text-2xl"></i></div>`;
+
+        // Selector de variantes
+        let actionHtml = '';
+        if (rec.has_variants) {
+            const variantOptions = (rec.variants || []).map(v => {
+                const variantLabel = v.name + (v.size ? ` — ${v.size}` : '') + (v.color ? ` · ${v.color}` : '');
+                const stockStatus = v.stock > 0 ? '' : ' (Agotado)';
+                const disabled = v.stock <= 0 ? 'disabled' : '';
+                return `<option value="${v.id}" ${disabled}>${variantLabel}${stockStatus}</option>`;
+            }).join('');
+
+            actionHtml = `
+                <div class="mt-2 flex items-center gap-2">
+                    <select id="rec-select-${rec.id}" class="flex-1 border border-gray-300 rounded-lg text-xs px-2 py-1 focus:ring-pink-500 focus:border-pink-500">
+                        <option value="">Selecciona variante</option>
+                        ${variantOptions}
+                    </select>
+                    <button type="button" onclick="window.quickAddRecommended(${rec.id})" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full px-3 py-2 transition active:scale-90 flex-shrink-0">
+                        <i class="fas fa-cart-plus text-xs"></i>
+                    </button>
+                </div>`;
+        } else {
+            actionHtml = `<button type="button" onclick="quickAddToCart(${rec.id})" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full p-2 transition active:scale-90 flex-shrink-0">
+                <i class="fas fa-plus text-xs"></i>
+            </button>`;
+        }
+
+        return `
         <div class="bg-gradient-to-r from-gray-50 to-white rounded-lg p-3 hover:shadow-lg transition border border-gray-200 hover:border-pink-300">
-            <div class="flex gap-3 items-center">
+            <div class="flex gap-3 items-start">
                 <div class="relative overflow-hidden bg-gray-100 rounded-lg w-20 h-20 flex-shrink-0">
-                    ${rec.image && rec.image !== '/images/placeholder.jpg'
-                        ? `<img src="${rec.image}" alt="${rec.name}" class="w-full h-full object-contain p-2">`
-                        : `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-image text-gray-300 text-2xl"></i></div>`
-                    }
+                    ${imageHtml}
                 </div>
-                <div class="flex-1 min-w-0 flex flex-col justify-between">
-                    <a href="/tienda/producto/${rec.slug}" class="text-xs font-semibold text-gray-900 hover:text-pink-600 line-clamp-2 mb-2 block transition">
+                <div class="flex-1 min-w-0">
+                    <a href="/tienda/producto/${rec.slug}" class="text-xs font-semibold text-gray-900 hover:text-pink-600 line-clamp-2 block transition">
                         ${rec.name}
                     </a>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-baseline gap-1">
-                            ${rec.has_discount
-                                ? `<span class="text-xs font-bold text-pink-600">$${parseFloat(rec.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>
-                                   <span class="text-xs line-through text-gray-500 decoration-gray-500 decoration-1">$${parseFloat(rec.original_price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>`
-                                : `<span class="text-xs font-bold text-pink-600">$${parseFloat(rec.price).toLocaleString('es-MX', {minimumFractionDigits: 2})}</span>`
-                            }
-                        </div>
-                        <button type="button" onclick="quickAddToCart(${rec.id})" class="bg-pink-600 hover:bg-pink-700 text-white rounded-full p-2 transition active:scale-90 flex-shrink-0">
-                            <i class="fas fa-plus text-xs"></i>
-                        </button>
+                    <div class="mt-1 flex items-center justify-between">
+                        <div class="flex items-baseline gap-1">${priceHtml}</div>
+                        ${!rec.has_variants ? actionHtml : ''}
                     </div>
+                    ${rec.has_variants ? actionHtml : ''}
                 </div>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 // Agregar rápidamente un producto recomendado
-window.quickAddToCart = async function(productId) {
+window.quickAddToCart = async function(productId, variantId) {
     try {
         const response = await fetch('{{ route("cart.add") }}', {
             method: 'POST',
@@ -228,7 +256,8 @@ window.quickAddToCart = async function(productId) {
             },
             body: JSON.stringify({
                 product_id: productId,
-                quantity: 1
+                quantity: 1,
+                variant_id: variantId || null
             })
         });
 
@@ -244,6 +273,17 @@ window.quickAddToCart = async function(productId) {
         console.error('Error:', error);
         showToast('Error en la solicitud', 'error');
     }
+};
+
+// Agregar recomendado con selector de variante
+window.quickAddRecommended = async function(productId) {
+    var select = document.getElementById('rec-select-' + productId);
+    var variantId = select ? select.value : '';
+    if (!variantId) {
+        showToast('Selecciona una variante', 'error');
+        return;
+    }
+    await window.quickAddToCart(productId, variantId);
 };
 
 // Mostrar toast de notificación

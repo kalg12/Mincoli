@@ -328,6 +328,8 @@ class CartController extends Controller
         $recommendations = $this->recommendationEngine->getRecommendations($cart, 4);
 
         $recommendationsData = $recommendations->map(function ($product) {
+            // Asegurar relaciones para componer información de variantes
+            $product->loadMissing(['images', 'variants']);
             return [
                 'id' => $product->id,
                 'name' => $product->name,
@@ -337,7 +339,21 @@ class CartController extends Controller
                 'original_price' => $product->price,
                 'has_discount' => $product->sale_price && $product->sale_price < $product->price,
                 'image' => $product->images->first()?->url ?? '/images/placeholder.jpg',
-                'stock' => $product->stock
+                'stock' => $product->stock,
+                'has_variants' => $product->variants->count() > 0,
+                'variants' => $product->variants->map(function ($v) use ($product) {
+                    return [
+                        'id' => $v->id,
+                        'name' => $v->name,
+                        'size' => $v->size,
+                        'color' => $v->color,
+                        'price' => $v->sale_price ?? ($v->price ?? ($product->sale_price ?? $product->price)),
+                        'sale_price' => $v->sale_price,
+                        'stock' => $v->stock,
+                        'sku' => $v->sku,
+                        'image' => $v->images()->first()?->url ?? null,
+                    ];
+                })->values(),
             ];
         });
 
