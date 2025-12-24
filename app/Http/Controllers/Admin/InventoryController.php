@@ -102,7 +102,7 @@ class InventoryController extends Controller
             }
         });
 
-        return redirect()->route('admin.inventory.movements')
+        return redirect()->route('dashboard.inventory.movements')
             ->with('success', 'Movimiento registrado correctamente');
     }
 

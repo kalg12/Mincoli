@@ -164,13 +164,16 @@
                                 @error('image_url')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Pega el enlace público de Drive; se normaliza automáticamente.</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-500">Ejemplo: https://drive.google.com/file/d/abcdef123/view?usp=sharing</p>
-                                <div id="imageUrlPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3">
-                                    <div class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 mb-2">
-                                        <span>Vista previa del enlace</span>
-                                        <span id="imageUrlStatus" class="hidden animate-pulse text-blue-600 dark:text-blue-400">Cargando...</span>
+                                <div id="imageUrlPreviewCard" class="mt-2 hidden rounded-lg border border-zinc-200 dark:border-zinc-700 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-900/20 dark:to-blue-900/10 p-4">
+                                    <div class="flex items-center gap-3">
+                                        <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-blue-900 dark:text-blue-300">Enlace válido</p>
+                                            <p class="text-xs text-blue-700 dark:text-blue-400">Para visualizar la imagen, guarda el producto</p>
+                                        </div>
                                     </div>
-                                    <p id="imageUrlError" class="hidden text-xs text-red-600 dark:text-red-400 mb-2">No pudimos cargar la imagen. Verifica el enlace.</p>
-                                    <img id="imageUrlPreviewImg" alt="Vista previa URL" class="w-full h-40 object-contain">
                                 </div>
                             </div>
                         </div>
@@ -192,8 +195,7 @@
                                     <div class="aspect-square bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center p-4 cursor-move">
                                         <img src="{{ $image->url }}" alt="{{ $product->name }}" class="max-w-full max-h-full object-contain pointer-events-none select-none">
                                     </div>
-                                    <div class="p-3 border-t border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-2">
-                                        <span class="text-[11px] text-zinc-500 dark:text-zinc-400">ID: {{ $image->id }}</span>
+                                    <div class="p-3 border-t border-zinc-200 dark:border-zinc-700">
                                         <button type="button"
                                                 class="w-full px-3 py-2 text-xs font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                                                 data-delete-image-action="{{ route('dashboard.products.images.destroy', ['id' => $product->id, 'imageId' => $image->id]) }}"
