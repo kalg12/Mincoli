@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\Auth\Guard;
 
 class InventoryController extends Controller
 {
@@ -77,9 +78,11 @@ class InventoryController extends Controller
         ]);
 
         DB::transaction(function () use ($validated) {
+            /** @var Guard $auth */
+            $auth = auth();
             $movement = InventoryMovement::create([
                 ...$validated,
-                'created_by' => auth()->id(),
+                'created_by' => $auth->id(),
             ]);
 
             // Actualizar stock
@@ -132,10 +135,12 @@ class InventoryController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        /** @var Guard $auth */
+        $auth = auth();
         $count = InventoryCount::create([
             ...$validated,
             'status' => 'draft',
-            'created_by' => auth()->id(),
+            'created_by' => $auth->id(),
         ]);
 
         return redirect()->route('admin.inventory.counts.show', $count)
@@ -224,10 +229,12 @@ class InventoryController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        /** @var Guard $auth */
+        $auth = auth();
         $item->update([
             ...$validated,
-            'counted_by' => auth()->id(),
-            'counted_by_name' => auth()->user()?->name,
+            'counted_by' => $auth->id(),
+            'counted_by_name' => $auth->user()?->name,
             'counted_at' => now(),
         ]);
 
@@ -283,6 +290,8 @@ class InventoryController extends Controller
         }
 
         DB::transaction(function () use ($count) {
+            /** @var Guard $auth */
+            $auth = auth();
             foreach ($count->items as $item) {
                 if ($item->difference != 0) {
                     // Crear movimiento de ajuste
@@ -294,7 +303,7 @@ class InventoryController extends Controller
                         'reason' => "Ajuste por conteo: {$count->name}",
                         'reference_type' => InventoryCountItem::class,
                         'reference_id' => $item->id,
-                        'created_by' => auth()->id(),
+                        'created_by' => $auth->id(),
                     ]);
 
                     // Actualizar stock
@@ -308,7 +317,7 @@ class InventoryController extends Controller
 
             $count->update([
                 'status' => 'reviewed',
-                'reviewed_by' => auth()->id(),
+                'reviewed_by' => $auth->id(),
                 'reviewed_at' => now(),
             ]);
         });
@@ -369,9 +378,11 @@ class InventoryController extends Controller
             'counter_name' => 'required|string|max:100',
         ]);
 
+        /** @var Guard $auth */
+        $auth = auth();
         $item->update([
             ...$validated,
-            'counted_by' => auth()->id(),
+            'counted_by' => $auth->id(),
             'counted_by_name' => $validated['counter_name'],
             'counted_at' => now(),
         ]);
