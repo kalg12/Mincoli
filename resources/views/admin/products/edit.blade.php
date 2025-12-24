@@ -840,7 +840,8 @@
                     saveBtn.disabled = true;
                     saveBtn.textContent = 'Guardando...';
                     try {
-                        var res = await fetch('{{ route('dashboard.products.images.reorder', $product->id) }}', {
+                        var reorderUrl = "{{ route('dashboard.products.images.reorder', $product->id) }}";
+                        var res = await fetch(reorderUrl, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
