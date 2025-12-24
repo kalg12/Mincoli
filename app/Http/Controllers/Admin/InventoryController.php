@@ -143,7 +143,7 @@ class InventoryController extends Controller
             'created_by' => $auth->id(),
         ]);
 
-        return redirect()->route('admin.inventory.counts.show', $count)
+        return redirect()->route('dashboard.inventory.counts.show', $count)
             ->with('success', 'Conteo creado correctamente');
     }
 
