@@ -64,7 +64,7 @@
             const noVariantInfo = document.getElementById('noVariantInfo');
 
             // Datos de productos con sus variantes
-            const productsData = @json($products);
+            const productsData = JSON.parse('{!! json_encode($products) !!}');
             const variantsByProduct = {};
 
             productsData.forEach(product => {
