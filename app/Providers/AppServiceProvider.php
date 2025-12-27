@@ -11,7 +11,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Cargar helpers globales (currency, etc.)
+        $helperPath = app_path('Helpers/CurrencyHelper.php');
+        if (file_exists($helperPath)) {
+            require_once $helperPath;
+        }
     }
 
     /**

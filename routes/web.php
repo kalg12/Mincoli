@@ -8,6 +8,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\PagesController;
+use App\Http\Controllers\POSController;
+use App\Http\Controllers\Api\POSApiController;
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -48,6 +50,40 @@ Route::get('/inventory-capture/{token}', [App\Http\Controllers\Admin\InventoryCo
 Route::post('/inventory-capture/{token}/items/{item}', [App\Http\Controllers\Admin\InventoryController::class, 'savePublicCapture'])->name('inventory.public.items.save');
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    // POS Module
+    Route::prefix('pos')->name('pos.')->group(function () {
+        Route::get('/', [POSController::class, 'index'])->name('index');
+        Route::get('/search', [POSController::class, 'searchProduct'])->name('searchProduct');
+        Route::get('/customers/search', [POSController::class, 'searchCustomer'])->name('customers.search');
+        Route::get('/transactions', [POSController::class, 'transactions'])->name('transactions.index');
+        Route::get('/session/open', [POSController::class, 'openSession'])->name('session.open');
+        Route::post('/session', [POSController::class, 'storeSession'])->name('session.store');
+        Route::post('/session/{session}/close', [POSController::class, 'closeSession'])->name('session.close');
+
+        // Transacciones
+        Route::get('/{session}/transaction', [POSController::class, 'createTransaction'])->name('transaction.create');
+        Route::post('/{session}/transaction', [POSController::class, 'storeTransaction'])->name('transaction.store');
+        Route::get('/transaction/{transaction}', [POSController::class, 'editTransaction'])->name('transaction.edit');
+        Route::patch('/transaction/{transaction}', [POSController::class, 'updateTransaction'])->name('transaction.update');
+        Route::post('/transaction/{transaction}/complete', [POSController::class, 'completeTransaction'])->name('transaction.complete');
+
+        // Items
+        Route::post('/transaction/{transaction}/item', [POSController::class, 'addItem'])->name('item.add');
+        Route::delete('/transaction/{transaction}/item/{item}', [POSController::class, 'removeItem'])->name('item.remove');
+        Route::patch('/transaction/{transaction}/item/{item}/quantity', [POSController::class, 'updateItemQuantity'])->name('item.updateQuantity');
+
+        // Pagos
+        Route::post('/transaction/{transaction}/payment', [POSController::class, 'recordPayment'])->name('payment.store');
+
+        // Tickets
+        Route::get('/transaction/{transaction}/ticket', [POSController::class, 'printTicket'])->name('ticket.print');
+
+        // Items pendientes por enviar
+        Route::get('/pending-shipments', [POSController::class, 'pendingShipments'])->name('pending-shipments.index');
+        Route::patch('/item/{item}/shipped', [POSController::class, 'markAsShipped'])->name('item.shipped');
+        Route::patch('/item/{item}/completed', [POSController::class, 'markAsCompleted'])->name('item.completed');
+    });
+
     // Settings
     Route::get('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
