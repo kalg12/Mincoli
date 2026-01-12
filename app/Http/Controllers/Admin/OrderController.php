@@ -113,6 +113,66 @@ class OrderController extends Controller
         return redirect()->route('dashboard.orders.index')->with('success', 'Pedido eliminado correctamente.');
     }
 
+    public function linkCustomer(Request $request, Order $order)
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+        ]);
+
+        $customer = \App\Models\Customer::findOrFail($request->customer_id);
+
+        $order->update([
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->name,
+            'customer_email' => $customer->email,
+            'customer_phone' => $customer->phone,
+        ]);
+
+        return back()->with('success', 'Pedido vinculado al cliente correctamente.');
+    }
+
+    public function registerAsCustomer(Order $order)
+    {
+        if ($order->customer_id) {
+            return back()->with('error', 'Este pedido ya está vinculado a un cliente.');
+        }
+
+        // Check for existing customer with same email or phone to avoid duplicates
+        $existing = \App\Models\Customer::where('email', $order->customer_email)
+            ->orWhere('phone', $order->customer_phone)
+            ->first();
+
+        if ($existing) {
+            // If exists, just link it
+            $order->update(['customer_id' => $existing->id]);
+            return back()->with('success', 'Se encontró un cliente existente con estos datos y se ha vinculado el pedido.');
+        }
+
+        // Create new customer
+        $customer = \App\Models\Customer::create([
+            'name' => $order->customer_name,
+            'email' => $order->customer_email,
+            'phone' => $order->customer_phone,
+        ]);
+
+        $order->update(['customer_id' => $customer->id]);
+
+        return back()->with('success', 'Cliente registrado y pedido vinculado correctamente.');
+    }
+
+    public function updateCustomer(Request $request, Order $order)
+    {
+        $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+        ]);
+
+        $order->update($request->only(['customer_name', 'customer_email', 'customer_phone']));
+
+        return back()->with('success', 'Datos del cliente actualizados correctamente.');
+    }
+
     public function destroyPayment(Order $order, $paymentId)
     {
         $payment = $order->payments()->findOrFail($paymentId);

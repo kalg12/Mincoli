@@ -174,16 +174,134 @@
                 </div>
 
                 <!-- Customer Info -->
-                <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-                    <div class="border-b border-zinc-200 px-6 py-4 dark:border-zinc-700">
+                <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900" x-data="customerLink()">
+                    <div class="border-b border-zinc-200 px-6 py-4 dark:border-zinc-700 flex justify-between items-center">
                         <h2 class="font-semibold text-zinc-900 dark:text-white">Cliente</h2>
+                        @if(!$order->customer_id)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            Invitado
+                        </span>
+                        @endif
                     </div>
-                    <div class="p-6 text-sm text-zinc-600 dark:text-zinc-400 space-y-2">
-                        <p><span class="font-medium text-zinc-900 dark:text-white">Nombre:</span> {{ $order->customer_name }}</p>
-                        <p><span class="font-medium text-zinc-900 dark:text-white">Email:</span> {{ $order->customer_email }}</p>
-                        <p><span class="font-medium text-zinc-900 dark:text-white">Tel:</span> {{ $order->customer_phone }}</p>
+                    <div class="p-6">
+                        <!-- Search Section -->
+                        <div class="mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Vincular con base de datos</label>
+                            <div class="relative">
+                                <input type="text" x-model="search" @input.debounce.300ms="performSearch()"
+                                    placeholder="Buscar por nombre o teléfono..." 
+                                    class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 pl-10 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <i class="fas fa-search text-zinc-400"></i>
+                                </div>
+                            </div>
+
+                            <!-- Search Results -->
+                            <div x-show="results.length > 0" class="absolute z-10 mt-2 w-full rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-800 overflow-hidden" x-cloak>
+                                <ul class="divide-y divide-zinc-100 dark:divide-zinc-700 max-h-60 overflow-y-auto">
+                                    <template x-for="customer in results" :key="customer.id">
+                                        <li>
+                                            <button @click="selectCustomer(customer)" class="w-full text-left px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+                                                <div class="font-bold text-sm text-zinc-900 dark:text-white" x-text="customer.name"></div>
+                                                <div class="text-xs text-zinc-500" x-text="customer.phone + ' • ' + customer.email"></div>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Customer Details Form -->
+                        <form action="{{ route('dashboard.orders.update-customer', $order->id) }}" method="POST" class="space-y-4">
+                            @csrf
+                            @method('PUT')
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Nombre Completo</label>
+                                <input type="text" name="customer_name" id="field_name" value="{{ $order->customer_name }}" 
+                                    class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Correo Electrónico</label>
+                                <input type="email" name="customer_email" id="field_email" value="{{ $order->customer_email }}" 
+                                    class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Teléfono</label>
+                                <input type="text" name="customer_phone" id="field_phone" value="{{ $order->customer_phone }}" 
+                                    class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="submit" class="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-xs font-black uppercase text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 transition-colors">
+                                    <i class="fas fa-save mr-2"></i> Guardar Solo Info
+                                </button>
+                                <button type="button" @click="confirmLink()" x-show="selectedCustomerId" 
+                                    class="flex-1 rounded-lg bg-pink-600 px-4 py-2 text-xs font-black uppercase text-white hover:bg-pink-700 shadow-lg shadow-pink-500/20 transition-all">
+                                    <i class="fas fa-link mr-2"></i> Vincular Cliente
+                                </button>
+                            </div>
+                        </form>
+                        
+                        @if(!$order->customer_id)
+                        <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                            <form action="{{ route('dashboard.orders.register-customer', $order->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full rounded-lg bg-green-600 px-4 py-2 text-xs font-black uppercase text-white hover:bg-green-700 shadow-lg shadow-green-500/10 transition-all">
+                                    <i class="fas fa-user-plus mr-2"></i> Registrar como Nuevo Cliente
+                                </button>
+                            </form>
+                            <p class="mt-2 text-[10px] text-zinc-500 text-center italic">Crea un registro permanente en tu base de datos de clientes.</p>
+                        </div>
+                        @else
+                        <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                            <a href="{{ route('dashboard.customers.show', $order->customer_id) }}" 
+                                class="inline-flex items-center justify-center w-full px-4 py-2 rounded-lg border border-zinc-200 bg-zinc-50 text-xs font-bold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors">
+                                <i class="fas fa-external-link-alt mr-2"></i> Ver Perfil Permanente
+                            </a>
+                        </div>
+                        @endif
+                        
+                        <form id="link-form" action="{{ route('dashboard.orders.link-customer', $order->id) }}" method="POST" class="hidden">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="customer_id" :value="selectedCustomerId">
+                        </form>
                     </div>
                 </div>
+
+                <script>
+                    function customerLink() {
+                        return {
+                            search: '',
+                            results: [],
+                            selectedCustomerId: null,
+                            async performSearch() {
+                                if (this.search.length < 3) {
+                                    this.results = [];
+                                    return;
+                                }
+                                try {
+                                    const response = await fetch(`{{ route('dashboard.pos.customers.search') }}?q=${this.search}`);
+                                    this.results = await response.json();
+                                } catch (e) {
+                                    console.error('Search error', e);
+                                }
+                            },
+                            selectCustomer(customer) {
+                                document.getElementById('field_name').value = customer.name;
+                                document.getElementById('field_email').value = customer.email;
+                                document.getElementById('field_phone').value = customer.phone;
+                                this.selectedCustomerId = customer.id;
+                                this.results = [];
+                                this.search = customer.name;
+                            },
+                            confirmLink() {
+                                if (confirm('¿Quieres vincular este pedido oficialmente con este cliente?')) {
+                                    document.getElementById('link-form').submit();
+                                }
+                            }
+                        }
+                    }
+                </script>
             </div>
         </div>
     </div>
