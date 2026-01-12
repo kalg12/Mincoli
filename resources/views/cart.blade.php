@@ -143,10 +143,10 @@
                 </div>
 
                 @if($items->count() > 0)
-                <button type="button"
-                        class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg transition mb-3">
+                <a href="{{ route('checkout.index') }}"
+                        class="block w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg transition mb-3 text-center">
                     Proceder al Pago
-                </button>
+                </a>
                 @else
                 <button class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg transition mb-3 opacity-50 cursor-not-allowed" disabled>
                     Proceder al Pago

@@ -9,11 +9,16 @@ class PaymentMethod extends Model
 {
     protected $fillable = [
         'name',
+        'code',
+        'description',
         'is_active',
+        'settings',
+        'instructions',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'settings' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

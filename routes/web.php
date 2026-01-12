@@ -27,6 +27,13 @@ Route::delete('/carrito/{id}', [CartController::class, 'remove'])->name('cart.re
 Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/api/carrito/datos', [CartController::class, 'getCartData'])->name('cart.data');
 
+// Checkout Routes
+Route::get('/checkout', [App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/process', [App\Http\Controllers\CheckoutController::class, 'process'])->name('checkout.process');
+Route::get('/checkout/success/{order}', [App\Http\Controllers\CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/receipt/{order}', [App\Http\Controllers\CheckoutController::class, 'downloadReceipt'])->name('checkout.receipt');
+
+
 // Pages Routes
 Route::get('/sobre-nosotros', [PagesController::class, 'about'])->name('about');
 Route::get('/politicas-envio', [PagesController::class, 'shipping'])->name('shipping');
@@ -40,6 +47,10 @@ Route::get('/aviso-legal', [PagesController::class, 'legal'])->name('legal');
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Order Tracker
+Route::get('/rastreo', [App\Http\Controllers\OrderTrackerController::class, 'index'])->name('tracker.index');
+Route::post('/rastreo', [App\Http\Controllers\OrderTrackerController::class, 'track'])->name('tracker.track');
 
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
     // Rutas de captura pública (fuera del panel)
@@ -154,7 +165,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     // Orders
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
-    Route::put('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::put('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
 
     // Customers
     Route::get('/customers', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
@@ -165,8 +176,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::post('/customers/{id}/notes', [App\Http\Controllers\Admin\CustomerController::class, 'addNote'])->name('customers.notes.store');
 
     // Payment Methods
-    Route::get('/payment-methods', fn() => view('admin.payment-methods.index'))->name('payment-methods.index');
-    Route::get('/payment-methods/{method}/edit', fn($method) => view('admin.payment-methods.edit', compact('method')))->name('payment-methods.edit');
+    // Payment Methods
+    Route::get('/payment-methods', [App\Http\Controllers\Admin\PaymentMethodController::class, 'index'])->name('payment-methods.index');
+    Route::get('/payment-methods/{id}/edit', [App\Http\Controllers\Admin\PaymentMethodController::class, 'edit'])->name('payment-methods.edit');
+    Route::put('/payment-methods/{id}', [App\Http\Controllers\Admin\PaymentMethodController::class, 'update'])->name('payment-methods.update');
 
     // Shipping
     Route::get('/shipping', fn() => view('admin.shipping.index'))->name('shipping.index');
