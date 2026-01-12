@@ -105,10 +105,9 @@
                                             @case('shipped')
                                                 bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400
                                                 @break
-                                            @default
                                                 bg-zinc-100 text-zinc-700 dark:bg-zinc-900/30 dark:text-zinc-400
                                         @endswitch
-                                    ">{{ Str::title($order->status) }}</span>
+                                    ">{{ $order->status_label }}</span>
                                 </td>
                                 <td class="py-3 pr-4">${{ number_format($order->total, 2) }}</td>
                                 <td class="py-3 pr-4">{{ $order->placed_at?->format('d/m/Y') }}</td>

@@ -188,6 +188,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/shipping', fn() => view('admin.shipping.index'))->name('shipping.index');
     Route::get('/shipping/zones/create', fn() => view('admin.shipping.zones.create'))->name('shipping.zones.create');
     Route::get('/shipping/zones/{id}/edit', fn($id) => view('admin.shipping.zones.edit', compact('id')))->name('shipping.zones.edit');
+
+    // Administration
+    Route::resource('users', App\Http\Controllers\Admin\UserController::class);
+    Route::resource('assignments', App\Http\Controllers\Admin\ProductAssignmentController::class);
 });
 
 Route::middleware(['auth'])->group(function () {

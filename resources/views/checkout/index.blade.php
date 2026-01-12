@@ -47,7 +47,7 @@
                         <div class="relative">
                             <label class="mb-1 block text-sm font-medium text-gray-700">Teléfono</label>
                             <div class="relative">
-                                <input type="password" id="customer_phone" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="******5847" inputmode="numeric" autocomplete="off" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 pr-10 @error('customer_phone') border-red-500 @enderror" required>
+                                <input type="password" id="customer_phone" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="**********" inputmode="numeric" autocomplete="off" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 pr-10 @error('customer_phone') border-red-500 @enderror" required>
                                 <button type="button" onclick="togglePhoneVisibility()" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-pink-600 focus:outline-none">
                                     <i class="fas fa-eye" id="phone-toggle-icon"></i>
                                 </button>

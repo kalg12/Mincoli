@@ -37,6 +37,11 @@
                     <flux:navlist.item icon="truck" :href="route('dashboard.pos.pending-shipments.index')" :current="request()->routeIs('dashboard.pos.pending-shipments.*')" wire:navigate>Pendientes por enviar</flux:navlist.item>
                 </flux:navlist.group>
 
+                <flux:navlist.group :heading="__('Administración')" class="grid">
+                    <flux:navlist.item icon="users" :href="route('dashboard.users.index')" :current="request()->routeIs('dashboard.users.*')" wire:navigate>Usuarios</flux:navlist.item>
+                    <flux:navlist.item icon="clipboard-document-check" :href="route('dashboard.assignments.index')" :current="request()->routeIs('dashboard.assignments.*')" wire:navigate>Asignación de Productos</flux:navlist.item>
+                </flux:navlist.group>
+
                 <flux:navlist.group :heading="__('Configuración')" class="grid">
                     <flux:navlist.item icon="cog-6-tooth" :href="route('dashboard.settings.index')" :current="request()->routeIs('dashboard.settings.*')" wire:navigate>Configuración Tienda</flux:navlist.item>
                     <flux:navlist.item icon="cog-6-tooth" :href="route('profile.edit')" :current="request()->routeIs('profile.edit')" wire:navigate>Ajustes</flux:navlist.item>

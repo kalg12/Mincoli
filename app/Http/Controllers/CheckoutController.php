@@ -150,6 +150,26 @@ class CheckoutController extends Controller
                 $orderItem->iva_amount = $ivaItem;
                 $orderItem->total = $totalItem;
                 $orderItem->save();
+
+                // Decrement Stock
+                if ($orderItem->variant_id && $variant) {
+                    $variant->decrement('stock', $itemData['quantity']);
+                } else {
+                    $product->decrement('stock', $itemData['quantity']);
+                }
+
+                // Record Movement
+                DB::table('inventory_movements')->insert([
+                    'product_id' => $product->id,
+                    'variant_id' => $orderItem->variant_id,
+                    'type' => 'out',
+                    'quantity' => $itemData['quantity'],
+                    'reason' => 'Venta #' . $order->order_number,
+                    'reference_type' => 'App\Models\Order',
+                    'reference_id' => $order->id,
+                    'created_at' => now(),
+                    'created_by' => auth()->id() ?? null,
+                ]);
             }
 
             // Create Payment Record (Pending)
