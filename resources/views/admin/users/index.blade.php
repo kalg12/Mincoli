@@ -24,11 +24,17 @@
                             <td class="px-6 py-4 font-medium text-zinc-900 dark:text-white">{{ $user->name }}</td>
                             <td class="px-6 py-4">{{ $user->email }}</td>
                             <td class="px-6 py-4">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold
-                                    {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-700' : 
-                                       ($user->role === 'employee' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700') }}">
-                                    {{ ucfirst($user->role) }}
-                                </span>
+                                <form action="{{ route('dashboard.users.update-role', $user->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="role" onchange="this.form.submit()" class="rounded-md border-zinc-300 py-1 pl-2 pr-8 text-xs font-semibold focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800
+                                        {{ $user->role === 'admin' ? 'text-purple-700' : 
+                                           ($user->role === 'employee' ? 'text-blue-700' : 'text-zinc-700') }}">
+                                        <option value="employee" {{ $user->role === 'employee' ? 'selected' : '' }}>Empleado</option>
+                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Administrador</option>
+                                        <option value="customer" {{ $user->role === 'customer' ? 'selected' : '' }}>Cliente</option>
+                                    </select>
+                                </form>
                             </td>
                             <td class="px-6 py-4 text-right flex justify-end gap-2">
                                 <a href="{{ route('dashboard.users.edit', $user->id) }}" class="text-blue-600 hover:text-blue-500">

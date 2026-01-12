@@ -190,6 +190,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/shipping/zones/{id}/edit', fn($id) => view('admin.shipping.zones.edit', compact('id')))->name('shipping.zones.edit');
 
     // Administration
+    Route::patch('users/{user}/role', [App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.update-role');
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
     Route::resource('assignments', App\Http\Controllers\Admin\ProductAssignmentController::class);
 });

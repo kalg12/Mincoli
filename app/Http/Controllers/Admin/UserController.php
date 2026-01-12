@@ -71,6 +71,21 @@ class UserController extends Controller
         return redirect()->route('dashboard.users.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
+    public function updateRole(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|in:admin,employee,customer',
+        ]);
+
+        if ($user->id === auth()->id() && $request->role !== 'admin') {
+            return back()->with('error', 'No puedes quitarte el rol de administrador a ti mismo.');
+        }
+
+        $user->update(['role' => $request->role]);
+
+        return back()->with('success', 'Rol de usuario actualizado correctamente.');
+    }
+
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
