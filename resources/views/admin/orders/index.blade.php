@@ -38,13 +38,21 @@
                             <td class="px-6 py-4">
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium 
                                     {{ $order->status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
+                                       ($order->status === 'partially_paid' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 
                                        ($order->status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
-                                       'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400') }}">
-                                    {{ ucfirst(__($order->status)) }}
+                                       'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400')) }}">
+                                    {{ $order->status_label }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-6 py-4 text-right flex justify-end gap-2">
                                 <a href="{{ route('dashboard.orders.show', $order->id) }}" class="font-medium text-pink-600 hover:text-pink-500">Ver</a>
+                                <form action="{{ route('dashboard.orders.destroy', $order->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar este pedido?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="font-medium text-red-600 hover:text-red-500">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         @endforeach

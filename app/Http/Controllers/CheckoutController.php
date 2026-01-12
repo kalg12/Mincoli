@@ -271,7 +271,7 @@ class CheckoutController extends Controller
     {
         // Security check
         $allowed = false;
-        if (auth()->check() && $order->customer_id === auth()->id()) $allowed = true;
+        if (auth()->check()) $allowed = true; // Allow any logged in user (Admins/Customers)
         elseif (session()->has('last_order_id') && session('last_order_id') == $order->id) $allowed = true;
 
         if (!$allowed) abort(403);

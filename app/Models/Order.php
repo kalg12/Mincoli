@@ -20,7 +20,30 @@ class Order extends Model
         'total',
         'notes',
         'placed_at',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
     ];
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'draft' => 'Borrador',
+            'pending' => 'Pendiente',
+            'paid' => 'Pagado',
+            'partially_paid' => 'Pago Parcial',
+            'shipped' => 'Enviado',
+            'delivered' => 'Entregado',
+            'cancelled' => 'Cancelado',
+            'refunded' => 'Reembolsado',
+            default => ucfirst($this->status),
+        };
+    }
+
+    public function getPaymentMethodNameAttribute(): string
+    {
+        return $this->payments->first()->method->name ?? 'Sin pago';
+    }
 
     protected $casts = [
         'subtotal' => 'decimal:2',

@@ -166,6 +166,9 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::put('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::post('/orders/{order}/payments', [App\Http\Controllers\Admin\OrderController::class, 'addPayment'])->name('orders.payments.store');
+    Route::delete('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::delete('/orders/{order}/payments/{payment}', [App\Http\Controllers\Admin\OrderController::class, 'destroyPayment'])->name('orders.payments.destroy');
 
     // Customers
     Route::get('/customers', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
