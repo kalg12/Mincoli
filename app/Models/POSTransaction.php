@@ -13,6 +13,8 @@ class POSTransaction extends Model
     protected $fillable = [
         'pos_session_id',
         'customer_id',
+        'customer_name',
+        'customer_phone',
         'transaction_number',
         'subtotal',
         'iva_total',

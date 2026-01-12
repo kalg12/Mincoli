@@ -34,7 +34,6 @@
 
                 <flux:navlist.group :heading="__('POS')" class="grid">
                     <flux:navlist.item icon="building-storefront" :href="route('dashboard.pos.index')" :current="request()->routeIs('dashboard.pos.*')" wire:navigate>Dashboard POS</flux:navlist.item>
-                    <flux:navlist.item icon="truck" :href="route('dashboard.pos.pending-shipments.index')" :current="request()->routeIs('dashboard.pos.pending-shipments.*')" wire:navigate>Pendientes por enviar</flux:navlist.item>
                 </flux:navlist.group>
 
                 <flux:navlist.group :heading="__('Administración')" class="grid">

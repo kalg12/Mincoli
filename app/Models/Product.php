@@ -39,6 +39,8 @@ class Product extends Model
         'deleted_at' => 'datetime',
     ];
 
+    protected $appends = ['image_url'];
+
     /**
      * Get the category this product belongs to
      */
@@ -113,6 +115,18 @@ class Product extends Model
             return (int) $this->variants->sum('stock');
         }
         return (int) $this->stock;
+    }
+
+    /**
+     * Get the first image URL or a placeholder
+     */
+    public function getImageUrlAttribute(): string
+    {
+        $image = $this->images->first();
+        if ($image) {
+            return asset('storage/' . $image->path);
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=111&color=fff&size=512';
     }
 
     /**

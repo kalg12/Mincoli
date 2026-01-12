@@ -66,6 +66,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         Route::get('/', [POSController::class, 'index'])->name('index');
         Route::get('/search', [POSController::class, 'searchProduct'])->name('searchProduct');
         Route::get('/customers/search', [POSController::class, 'searchCustomer'])->name('customers.search');
+        Route::post('/transactions/store-ajax', [POSController::class, 'storeAjax'])->name('store-ajax'); // Added route
         Route::get('/transactions', [POSController::class, 'transactions'])->name('transactions.index');
         Route::get('/session/open', [POSController::class, 'openSession'])->name('session.open');
         Route::post('/session', [POSController::class, 'storeSession'])->name('session.store');

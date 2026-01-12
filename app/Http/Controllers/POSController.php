@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\POSSession;
 use App\Models\POSTransaction;
 use App\Models\POSTransactionItem;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\PaymentMethod;
@@ -21,14 +23,13 @@ class POSController extends Controller
      */
     public function index(): View
     {
-        $activeSession = POSSession::where('status', 'open')
-            ->where('user_id', Auth::id())
-            ->first();
-
-        $pendingShipments = POSTransactionItem::where('status', 'pending_shipment')
-            ->with(['posTransaction', 'product', 'variant'])
-            ->orderBy('created_at', 'asc')
-            ->paginate(15);
+        $categories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+        
+        // Cargar productos con sus variantes e imagenes para el grid inicial
+        $products = Product::where('is_active', true)
+            ->with(['variants', 'images', 'category'])
+            ->latest()
+            ->paginate(24);
 
         $stats = [
             'today_sales' => POSTransaction::whereDate('created_at', today())
@@ -37,15 +38,15 @@ class POSController extends Controller
             'today_transactions' => POSTransaction::whereDate('created_at', today())
                 ->where('status', '!=', 'cancelled')
                 ->count(),
-            'pending_payments' => POSTransaction::where('payment_status', '!=', 'completed')
-                ->sum('total') - POSTransaction::where('payment_status', '!=', 'completed')
-                ->sum(DB::raw('(SELECT COALESCE(SUM(amount), 0) FROM pos_payments WHERE pos_payments.pos_transaction_id = pos_transactions.id AND status = "completed")')),
         ];
 
+        $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
+
         return view('pos.index', [
-            'activeSession' => $activeSession,
-            'pendingShipments' => $pendingShipments,
+            'categories' => $categories,
+            'products' => $products,
             'stats' => $stats,
+            'showIva' => $showIva,
         ]);
     }
 
@@ -131,12 +132,8 @@ class POSController extends Controller
     /**
      * Guardar nueva transaccion
      */
-    public function storeTransaction(Request $request, POSSession $session)
+    public function storeTransaction(Request $request)
     {
-        if ($session->status !== 'open' || $session->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'required_without:customer_id|nullable|string|max:255',
@@ -156,7 +153,7 @@ class POSController extends Controller
             $validated['customer_id'] = $customer->id;
         }
 
-        $transaction = $session->transactions()->create([
+        $transaction = POSTransaction::create([
             'customer_id' => $validated['customer_id'] ?? null,
             'notes' => $validated['notes'] ?? null,
             'shipping_contact_phone' => $validated['shipping_contact_phone'] ?? ($validated['customer_phone'] ?? null),
@@ -173,10 +170,6 @@ class POSController extends Controller
      */
     public function editTransaction(POSTransaction $transaction): View
     {
-        if ($transaction->posSession->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $paymentMethods = PaymentMethod::where('is_active', true)->get();
         $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
 
@@ -192,10 +185,6 @@ class POSController extends Controller
      */
     public function updateTransaction(Request $request, POSTransaction $transaction)
     {
-        if ($transaction->posSession->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'shipping_contact_phone' => 'nullable|string|max:30',
             'shipping_address' => 'nullable|string|max:500',
@@ -238,10 +227,6 @@ class POSController extends Controller
      */
     public function addItem(Request $request, POSTransaction $transaction)
     {
-        if ($transaction->posSession->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'product_variant_id' => 'nullable|exists:product_variants,id',
@@ -286,7 +271,7 @@ class POSController extends Controller
      */
     public function removeItem(POSTransaction $transaction, POSTransactionItem $item)
     {
-        if ($transaction->posSession->user_id !== Auth::id() || $item->pos_transaction_id !== $transaction->id) {
+        if ($item->pos_transaction_id !== $transaction->id) {
             abort(403);
         }
 
@@ -301,7 +286,7 @@ class POSController extends Controller
      */
     public function updateItemQuantity(Request $request, POSTransaction $transaction, POSTransactionItem $item)
     {
-        if ($transaction->posSession->user_id !== Auth::id() || $item->pos_transaction_id !== $transaction->id) {
+        if ($item->pos_transaction_id !== $transaction->id) {
             abort(403);
         }
 
@@ -329,10 +314,6 @@ class POSController extends Controller
      */
     public function recordPayment(Request $request, POSTransaction $transaction)
     {
-        if ($transaction->posSession->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'payment_method_id' => 'nullable|exists:payment_methods,id',
             'amount' => 'required|numeric|min:0.01',
@@ -367,10 +348,6 @@ class POSController extends Controller
      */
     public function printTicket(POSTransaction $transaction)
     {
-        if ($transaction->posSession->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
 
         return view('pos.ticket', [
@@ -384,10 +361,6 @@ class POSController extends Controller
      */
     public function completeTransaction(POSTransaction $transaction)
     {
-        if ($transaction->posSession->user_id !== Auth::id()) {
-            abort(403);
-        }
-
         $transaction->update([
             'status' => 'completed',
             'completed_at' => now(),
@@ -489,6 +462,72 @@ class POSController extends Controller
     /**
      * Buscar clientes por telefono/nombre
      */
+    public function storeAjax(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'customer_id' => 'nullable|exists:customers,id',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $subtotal = 0;
+            $items = $request->items;
+
+            foreach ($items as $item) {
+                $subtotal += $item['price'] * $item['quantity'];
+            }
+
+            $total = $subtotal; 
+            $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
+            $iva = $showIva ? ($total * 0.16 / 1.16) : 0;
+            $calculatedSubtotal = $showIva ? ($subtotal / 1.16) : $subtotal;
+
+            $order = Order::create([
+                'customer_id' => $request->customer_id,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
+                'subtotal' => $calculatedSubtotal,
+                'iva_total' => $iva,
+                'total' => $total,
+                'channel' => 'pos',
+                'status' => 'paid',
+                'placed_at' => now(),
+                'notes' => 'Pedido generado desde el POS.',
+            ]);
+
+            foreach ($items as $item) {
+                $itemTotal = $item['price'] * $item['quantity'];
+                $itemIvaAmount = $showIva ? ($itemTotal * 0.16 / 1.16) : 0;
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['id'],
+                    'variant_id' => $item['variant'] ? $item['variant']['id'] : null,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
+                    'iva_amount' => $itemIvaAmount,
+                    'total' => $itemTotal,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Orden generada con éxito',
+                'order_number' => $order->order_number,
+                'id' => $order->id
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function searchCustomer(Request $request)
     {
         $query = $request->get('q');
