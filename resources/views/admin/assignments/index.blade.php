@@ -9,44 +9,87 @@
 
         <div class="p-6">
             <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
-                <table class="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
-                    <thead class="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                <table class="w-full text-left text-sm border-collapse border-2 border-zinc-800 dark:border-zinc-700" id="assignments-table">
+                    <thead class="bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest">
                         <tr>
-                            <th class="px-6 py-3">Nombre</th>
-                            <th class="px-6 py-3">Producto</th>
-                            <th class="px-6 py-3 text-right">Cantidad</th>
-                            <th class="px-6 py-3 text-right">Precio Unit.</th>
-                            <th class="px-6 py-3 text-right">Total</th>
-                            <th class="px-6 py-3">Estado</th>
-                            <th class="px-6 py-3">Fecha</th>
+                            <th class="px-3 py-3 border border-zinc-800">Responsable</th>
+                            <th class="px-3 py-3 border border-zinc-800">Producto</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-16 text-center">Cant</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-24 text-center text-pink-400">Total</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-24 text-center">Base</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-24 text-center">IVA</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-32">LOB</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-48">Estado / Acción</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                    <tbody class="divide-y-2 divide-zinc-800">
                         @foreach($assignments as $assignment)
-                        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                            <td class="px-6 py-4 font-medium text-zinc-900 dark:text-white">{{ $assignment->user->name }}</td>
-                            <td class="px-6 py-4">
+                        <tr class="{{ $assignment->status_color_classes }}">
+                            <td class="px-3 py-3 border border-zinc-800 font-black uppercase text-[10px]">{{ $assignment->user->name }}</td>
+                            <td class="px-3 py-3 border border-zinc-800 font-bold">
                                 {{ $assignment->product->name }}
-                                @if($assignment->variant_id)
-                                    <span class="text-xs text-zinc-500">({{ $assignment->variant_id }})</span> <!-- Ideally variant name -->
-                                @endif
                             </td>
-                            <td class="px-6 py-4 text-right">{{ $assignment->quantity }}</td>
-                            <td class="px-6 py-4 text-right">${{ number_format($assignment->unit_price, 2) }}</td>
-                            <td class="px-6 py-4 text-right font-bold text-zinc-900 dark:text-white">${{ number_format($assignment->total_amount, 2) }}</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold
-                                    {{ $assignment->status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                    {{ ucfirst($assignment->status) }}
-                                </span>
+                            <td class="px-3 py-3 border border-zinc-800 text-center font-black">{{ $assignment->quantity }}</td>
+                            <td class="px-3 py-3 border border-zinc-800 text-right font-black text-pink-800 dark:text-pink-400">${{ number_format($assignment->unit_price, 2) }}</td>
+                            <td class="px-3 py-3 border border-zinc-800 text-right font-bold text-zinc-900 dark:text-zinc-100">${{ number_format($assignment->base_price, 0) }}</td>
+                            <td class="px-3 py-3 border border-zinc-800 text-right font-bold text-zinc-800 dark:text-zinc-200">${{ number_format($assignment->iva_amount, 2) }}</td>
+                            <td class="px-3 py-3 border border-zinc-800 font-black uppercase text-[10px]">{{ $assignment->partner_lob ?: '-' }}</td>
+                            <td class="px-3 py-1 border-2 border-zinc-950">
+                                <form action="{{ route('dashboard.assignments.update-status', $assignment->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="status" onchange="this.form.submit()" class="w-full border-0 py-1 pl-2 pr-8 text-[10px] font-black uppercase appearance-none cursor-pointer focus:ring-0
+                                        {{ $assignment->status === 'quotation' ? 'bg-[#FFFF00] text-black' : '' }}
+                                        {{ $assignment->status === 'paid_customer' ? 'bg-[#00FFFF] text-black' : '' }}
+                                        {{ $assignment->status === 'paid_partner' ? 'bg-[#000080] text-white' : '' }}
+                                        {{ $assignment->status === 'deferred' ? 'bg-[#A9A9A9] text-white' : '' }}
+                                        {{ $assignment->status === 'incident' ? 'bg-[#FF0000] text-white' : '' }}">
+                                        <option value="quotation" {{ $assignment->status === 'quotation' ? 'selected' : '' }} style="background-color: #FFFF00; color: #000;">[ AMARILLO ] - Cotización</option>
+                                        <option value="paid_customer" {{ $assignment->status === 'paid_customer' ? 'selected' : '' }} style="background-color: #00FFFF; color: #000;">[ AZUL CIELO ] - Pagado Cli</option>
+                                        <option value="paid_partner" {{ $assignment->status === 'paid_partner' ? 'selected' : '' }} style="background-color: #000080; color: #fff;">[ AZUL MARINO ] - Pagado Soc</option>
+                                        <option value="deferred" {{ $assignment->status === 'deferred' ? 'selected' : '' }} style="background-color: #A9A9A9; color: #fff;">[ GRIS ] - Pendiente</option>
+                                        <option value="incident" {{ $assignment->status === 'incident' ? 'selected' : '' }} style="background-color: #FF0000; color: #fff;">[ ROJO ] - Incidencia</option>
+                                    </select>
+                                </form>
                             </td>
-                            <td class="px-6 py-4">{{ $assignment->created_at->format('d/m/Y') }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
                 <div class="p-4">
                     {{ $assignments->links() }}
+                </div>
+            </div>
+
+            <!-- Corte de Caja Summary - Excel Style -->
+            <div class="mt-8 flex justify-end">
+                <div class="w-full md:w-96 rounded-xl border-2 border-zinc-800 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-zinc-800 text-[10px] uppercase tracking-widest text-white font-black">
+                            <tr>
+                                <th class="px-6 py-4 border-b border-zinc-700">Resumen de Corte</th>
+                                <th class="px-6 py-4 text-right border-b border-zinc-700">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                            <tr class="bg-zinc-50 dark:bg-zinc-800/50 italic">
+                                <td class="px-6 py-4 font-bold text-zinc-500">Iva (16% Retenido)</td>
+                                <td class="px-6 py-4 text-right font-black text-zinc-900 dark:text-white">${{ number_format($corteSummary['iva'], 2) }}</td>
+                            </tr>
+                            @foreach($corteSummary['partners'] as $partner => $total)
+                            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                <td class="px-6 py-4 font-bold text-zinc-700 dark:text-zinc-300">Socio: {{ $partner ?: 'General' }}</td>
+                                <td class="px-6 py-4 text-right font-black text-green-600 dark:text-green-400">${{ number_format($total, 2) }}</td>
+                            </tr>
+                            @endforeach
+                            <tr class="bg-zinc-900 text-white">
+                                <td class="px-6 py-4 font-black uppercase text-[10px] tracking-widest">Gran Total a Liquidar</td>
+                                <td class="px-6 py-4 text-right font-black text-xl text-pink-500">
+                                    ${{ number_format($corteSummary['iva'] + collect($corteSummary['partners'])->sum(), 2) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -192,6 +192,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     // Administration
     Route::patch('users/{user}/role', [App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.update-role');
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
+    Route::patch('assignments/{assignment}/status', [App\Http\Controllers\Admin\ProductAssignmentController::class, 'updateStatus'])->name('assignments.update-status');
     Route::resource('assignments', App\Http\Controllers\Admin\ProductAssignmentController::class);
 });
 

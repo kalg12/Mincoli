@@ -8,9 +8,34 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with(['customer', 'payments.method'])->latest()->paginate(10);
+        $query = Order::with(['customer', 'payments.method'])->latest();
+
+        // Search by Order Number or Customer Name/Email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by Date Range
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
+        }
+
+        // Pagination Limit
+        $perPage = $request->get('per_page', 10);
+        if (!is_numeric($perPage) || $perPage <= 0) $perPage = 10;
+
+        $orders = $query->paginate($perPage)->withQueryString();
+
         return view('admin.orders.index', compact('orders'));
     }
 
