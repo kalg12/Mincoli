@@ -51,18 +51,31 @@
                                 <div class="p-3 flex-1 flex flex-col justify-between">
                                     <div>
                                         <h2 class="text-sm font-bold text-zinc-100 leading-tight line-clamp-2 group-hover:text-pink-400 transition-colors" x-text="product.name"></h2>
-                                        <div class="text-base font-black text-pink-500 mt-1" x-text="'$' + parseFloat(product.price).toLocaleString()"></div>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <div class="text-base font-black text-pink-500" x-text="'$' + parseFloat(product.price).toLocaleString()"></div>
+                                            <div x-show="product.variants.length === 0" class="text-[10px] font-black px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800"
+                                                :class="product.stock > 10 ? 'text-zinc-500' : (product.stock > 0 ? 'text-amber-500' : 'text-red-500')">
+                                                <span x-text="product.stock > 0 ? product.stock + ' disp.' : 'Agotado'"></span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <button @click.stop="handleProductClick(product)" 
-                                        class="w-full mt-3 bg-pink-600 hover:bg-pink-700 text-white rounded-lg py-2 text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95">
-                                        + AÑADIR
+                                        :disabled="(product.variants.length === 0 && product.stock <= 0) || (product.variants.length > 0 && product.variants.every(v => v.stock <= 0))"
+                                        :class="((product.variants.length === 0 && product.stock <= 0) || (product.variants.length > 0 && product.variants.every(v => v.stock <= 0))) ? 'opacity-50 grayscale cursor-not-allowed bg-zinc-800' : 'bg-pink-600 hover:bg-pink-700 active:scale-95 shadow-md'"
+                                        class="w-full mt-3 text-white rounded-lg py-2 text-xs font-black uppercase tracking-widest transition-all">
+                                        <span x-text="((product.variants.length === 0 && product.stock <= 0) || (product.variants.length > 0 && product.variants.every(v => v.stock <= 0))) ? 'AGOTADO' : (product.variants.length > 0 ? 'Opciones' : '+ AÑADIR')"></span>
                                     </button>
                                 </div>
                             </div>
                         </template>
                     </div>
                     
-                    <div x-show="filteredProducts.length === 0" class="flex flex-col items-center justify-center h-64 text-zinc-800">
+                    <div x-show="isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-800">
+                        <i class="fas fa-spinner fa-spin text-5xl mb-4 opacity-10"></i>
+                         <p class="text-xs font-black uppercase tracking-[0.2em] opacity-20">Buscando productos...</p>
+                    </div>
+
+                    <div x-show="filteredProducts.length === 0 && !isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-800">
                         <i class="fas fa-box-open text-5xl mb-4 opacity-10"></i>
                         <p class="text-xs font-black uppercase tracking-[0.2em] opacity-20">No se encontraron productos</p>
                     </div>
@@ -245,8 +258,14 @@
                     <div class="grid grid-cols-1 gap-2">
                         <template x-for="v in selectingProduct?.variants" :key="v.id">
                             <button @click="addVariantToCart(v)" 
-                                class="flex justify-between items-center p-4 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-pink-500 hover:bg-zinc-800 transition-all active:scale-95 group shadow-sm">
-                                <span class="text-sm font-bold text-zinc-400 group-hover:text-white transition-colors" x-text="v.name"></span>
+                                :disabled="v.stock <= 0"
+                                :class="v.stock <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-pink-500 hover:bg-zinc-800 active:scale-95'"
+                                class="flex justify-between items-center p-4 rounded-2xl bg-zinc-950 border border-zinc-800 transition-all group shadow-sm">
+                                <div class="flex flex-col text-left">
+                                    <span class="text-sm font-bold text-zinc-400 group-hover:text-white transition-colors" x-text="v.name"></span>
+                                    <span class="text-[10px] font-black uppercase tracking-tighter" :class="v.stock > 0 ? 'text-emerald-500' : 'text-red-500'" 
+                                          x-text="v.stock > 0 ? v.stock + ' disponibles' : 'Sin stock'"></span>
+                                </div>
                                 <span class="text-base font-black text-pink-500" x-text="'$' + parseFloat(v.price).toLocaleString()"></span>
                             </button>
                         </template>
@@ -284,6 +303,7 @@
             return {
                 search: '',
                 activeCategoryId: null,
+                isLoading: false,
                 products: @json($products->items()),
                 cart: [],
                 showIva: {{ $showIva ? 'true' : 'false' }},
@@ -299,14 +319,38 @@
                 manualCustomerMode: false,
                 manualCustomer: { name: '', phone: '' },
 
+                async filterProducts() {
+                    if (this.search.length < 3 && !this.activeCategoryId) {
+                        // Si no hay busqueda ni categoria, podemos mantener los iniciales o recargar
+                        return;
+                    }
+                    
+                    this.isLoading = true;
+                    try {
+                        const params = new URLSearchParams({
+                            q: this.search,
+                            category_id: this.activeCategoryId || ''
+                        });
+                        const resp = await fetch(`{{ route('dashboard.pos.searchProduct') }}?${params.toString()}`);
+                        this.products = await resp.json();
+                    } catch (e) {
+                        console.error('Error searching products', e);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
                 get filteredProducts() {
+                    // Si hay busqueda local o remota, el getter simplemente devuelve this.products
+                    // ya que el backend o el filtro manual ya se encargaron.
+                    // Pero para evitar duplicar logica, podemos mantener un filtro ligero aqui:
                     return this.products.filter(p => {
-                        const matchesCategory = this.activeCategoryId === null || p.category_id === this.activeCategoryId;
                         const s = this.search.toLowerCase();
                         const matchesSearch = p.name.toLowerCase().includes(s) || 
                                              (p.sku && p.sku.toLowerCase().includes(s)) ||
                                              (p.barcode && p.barcode.toLowerCase().includes(s));
-                        return matchesCategory && matchesSearch;
+                        const matchesCategory = this.activeCategoryId === null || p.category_id === this.activeCategoryId;
+                        return matchesSearch && matchesCategory;
                     });
                 },
 
@@ -321,6 +365,7 @@
 
                 setCategory(id) {
                     this.activeCategoryId = id;
+                    this.filterProducts();
                 },
 
                 handleProductClick(product) {
@@ -334,6 +379,13 @@
 
                 addToCart(product) {
                     const existing = this.cart.find(item => item.id === product.id && !item.variant);
+                    const currentQty = existing ? existing.quantity : 0;
+
+                    if (currentQty + 1 > product.stock) {
+                        alert(`No hay suficiente stock. Disponibles: ${product.stock}`);
+                        return;
+                    }
+
                     if (existing) {
                         existing.quantity++;
                     } else {
@@ -350,6 +402,13 @@
 
                 addVariantToCart(variant) {
                     const existing = this.cart.find(item => item.variant && item.variant.id === variant.id);
+                    const currentQty = existing ? existing.quantity : 0;
+
+                    if (currentQty + 1 > variant.stock) {
+                        alert(`No hay suficiente stock. Disponibles: ${variant.stock}`);
+                        return;
+                    }
+
                     if (existing) {
                         existing.quantity++;
                     } else {
@@ -366,8 +425,21 @@
                 },
 
                 updateQty(index, delta) {
-                    this.cart[index].quantity += delta;
-                    if (this.cart[index].quantity < 1) {
+                    const item = this.cart[index];
+                    if (delta > 0) {
+                        const product = this.products.find(p => p.id === item.id);
+                        const maxStock = item.variant 
+                            ? product.variants.find(v => v.id === item.variant.id).stock 
+                            : product.stock;
+
+                        if (item.quantity + delta > maxStock) {
+                            alert(`No puedes agregar más. Stock máximo: ${maxStock}`);
+                            return;
+                        }
+                    }
+
+                    item.quantity += delta;
+                    if (item.quantity < 1) {
                         this.removeFromCart(index);
                     }
                 },

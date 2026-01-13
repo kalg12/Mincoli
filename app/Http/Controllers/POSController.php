@@ -9,6 +9,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\InventoryMovement;
 use App\Models\PaymentMethod;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
@@ -210,13 +212,14 @@ class POSController extends Controller
         $query = $request->get('q');
 
         $products = Product::where('is_active', true)
+            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
             ->where(function ($q) use ($query) {
                 $q->where('sku', 'like', "%$query%")
                     ->orWhere('barcode', 'like', "%$query%")
                     ->orWhere('name', 'like', "%$query%");
             })
-            ->with('variants')
-            ->limit(10)
+            ->with(['variants', 'images'])
+            ->limit(48)
             ->get();
 
         return response()->json($products);
@@ -478,6 +481,19 @@ class POSController extends Controller
             $items = $request->items;
 
             foreach ($items as $item) {
+                // Verificar stock antes de procesar
+                if (isset($item['variant']) && $item['variant']) {
+                    $variant = ProductVariant::find($item['variant']['id']);
+                    if (!$variant || $variant->stock < $item['quantity']) {
+                        throw new \Exception("Stock insuficiente para: {$item['name']} ({$item['variant']['name']})");
+                    }
+                } else {
+                    $product = Product::find($item['id']);
+                    if (!$product || $product->stock < $item['quantity']) {
+                        throw new \Exception("Stock insuficiente para: {$item['name']}");
+                    }
+                }
+
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
@@ -512,6 +528,37 @@ class POSController extends Controller
                     'iva_amount' => $itemIvaAmount,
                     'total' => $itemTotal,
                 ]);
+
+                // Descontar stock y registrar movimiento
+                if ($item['variant']) {
+                    $variant = ProductVariant::find($item['variant']['id']);
+                    $variant->decrement('stock', $item['quantity']);
+                    
+                    InventoryMovement::create([
+                        'product_id' => $item['id'],
+                        'variant_id' => $item['variant']['id'],
+                        'type' => 'out',
+                        'quantity' => $item['quantity'],
+                        'reason' => "Venta POS - Orden #{$order->order_number}",
+                        'reference_type' => 'Order',
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::id(),
+                    ]);
+                } else {
+                    $product = Product::find($item['id']);
+                    $product->decrement('stock', $item['quantity']);
+
+                    InventoryMovement::create([
+                        'product_id' => $item['id'],
+                        'variant_id' => null,
+                        'type' => 'out',
+                        'quantity' => $item['quantity'],
+                        'reason' => "Venta POS - Orden #{$order->order_number}",
+                        'reference_type' => 'Order',
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
             }
 
             DB::commit();
