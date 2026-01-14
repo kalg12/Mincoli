@@ -567,7 +567,8 @@ class POSController extends Controller
                 'success' => true,
                 'message' => 'Orden generada con éxito',
                 'order_number' => $order->order_number,
-                'id' => $order->id
+                'id' => $order->id,
+                'redirect_url' => route('dashboard.pos.success', $order->id)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -588,5 +589,10 @@ class POSController extends Controller
             ->get(['id', 'name', 'phone', 'email']);
 
         return response()->json($customers);
+    }
+
+    public function success(Order $order): View
+    {
+        return view('pos.success', compact('order'));
     }
 }

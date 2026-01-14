@@ -191,4 +191,10 @@ class OrderController extends Controller
 
         return back()->with('success', 'Pago eliminado correctamente.');
     }
+
+    public function exportPaymentsPdf(Order $order)
+    {
+        $order->load(['customer', 'payments.method', 'items.product']);
+        return view('admin.orders.payments-pdf', compact('order'));
+    }
 }

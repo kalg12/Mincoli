@@ -75,6 +75,11 @@
                 <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="border-b border-zinc-200 px-6 py-4 dark:border-zinc-700 flex justify-between items-center">
                         <h2 class="font-semibold text-zinc-900 dark:text-white">Pagos y Abonos</h2>
+                        @if($order->payments->count() > 0)
+                        <a href="{{ route('dashboard.orders.payments-pdf', $order->id) }}" target="_blank" class="text-xs font-black uppercase text-pink-600 hover:text-pink-700 flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i> Exportar Abonos (PDF)
+                        </a>
+                        @endif
                     </div>
                     <div class="p-6">
                         <!-- History -->

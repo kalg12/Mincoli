@@ -71,6 +71,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         Route::get('/session/open', [POSController::class, 'openSession'])->name('session.open');
         Route::post('/session', [POSController::class, 'storeSession'])->name('session.store');
         Route::post('/session/{session}/close', [POSController::class, 'closeSession'])->name('session.close');
+        Route::get('/success/{order}', [POSController::class, 'success'])->name('success'); // New POS success route
 
         // Transacciones
         Route::get('/{session}/transaction', [POSController::class, 'createTransaction'])->name('transaction.create');
@@ -167,6 +168,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
     Route::put('/orders/{id}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::get('/orders/{order}/payments-pdf', [App\Http\Controllers\Admin\OrderController::class, 'exportPaymentsPdf'])->name('orders.payments-pdf'); // New payments PDF route
     Route::post('/orders/{order}/payments', [App\Http\Controllers\Admin\OrderController::class, 'addPayment'])->name('orders.payments.store');
     Route::delete('/orders/{order}', [App\Http\Controllers\Admin\OrderController::class, 'destroy'])->name('orders.destroy');
     Route::put('/orders/{order}/customer', [App\Http\Controllers\Admin\OrderController::class, 'updateCustomer'])->name('orders.update-customer');

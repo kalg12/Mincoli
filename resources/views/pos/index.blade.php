@@ -1,4 +1,6 @@
 <x-layouts.app :title="__('POS - Sistema de Ventas')">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <div class="h-[calc(100vh-65px)] overflow-hidden bg-zinc-950 text-zinc-100" x-data="posSystem()">
         <div class="flex h-full">
             <!-- Main Content: Products Panel -->
@@ -8,9 +10,9 @@
                     <div class="relative max-w-2xl mx-auto">
                         <input type="text" x-model="search" @input.debounce.300ms="filterProducts()"
                             placeholder="Buscar productos..."
-                            class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-4 py-2 pl-10 text-sm text-zinc-100 placeholder-zinc-600 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all">
+                            class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-4 py-2 pl-10 text-sm text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3.5">
-                            <i class="fas fa-search text-zinc-500 text-sm"></i>
+                            <i class="fas fa-search text-zinc-400 text-sm"></i>
                         </div>
                     </div>
                 </div>
@@ -70,14 +72,14 @@
                         </template>
                     </div>
                     
-                    <div x-show="isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-800">
-                        <i class="fas fa-spinner fa-spin text-5xl mb-4 opacity-10"></i>
-                         <p class="text-xs font-black uppercase tracking-[0.2em] opacity-20">Buscando productos...</p>
+                    <div x-show="isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-700">
+                        <i class="fas fa-spinner fa-spin text-5xl mb-4 opacity-20"></i>
+                         <p class="text-xs font-black uppercase tracking-[0.2em] opacity-40">Buscando productos...</p>
                     </div>
 
-                    <div x-show="filteredProducts.length === 0 && !isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-800">
-                        <i class="fas fa-box-open text-5xl mb-4 opacity-10"></i>
-                        <p class="text-xs font-black uppercase tracking-[0.2em] opacity-20">No se encontraron productos</p>
+                    <div x-show="filteredProducts.length === 0 && !isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-700">
+                        <i class="fas fa-box-open text-5xl mb-4 opacity-20"></i>
+                        <p class="text-xs font-black uppercase tracking-[0.2em] opacity-40">No se encontraron productos</p>
                     </div>
                 </div>
             </div>
@@ -105,7 +107,7 @@
                                 <div class="relative">
                                     <input type="text" x-model="customerSearch" @input.debounce.300ms="searchCustomers()"
                                         placeholder="Buscar por nombre o cel..."
-                                        class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-700 focus:ring-1 focus:ring-pink-600 focus:border-pink-600 transition-all">
+                                        class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:ring-1 focus:ring-pink-600 focus:border-pink-600 transition-all">
                                     
                                     <!-- Customer Results -->
                                     <div x-show="customerResults.length > 0" class="absolute z-50 left-0 right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
@@ -132,8 +134,8 @@
                                    <i class="fas fa-times"></i> Salir
                                 </button>
                             </div>
-                            <input type="text" x-model="manualCustomer.name" placeholder="Nombre completo" class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-700 focus:ring-1 focus:ring-pink-600">
-                            <input type="text" x-model="manualCustomer.phone" placeholder="Celular (10 dígitos)" class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-700 focus:ring-1 focus:ring-pink-600">
+                             <input type="text" x-model="manualCustomer.name" placeholder="Nombre completo" class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:ring-1 focus:ring-pink-600">
+                            <input type="text" x-model="manualCustomer.phone" placeholder="Celular (10 dígitos)" class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:ring-1 focus:ring-pink-600">
                         </div>
 
                         <div x-show="linkedCustomer" class="p-2">
@@ -181,25 +183,24 @@
                             <div class="mt-3 flex items-center justify-between">
                                 <!-- Quantity Controls -->
                                 <div class="flex items-center bg-zinc-900 rounded-lg p-1 border border-zinc-800 shadow-inner">
-                                    <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center text-zinc-500 hover:bg-zinc-800 hover:text-white rounded-md transition-colors">
+                                    <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center text-zinc-100 hover:bg-zinc-800 hover:text-white rounded-md transition-colors">
                                         <i class="fas fa-minus text-xs"></i>
                                     </button>
                                     <span class="w-8 text-center text-sm font-black text-white" x-text="item.quantity"></span>
-                                    <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center text-zinc-500 hover:bg-zinc-800 hover:text-white rounded-md transition-colors">
+                                    <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center text-zinc-100 hover:bg-zinc-800 hover:text-white rounded-md transition-colors">
                                         <i class="fas fa-plus text-xs"></i>
                                     </button>
                                 </div>
 
                                 <!-- Actions -->
-                                <button @click="removeFromCart(index)" class="w-8 h-8 flex items-center justify-center bg-red-950/10 text-red-900/50 group-hover/item:text-red-500 rounded-lg hover:bg-red-950 hover:text-white transition-all border border-transparent group-hover/item:border-red-900/30">
+                                <button @click="removeFromCart(index)" class="w-8 h-8 flex items-center justify-center bg-red-950/20 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-900/30">
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </div>
                         </div>
                     </template>
-                    
-                    <div x-show="cart.length === 0" class="h-48 flex flex-col items-center justify-center text-zinc-800">
-                        <i class="fas fa-shopping-basket text-4xl mb-3 opacity-10"></i>
+                                        <div x-show="cart.length === 0" class="h-48 flex flex-col items-center justify-center text-zinc-700">
+                        <i class="fas fa-shopping-basket text-4xl mb-3 opacity-20"></i>
                          <p class="text-xs font-black uppercase tracking-[0.2em] opacity-20">Carrito vacío</p>
                     </div>
                 </div>
@@ -227,14 +228,32 @@
                             Procesar Orden
                         </button>
                         <div class="grid grid-cols-2 gap-3">
-                           <button @click="shareWhatsApp()" :disabled="cart.length === 0"
-                               class="w-full border border-zinc-700 text-zinc-400 py-2.5 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-20 flex items-center justify-center gap-2 text-[10px]">
-                               <i class="fab fa-whatsapp text-emerald-500 text-sm"></i> COTIZACIÓN
-                           </button>
-                           <button @click="clearCart()" x-show="cart.length > 0"
-                               class="w-full border border-zinc-700 text-zinc-500 py-2.5 rounded-xl font-black uppercase tracking-widest hover:bg-red-900/20 hover:text-red-400 transition-all text-[10px]">
-                               Borrar Carrito
-                           </button>
+                            <div class="relative w-full" x-data="{ open: false }" @click.away="open = false">
+                                <button @click="open = !open" :disabled="cart.length === 0"
+                                    class="w-full border border-zinc-700 text-zinc-400 py-2.5 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-20 flex items-center justify-center gap-2 text-[10px]">
+                                    <i class="fas fa-share-alt text-pink-500"></i> COTIZACIÓN
+                                </button>
+                                
+                                <div x-show="open" x-cloak
+                                    class="absolute bottom-full left-0 w-full mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[100]">
+                                    <button @click="shareWhatsApp(); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 flex items-center gap-3 transition-colors">
+                                        <i class="fab fa-whatsapp text-emerald-500 text-sm"></i> ENVIAR TEXTO WHATSAPP
+                                    </button>
+                                    <button @click="exportQuotation('copy'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
+                                        <i class="fas fa-copy text-pink-400 text-sm"></i> COPIAR IMAGEN (PARA PEGAR EN WA)
+                                    </button>
+                                    <button @click="exportQuotation('image'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
+                                        <i class="fas fa-image text-blue-400 text-sm"></i> DESCARGAR IMAGEN (JPG)
+                                    </button>
+                                    <button @click="exportQuotation('pdf'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
+                                        <i class="fas fa-file-pdf text-red-500 text-sm"></i> DESCARGAR PDF
+                                    </button>
+                                </div>
+                            </div>
+                            <button @click="clearCart()" x-show="cart.length > 0"
+                                class="w-full border border-zinc-700 text-zinc-500 py-2.5 rounded-xl font-black uppercase tracking-widest hover:bg-red-900/20 hover:text-red-400 transition-all text-[10px]">
+                                Borrar Carrito
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -281,6 +300,80 @@
         </div>
     </div>
 
+    <!-- Hidden Quotation Template for Export -->
+    <div id="quotation-template" class="fixed -left-[4000px] top-0 bg-white text-zinc-900 p-10 w-[600px] leading-tight" style="font-family: 'Inter', sans-serif;">
+        <div class="flex justify-between items-center border-b-2 border-zinc-900 pb-6">
+            <div>
+                <h1 class="text-3xl font-black uppercase tracking-tighter">Mincoli</h1>
+                <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Tienda Online</p>
+            </div>
+            <div class="text-right">
+                <h2 class="text-xl font-black uppercase">Cotización</h2>
+                <p class="text-[10px] text-zinc-500 font-bold" x-text="new Date().toLocaleString()"></p>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 gap-8">
+            <div>
+                <h3 class="text-[10px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Cliente</h3>
+                <p class="text-sm font-black uppercase" x-text="(linkedCustomer ? linkedCustomer.name : manualCustomer.name) || 'Público General'"></p>
+                <p class="text-xs font-bold text-zinc-500" x-text="(linkedCustomer ? linkedCustomer.phone : manualCustomer.phone) || '-'"></p>
+            </div>
+            <div class="text-right">
+                <h3 class="text-[10px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Métodos de Pago</h3>
+                <p class="text-[9px] font-bold leading-relaxed">Depósitos OXXO: 2242 1701 8074 1927</p>
+                <p class="text-[9px] font-bold leading-relaxed">CLABE AZTECA: 1271 8001 3158 064 597</p>
+            </div>
+        </div>
+
+        <div class="mt-10">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-zinc-200">
+                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest">Producto</th>
+                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest text-center">Cant.</th>
+                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest text-right">Precio</th>
+                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="item in cart" :key="item.id + (item.variant ? '-' + item.variant.id : '')">
+                        <tr class="border-b border-zinc-100">
+                            <td class="py-4">
+                                <div class="text-xs font-black uppercase" x-text="item.name"></div>
+                                <div x-show="item.variant" class="text-[9px] text-zinc-500 font-bold mt-0.5" x-text="item.variant ? item.variant.name : ''"></div>
+                            </td>
+                            <td class="py-4 text-center text-xs font-bold" x-text="item.quantity"></td>
+                            <td class="py-4 text-right text-xs font-bold" x-text="'$' + parseFloat(item.price).toLocaleString()"></td>
+                            <td class="py-4 text-right text-xs font-black" x-text="'$' + (item.price * item.quantity).toLocaleString()"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <div class="w-48 space-y-2">
+                <div class="flex justify-between text-[10px] font-bold text-zinc-500 uppercase" x-show="showIva">
+                    <span>Subtotal</span>
+                    <span x-text="'$' + subtotal.toLocaleString()"></span>
+                </div>
+                <div class="flex justify-between text-[10px] font-bold text-zinc-500 uppercase" x-show="showIva">
+                    <span>IVA (16%)</span>
+                    <span x-text="'$' + (total - subtotal).toLocaleString()"></span>
+                </div>
+                <div class="flex justify-between items-center py-3 border-t-2 border-zinc-900 mt-2">
+                    <span class="text-xs font-black uppercase tracking-tight">Total</span>
+                    <span class="text-xl font-black" x-text="'$' + total.toLocaleString()"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center pt-8 border-t border-zinc-100">
+            <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">¡Gracias por tu preferencia! — mincoli.com</p>
+        </div>
+    </div>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
@@ -294,8 +387,8 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
         [x-cloak] { display: none !important; }
 
-        input { outline: none !important; }
-        input::placeholder { color: #334155 !important; }
+         input { outline: none !important; }
+        input::placeholder { color: #71717a !important; }
     </style>
 
     <script>
@@ -319,12 +412,8 @@
                 manualCustomerMode: false,
                 manualCustomer: { name: '', phone: '' },
 
-                async filterProducts() {
-                    if (this.search.length < 3 && !this.activeCategoryId) {
-                        // Si no hay busqueda ni categoria, podemos mantener los iniciales o recargar
-                        return;
-                    }
-                    
+                 async filterProducts() {
+                    // Si no hay busqueda ni categoria, podemos recargar los productos iniciales
                     this.isLoading = true;
                     try {
                         const params = new URLSearchParams({
@@ -503,6 +592,61 @@
                     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
                 },
 
+                async exportQuotation(type) {
+                    if (this.cart.length === 0) return;
+                    
+                    this.isLoading = true;
+                    // Asegurar que el scroll del template esté arriba
+                    const element = document.getElementById('quotation-template');
+                    
+                    try {
+                        // Dar tiempo extra para renderizado de template Alpine
+                        await new Promise(r => setTimeout(r, 300));
+                        
+                        const canvas = await html2canvas(element, {
+                            scale: 2,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            useCORS: true,
+                            allowTaint: true
+                        });
+
+                        if (type === 'image') {
+                            const link = document.createElement('a');
+                            link.download = `Cotizacion_Mincoli_${new Date().getTime()}.jpg`;
+                            link.href = canvas.toDataURL('image/jpeg', 0.9);
+                            link.click();
+                        } else if (type === 'pdf') {
+                            const { jsPDF } = window.jspdf;
+                            const pdf = new jsPDF('p', 'mm', 'a4');
+                            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                            
+                            const imgProps = pdf.getImageProperties(imgData);
+                            const pdfWidth = pdf.internal.pageSize.getWidth();
+                            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                            
+                            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                            pdf.save(`Cotizacion_Mincoli_${new Date().getTime()}.pdf`);
+                        } else if (type === 'copy') {
+                            canvas.toBlob(async (blob) => {
+                                try {
+                                    const data = [new ClipboardItem({ [blob.type]: blob })];
+                                    await navigator.clipboard.write(data);
+                                    alert('Imagen copiada al portapapeles. ¡Ya puedes pegarla en WhatsApp!');
+                                } catch (err) {
+                                    console.error('Clipboard error', err);
+                                    alert('Tu navegador no permite copiar imágenes al portapapeles. Usa la opción de descargar.');
+                                }
+                            }, 'image/png');
+                        }
+                    } catch (e) {
+                        console.error('Export error', e);
+                        alert('Error al generar la cotización.');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
                 async proceedToOrder() {
                     if (this.cart.length === 0) return;
                     
@@ -524,12 +668,18 @@
                         const result = await response.json();
 
                         if (result.success) {
-                            alert(`Orden ${result.order_number} generada correctamente.`);
-                            this.cart = [];
-                            this.linkedCustomer = null;
-                            this.manualCustomer = { name: '', phone: '' };
-                            this.manualCustomerMode = false;
-                            this.customerSearch = '';
+                            // Redirigir a la vista de éxito premium
+                            if (result.redirect_url) {
+                                window.location.href = result.redirect_url;
+                            } else {
+                                // Fallback
+                                alert(`Orden ${result.order_number} generada correctamente.`);
+                                this.cart = [];
+                                this.linkedCustomer = null;
+                                this.manualCustomer = { name: '', phone: '' };
+                                this.manualCustomerMode = false;
+                                this.customerSearch = '';
+                            }
                         } else {
                             alert('Error: ' + result.message);
                         }
