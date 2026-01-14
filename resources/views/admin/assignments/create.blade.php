@@ -1,3 +1,4 @@
+<x-layouts.app :title="__('Nueva Asignación')">
     <div class="flex-1">
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-zinc-900 dark:text-white flex items-center">
