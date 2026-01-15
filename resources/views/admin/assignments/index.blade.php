@@ -2,12 +2,121 @@
     <div class="flex-1">
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Asignación de Productos</h1>
-            <a href="{{ route('dashboard.assignments.create') }}" class="rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700">
-                <i class="fas fa-plus mr-2"></i> Nueva Asignación
-            </a>
+            <div class="flex gap-2">
+                <a href="{{ route('dashboard.assignments.export-pdf', request()->query()) }}" target="_blank" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 flex items-center gap-2">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                </a>
+                <a href="{{ route('dashboard.assignments.create') }}" class="rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700">
+                    <i class="fas fa-plus mr-2"></i> Nueva Asignación
+                </a>
+            </div>
         </div>
 
-        <div class="p-6">
+        <div class="p-6 space-y-6">
+            <!-- Filters Section -->
+            <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 p-6">
+                <form method="GET" action="{{ route('dashboard.assignments.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2">Responsable</label>
+                        <select name="user_id" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                            <option value="">Todos</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2">Categoría</label>
+                        <select name="category_id" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                            <option value="">Todas</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2">Desde</label>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2">Hasta</label>
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2">LOB / Socio</label>
+                        <select name="lob" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                            <option value="">Todos</option>
+                            @foreach($lobs as $lob)
+                                <option value="{{ $lob }}" {{ request('lob') == $lob ? 'selected' : '' }}>{{ $lob }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-2">Estado</label>
+                        <select name="status" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                            <option value="">Todos</option>
+                            <option value="quotation" {{ request('status') == 'quotation' ? 'selected' : '' }}>Cotización</option>
+                            <option value="paid_customer" {{ request('status') == 'paid_customer' ? 'selected' : '' }}>Pagado Cliente</option>
+                            <option value="paid_partner" {{ request('status') == 'paid_partner' ? 'selected' : '' }}>Pagado Socio</option>
+                            <option value="deferred" {{ request('status') == 'deferred' ? 'selected' : '' }}>Pendiente</option>
+                            <option value="incident" {{ request('status') == 'incident' ? 'selected' : '' }}>Incidencia</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-bold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
+                            <i class="fas fa-filter mr-2"></i> Filtrar
+                        </button>
+                        <a href="{{ route('dashboard.assignments.index') }}" class="rounded-lg bg-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Paid Orders Suggestions (if date range is set) -->
+            @if($paidOrders->isNotEmpty())
+            <div class="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/20 p-6">
+                <h3 class="text-sm font-black uppercase tracking-wider text-blue-900 dark:text-blue-300 mb-4 flex items-center gap-2">
+                    <i class="fas fa-lightbulb"></i> Pedidos Pagados en el Rango de Fechas
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach($paidOrders as $order)
+                    <div class="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs font-black text-zinc-900 dark:text-white">{{ $order->order_number }}</p>
+                                <p class="text-[10px] text-zinc-500">{{ $order->customer_name }}</p>
+                            </div>
+                            <span class="text-xs font-bold text-green-600">${{ number_format($order->total, 0) }}</span>
+                        </div>
+                        <div class="text-[9px] text-zinc-400 space-y-1">
+                            @foreach($order->items->take(2) as $item)
+                            <p>• {{ $item->product->name }} ({{ $item->quantity }})</p>
+                            @endforeach
+                            @if($order->items->count() > 2)
+                            <p class="italic">+ {{ $order->items->count() - 2 }} más...</p>
+                            @endif
+                        </div>
+                        <a href="{{ route('dashboard.orders.show', $order->id) }}" target="_blank" class="mt-2 block text-center text-[10px] font-bold text-blue-600 hover:text-blue-700">
+                            Ver Detalle <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- Assignments Table -->
             <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 overflow-hidden">
                 <table class="w-full text-left text-sm border-collapse border-2 border-zinc-800 dark:border-zinc-700" id="assignments-table">
                     <thead class="bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest">
@@ -20,6 +129,7 @@
                             <th class="px-3 py-3 border border-zinc-800 w-24 text-center">IVA</th>
                             <th class="px-3 py-3 border border-zinc-800 w-32">LOB</th>
                             <th class="px-3 py-3 border border-zinc-800 w-48">Estado / Acción</th>
+                            <th class="px-3 py-3 border border-zinc-800 w-20 text-center bg-red-950"><i class="fas fa-trash"></i></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y-2 divide-zinc-800">
@@ -38,18 +148,22 @@
                                 <form action="{{ route('dashboard.assignments.update-status', $assignment->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
-                                    <select name="status" onchange="this.form.submit()" class="w-full border-0 py-1 pl-2 pr-8 text-[10px] font-black uppercase appearance-none cursor-pointer focus:ring-0
-                                        {{ $assignment->status === 'quotation' ? 'bg-[#FFFF00] text-black' : '' }}
-                                        {{ $assignment->status === 'paid_customer' ? 'bg-[#00FFFF] text-black' : '' }}
-                                        {{ $assignment->status === 'paid_partner' ? 'bg-[#000080] text-white' : '' }}
-                                        {{ $assignment->status === 'deferred' ? 'bg-[#A9A9A9] text-white' : '' }}
-                                        {{ $assignment->status === 'incident' ? 'bg-[#FF0000] text-white' : '' }}">
-                                        <option value="quotation" {{ $assignment->status === 'quotation' ? 'selected' : '' }} style="background-color: #FFFF00; color: #000;">[ AMARILLO ] - Cotización</option>
-                                        <option value="paid_customer" {{ $assignment->status === 'paid_customer' ? 'selected' : '' }} style="background-color: #00FFFF; color: #000;">[ AZUL CIELO ] - Pagado Cli</option>
-                                        <option value="paid_partner" {{ $assignment->status === 'paid_partner' ? 'selected' : '' }} style="background-color: #000080; color: #fff;">[ AZUL MARINO ] - Pagado Soc</option>
-                                        <option value="deferred" {{ $assignment->status === 'deferred' ? 'selected' : '' }} style="background-color: #A9A9A9; color: #fff;">[ GRIS ] - Pendiente</option>
-                                        <option value="incident" {{ $assignment->status === 'incident' ? 'selected' : '' }} style="background-color: #FF0000; color: #fff;">[ ROJO ] - Incidencia</option>
+                                    <select name="status" onchange="this.form.submit()" class="w-full border-0 py-1 pl-2 pr-8 text-[10px] font-black uppercase appearance-none cursor-pointer focus:ring-0 {{ $assignment->status_color_classes }}">
+                                        <option value="quotation" {{ $assignment->status === 'quotation' ? 'selected' : '' }}>Cotización</option>
+                                        <option value="paid_customer" {{ $assignment->status === 'paid_customer' ? 'selected' : '' }}>Pagado Cliente</option>
+                                        <option value="paid_partner" {{ $assignment->status === 'paid_partner' ? 'selected' : '' }}>Pagado Socio</option>
+                                        <option value="deferred" {{ $assignment->status === 'deferred' ? 'selected' : '' }}>Pendiente</option>
+                                        <option value="incident" {{ $assignment->status === 'incident' ? 'selected' : '' }}>Incidencia</option>
                                     </select>
+                                </form>
+                            </td>
+                            <td class="px-2 py-2 border-2 border-zinc-950 text-center bg-red-950/20">
+                                <form action="{{ route('dashboard.assignments.destroy', $assignment->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta asignación?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:text-red-700 font-bold">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -73,7 +187,7 @@
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
                             <tr class="bg-zinc-50 dark:bg-zinc-800/50 italic">
-                                <td class="px-6 py-4 font-bold text-zinc-500">Iva (16% Retenido)</td>
+                                <td class="px-6 py-4 font-bold text-zinc-500">IVA (16% Retenido)</td>
                                 <td class="px-6 py-4 text-right font-black text-zinc-900 dark:text-white">${{ number_format($corteSummary['iva'], 2) }}</td>
                             </tr>
                             @foreach($corteSummary['partners'] as $partner => $total)

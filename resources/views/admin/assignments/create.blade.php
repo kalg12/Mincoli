@@ -35,7 +35,7 @@
                                 <th class="px-3 py-4 border-r border-zinc-700 min-w-[180px]">Vendedor / Responsable</th>
                                 <th class="px-3 py-4 border-r border-zinc-700 min-w-[220px]">Producto (Seleccionar)</th>
                                 <th class="px-3 py-4 border-r border-zinc-700 w-24 text-center">Cant.</th>
-                                <th class="px-3 py-4 border-r border-zinc-700 w-32 text-center text-pink-400 font-black">Precio (Total)</th>
+                                <th class="px-3 py-4 border-r border-zinc-700 w-32 text-center text-orange-400 font-black">Precio (Total)</th>
                                 <th class="px-3 py-4 border-r border-zinc-700 w-28 text-center bg-zinc-800">Corte (Base)</th>
                                 <th class="px-3 py-4 border-r border-zinc-700 w-24 text-center bg-zinc-800">IVA (16%)</th>
                                 <th class="px-3 py-4 border-r border-zinc-700 w-40">LOB / Socio</th>
@@ -102,28 +102,28 @@
                 
                 tr.innerHTML = `
                     <td class="border-2 border-zinc-950">
-                        <select name="assignments[${rowId}][user_id]" class="font-black uppercase text-[10px] bg-white text-black h-full" required>
+                        <select name="assignments[${rowId}][user_id]" class="font-black uppercase text-[10px] bg-white text-black h-full">
                             <option value="">[ VENDEDOR ]</option>
                             ${users.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
                         </select>
                     </td>
                     <td class="border-2 border-zinc-950">
-                        <select name="assignments[${rowId}][product_id]" onchange="updateRowPrice(${rowId}, this)" class="font-black uppercase text-[10px] bg-white text-black h-full" required>
+                        <select name="assignments[${rowId}][product_id]" onchange="updateRowPrice(${rowId}, this)" class="font-black uppercase text-[10px] bg-white text-black h-full">
                             <option value="">[ PRODUCTO ]</option>
                             ${products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name}</option>`).join('')}
                         </select>
                     </td>
                     <td class="border-2 border-zinc-950">
-                        <input type="number" name="assignments[${rowId}][quantity]" value="1" min="1" oninput="calculateRow(${rowId})" class="text-center font-black text-black bg-white" required>
+                        <input type="number" name="assignments[${rowId}][quantity]" value="1" min="1" oninput="calculateRow(${rowId})" class="text-center font-black text-black bg-white">
                     </td>
-                    <td class="border-2 border-zinc-950 bg-pink-100">
-                        <input type="number" step="0.01" name="assignments[${rowId}][unit_price]" oninput="calculateRow(${rowId})" class="text-center font-black text-pink-700 bg-pink-100" required>
+                    <td class="border-2 border-zinc-950 bg-orange-50">
+                        <input type="number" step="0.01" name="assignments[${rowId}][unit_price]" oninput="calculateRow(${rowId})" class="text-center font-black text-orange-700 bg-orange-50">
                     </td>
-                    <td class="border-2 border-zinc-950 bg-zinc-200">
-                        <input type="number" step="1" name="assignments[${rowId}][base_price]" class="text-center font-black text-zinc-700" readonly tabindex="-1">
+                    <td class="border-2 border-zinc-950 bg-blue-50">
+                        <input type="number" step="1" name="assignments[${rowId}][base_price]" class="text-center font-black text-blue-700 bg-blue-50" readonly tabindex="-1">
                     </td>
-                    <td class="border-2 border-zinc-950 bg-zinc-200">
-                        <input type="number" step="0.01" name="assignments[${rowId}][iva_amount]" class="text-center font-black text-zinc-700" readonly tabindex="-1">
+                    <td class="border-2 border-zinc-950 bg-blue-50">
+                        <input type="number" step="0.01" name="assignments[${rowId}][iva_amount]" class="text-center font-black text-blue-700 bg-blue-50" readonly tabindex="-1">
                     </td>
                     <td class="border-2 border-zinc-950">
                         <input type="text" name="assignments[${rowId}][partner_lob]" placeholder="SOCIO / LOB" class="font-black uppercase italic text-zinc-800 bg-white">
@@ -169,5 +169,20 @@
         window.onload = () => {
             for(let i=0; i<5; i++) addRow();
         }
+
+        // Filter empty rows before submit
+        document.getElementById('batch-form').addEventListener('submit', function(e) {
+            const rows = document.querySelectorAll('#excel-table tbody tr');
+            rows.forEach(row => {
+                const userSelect = row.querySelector('select[name*="[user_id]"]');
+                const productSelect = row.querySelector('select[name*="[product_id]"]');
+                const priceInput = row.querySelector('input[name*="[unit_price]"]');
+                
+                // Remove row if user, product, or price is empty
+                if (!userSelect?.value || !productSelect?.value || !priceInput?.value) {
+                    row.remove();
+                }
+            });
+        });
     </script>
 </x-layouts.app>
