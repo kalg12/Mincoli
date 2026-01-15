@@ -23,7 +23,7 @@
         <div class="lg:col-span-2">
             <form action="{{ route('checkout.process') }}" method="POST" id="checkout-form">
                 @csrf
-                
+
                 <!-- Customer Information -->
                 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Información de Contacto</h2>
@@ -35,7 +35,7 @@
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div class="col-span-2">
                             <label class="mb-1 block text-sm font-medium text-gray-700">Correo Electrónico</label>
                             <input type="email" name="customer_email" value="{{ old('customer_email', auth()->user()->email ?? '') }}" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 @error('customer_email') border-red-500 @enderror" required>
@@ -44,18 +44,11 @@
                             @enderror
                         </div>
 
-                        <div class="relative">
+                        <div>
                             <label class="mb-1 block text-sm font-medium text-gray-700">Teléfono</label>
-                            <div class="relative">
-                                <input type="password" id="customer_phone" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="**********" inputmode="numeric" autocomplete="off" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 pr-10 @error('customer_phone') border-red-500 @enderror" required>
-                                <button type="button" onclick="togglePhoneVisibility()" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-pink-600 focus:outline-none">
-                                    <i class="fas fa-eye" id="phone-toggle-icon"></i>
-                                </button>
-                            </div>
+                            <input type="tel" id="customer_phone" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="Ingresa tu teléfono" inputmode="numeric" autocomplete="off" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 @error('customer_phone') border-red-500 @enderror" required>
                             @error('customer_phone')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @else
-                                <p class="mt-1 text-xs text-gray-400">Tu número se ocultará por seguridad.</p>
                             @enderror
                         </div>
 
@@ -71,26 +64,11 @@
                     </div>
                 </div>
 
-                <script>
-                    function togglePhoneVisibility() {
-                        const phoneInput = document.getElementById('customer_phone');
-                        const icon = document.getElementById('phone-toggle-icon');
-                        if (phoneInput.type === 'password') {
-                            phoneInput.type = 'tel';
-                            icon.classList.remove('fa-eye');
-                            icon.classList.add('fa-eye-slash');
-                        } else {
-                            phoneInput.type = 'password';
-                            icon.classList.remove('fa-eye-slash');
-                            icon.classList.add('fa-eye');
-                        }
-                    }
-                </script>
 
                 <!-- Payment Methods -->
                 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Método de Pago</h2>
-                    
+
                     @if(session('error'))
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                             <strong class="font-bold">Error!</strong>
