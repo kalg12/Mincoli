@@ -2,7 +2,7 @@
     <div class="flex-1">
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-zinc-900 dark:text-white flex items-center">
-                <i class="fas fa-file-excel text-green-600 mr-3"></i> 
+                <i class="fas fa-file-excel text-green-600 mr-3"></i>
                 Carga Masiva de Asignaciones
             </h1>
             <a href="{{ route('dashboard.assignments.index') }}" class="inline-flex items-center px-4 py-2 border border-zinc-300 rounded-md shadow-sm text-sm font-medium text-zinc-700 bg-white hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 silver-btn">
@@ -12,7 +12,7 @@
 
         <form action="{{ route('dashboard.assignments.store') }}" method="POST" id="batch-form">
             @csrf
-            
+
             <div class="p-6 space-y-6">
                 <!-- Header Info - Spreadsheet Style Header -->
                 <div class="p-6 rounded-xl bg-zinc-900 text-white shadow-xl border border-zinc-700 flex justify-between items-center">
@@ -52,7 +52,7 @@
                     <button type="button" onclick="addRow(1)" class="inline-flex items-center px-6 py-3 border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-sm font-bold rounded-xl text-zinc-500 hover:text-pink-600 hover:border-pink-500 transition-all">
                         <i class="fas fa-plus mr-2"></i> Añadir otra fila
                     </button>
-                    
+
                     <button type="submit" class="inline-flex items-center px-10 py-4 border border-transparent text-lg font-black rounded-xl shadow-2xl text-white bg-pink-600 hover:bg-pink-700 transform hover:scale-105 transition-all">
                         <i class="fas fa-cloud-upload-alt mr-3"></i> REGISTRAR CARGA
                     </button>
@@ -68,10 +68,10 @@
         .dark input[readonly] { background-color: #334155 !important; color: #f1f5f9 !important; }
         select, input { outline: none !important; border-radius: 0 !important; }
         #excel-table td { padding: 0 !important; border: 2px solid #64748b; }
-        #excel-table input, #excel-table select { 
-            border: none; 
-            padding: 0.75rem 0.5rem; 
-            width: 100%; 
+        #excel-table input, #excel-table select {
+            border: none;
+            padding: 0.75rem 0.5rem;
+            width: 100%;
             background: transparent;
             font-size: 11px;
             font-weight: 900;
@@ -95,11 +95,11 @@
             for(let i=0; i<count; i++) {
                 const tbody = document.querySelector('#excel-table tbody');
                 const rowId = rowCount++;
-                
+
                 const tr = document.createElement('tr');
                 tr.className = 'transition-colors bg-white dark:bg-zinc-900';
                 tr.id = `row-${rowId}`;
-                
+
                 tr.innerHTML = `
                     <td class="border-2 border-zinc-950">
                         <select name="assignments[${rowId}][user_id]" class="font-black uppercase text-[10px] bg-white text-black h-full">
@@ -116,7 +116,7 @@
                     <td class="border-2 border-zinc-950">
                         <input type="number" name="assignments[${rowId}][quantity]" value="1" min="1" oninput="calculateRow(${rowId})" class="text-center font-black text-black bg-white">
                     </td>
-                    <td class="border-2 border-zinc-950 bg-orange-50">
+                    <td class="border-2 border-zinc-950">
                         <input type="number" step="0.01" name="assignments[${rowId}][unit_price]" oninput="calculateRow(${rowId})" class="text-center font-black text-orange-700 bg-orange-50">
                     </td>
                     <td class="border-2 border-zinc-950 bg-blue-50">
@@ -134,7 +134,7 @@
                         </button>
                     </td>
                 `;
-                
+
                 tbody.appendChild(tr);
             }
         }
@@ -156,11 +156,11 @@
             const priceInput = document.querySelector(`input[name="assignments[${rowId}][unit_price]"]`);
             const baseInput = document.querySelector(`input[name="assignments[${rowId}][base_price]"]`);
             const ivaInput = document.querySelector(`input[name="assignments[${rowId}][iva_amount]"]`);
-            
+
             const total = parseFloat(priceInput.value) || 0;
             const base = Math.round(total / 1.16);
             const iva = total - base;
-            
+
             baseInput.value = base;
             ivaInput.value = iva.toFixed(2);
         }
@@ -177,7 +177,7 @@
                 const userSelect = row.querySelector('select[name*="[user_id]"]');
                 const productSelect = row.querySelector('select[name*="[product_id]"]');
                 const priceInput = row.querySelector('input[name*="[unit_price]"]');
-                
+
                 // Remove row if user, product, or price is empty
                 if (!userSelect?.value || !productSelect?.value || !priceInput?.value) {
                     row.remove();
