@@ -200,6 +200,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
     Route::patch('assignments/{assignment}/status', [App\Http\Controllers\Admin\ProductAssignmentController::class, 'updateStatus'])->name('assignments.update-status');
     Route::get('assignments/export-pdf', [App\Http\Controllers\Admin\ProductAssignmentController::class, 'exportPdf'])->name('assignments.export-pdf');
+    Route::get('assignments/export-excel', [App\Http\Controllers\Admin\ProductAssignmentController::class, 'exportExcel'])->name('assignments.export-excel');
     Route::resource('assignments', App\Http\Controllers\Admin\ProductAssignmentController::class);
 });
 

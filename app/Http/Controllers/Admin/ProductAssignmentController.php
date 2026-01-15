@@ -188,4 +188,67 @@ class ProductAssignmentController extends Controller
         $assignment->delete();
         return back()->with('success', 'Asignación eliminada correctamente.');
     }
+
+    public function exportExcel(Request $request)
+    {
+        $query = ProductAssignment::with(['user', 'product.category']);
+
+        // Apply same filters
+        if ($request->filled('user_id')) $query->where('user_id', $request->user_id);
+        if ($request->filled('category_id')) $query->whereHas('product', fn($q) => $q->where('category_id', $request->category_id));
+        if ($request->filled('date_from')) $query->whereDate('assigned_at', '>=', $request->date_from);
+        if ($request->filled('date_to')) $query->whereDate('assigned_at', '<=', $request->date_to);
+        if ($request->filled('lob')) $query->where('partner_lob', $request->lob);
+        if ($request->filled('status')) $query->where('status', $request->status);
+
+        $assignments = $query->latest('assigned_at')->get();
+
+        $filename = "asignaciones-" . date('Y-m-d-H-i') . ".csv";
+        $handle = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for Excel
+        fputs($handle, "\xEF\xBB\xBF");
+
+        // Headers
+        fputcsv($handle, [
+            'ID',
+            'Fecha',
+            'Responsable',
+            'Producto',
+            'Categoría',
+            'Cantidad',
+            'Precio Unitario',
+            'Precio Base (Corte)',
+            'IVA',
+            'LOB / Socio',
+            'Estado'
+        ]);
+
+        foreach ($assignments as $assignment) {
+            fputcsv($handle, [
+                $assignment->id,
+                $assignment->assigned_at->format('d/m/Y H:i'),
+                $assignment->user->name,
+                $assignment->product->name,
+                $assignment->product->category->name ?? '-',
+                $assignment->quantity,
+                $assignment->unit_price,
+                $assignment->base_price,
+                $assignment->iva_amount,
+                $assignment->partner_lob,
+                $assignment->status_label
+            ]);
+        }
+
+        fclose($handle);
+
+        return response()->stream(
+            fn() => null,
+            200,
+            [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ]
+        );
+    }
 }
