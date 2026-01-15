@@ -298,10 +298,11 @@
                 </div>
             </div>
         </div>
-    </div>
-
     <!-- Hidden Quotation Template for Export -->
-    <div id="quotation-template" class="fixed -left-[4000px] top-0 bg-white text-zinc-900 p-10 w-[600px] leading-tight" style="font-family: 'Inter', sans-serif;">
+    <div id="quotation-template" 
+         class="fixed left-0 top-0 bg-white text-zinc-900 p-10 w-[600px] leading-tight pointer-events-none" 
+         :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + ';'"
+         style="font-family: 'Inter', sans-serif;">
         <div class="flex justify-between items-center border-b-2 border-zinc-900 pb-6">
             <div>
                 <h1 class="text-3xl font-black uppercase tracking-tighter">Mincoli</h1>
@@ -309,15 +310,15 @@
             </div>
             <div class="text-right">
                 <h2 class="text-xl font-black uppercase">Cotización</h2>
-                <p class="text-[10px] text-zinc-500 font-bold" x-text="new Date().toLocaleString()"></p>
+                <p class="text-[10px] text-zinc-500 font-bold" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
             </div>
         </div>
 
         <div class="mt-8 grid grid-cols-2 gap-8">
             <div>
                 <h3 class="text-[10px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Cliente</h3>
-                <p class="text-sm font-black uppercase" x-text="(linkedCustomer ? linkedCustomer.name : manualCustomer.name) || 'Público General'"></p>
-                <p class="text-xs font-bold text-zinc-500" x-text="(linkedCustomer ? linkedCustomer.phone : manualCustomer.phone) || '-'"></p>
+                <p class="text-sm font-black uppercase" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
+                <p class="text-xs font-bold text-zinc-500" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
             </div>
             <div class="text-right">
                 <h3 class="text-[10px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Métodos de Pago</h3>
@@ -373,6 +374,7 @@
             <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">¡Gracias por tu preferencia! — mincoli.com</p>
         </div>
     </div>
+</div>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -397,6 +399,7 @@
                 search: '',
                 activeCategoryId: null,
                 isLoading: false,
+                isExporting: false, // Flag for export visibility
                 products: @json($products->items()),
                 cart: [],
                 showIva: {{ $showIva ? 'true' : 'false' }},
@@ -411,6 +414,10 @@
                 linkedCustomer: null,
                 manualCustomerMode: false,
                 manualCustomer: { name: '', phone: '' },
+                
+                // Image Preview (Clipboard Fallback)
+                previewModal: false,
+                previewImage: null,
 
                  async filterProducts() {
                     // Si no hay busqueda ni categoria, podemos recargar los productos iniciales
@@ -571,14 +578,16 @@
                     if (this.linkedCustomer) clientName = this.linkedCustomer.name;
                     else if (this.manualCustomer.name) clientName = this.manualCustomer.name;
                     
-                    let message = `Hola${clientName ? ' ' + clientName : ''}! te comparto tu coti:\n\n`;
+                    let message = `Hola${clientName ? ' ' + clientName : ''}! te comparto tu cotización de Mincoli:\n\n`;
                     this.cart.forEach(item => {
                         const variantStr = item.variant ? ` (${item.variant.name})` : '';
-                        message += `$${parseFloat(item.price).toFixed(0)}    ${item.name}${variantStr}\n`;
+                        const totalItem = parseFloat(item.price) * item.quantity;
+                        message += `▪️ *${item.quantity}x* ${item.name}${variantStr}\n   Precio unitario: $${parseFloat(item.price).toLocaleString('es-MX', {minimumFractionDigits: 2})} | Total: $${totalItem.toLocaleString('es-MX', {minimumFractionDigits: 2})}\n`;
                     });
-                    message += `\nUn total de $${this.total.toFixed(0)}`;
                     
-                    message += `\n\n--------------------------\n`;
+                    message += `\n*TOTAL A PAGAR: $${this.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}*\n`;
+                    
+                    message += `\n--------------------------\n`;
                     message += `🏦 DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
                     message += `*DEPÓSITOS OXXO:*\nCÓDIGO DE DEPÓSITO EN CAJA\n2242 1701 8074 1927\nNOMBRE: KEVIN VALENTIN JIMENEZ MARTINEZ\n\n`;
                     message += `*TRANSFERENCIA BANCO AZTECA:*\nCLABE: 1271 8001 3158 064 597\nNO. DE TARJETA: 4027 6600 0780 3556\nNOMBRE: JAZMÍN REYES`;
@@ -593,56 +602,84 @@
                 },
 
                 async exportQuotation(type) {
-                    if (this.cart.length === 0) return;
+                    if (this.cart.length === 0) {
+                        alert('El carrito está vacío');
+                        return;
+                    }
                     
                     this.isLoading = true;
-                    // Asegurar que el scroll del template esté arriba
-                    const element = document.getElementById('quotation-template');
+                    this.isExporting = true;
                     
                     try {
-                        // Dar tiempo extra para renderizado de template Alpine
-                        await new Promise(r => setTimeout(r, 300));
+                        // Wait for Alpine to show and render the template
+                        await this.$nextTick();
+                        await new Promise(r => setTimeout(r, 1500));
                         
+                        const element = document.getElementById('quotation-template');
+                        
+                        // Verify element is visible and has content
+                        if (!element || element.offsetHeight === 0) {
+                            throw new Error('Template not rendered');
+                        }
+                        
+                        // Capture with html2canvas
                         const canvas = await html2canvas(element, {
                             scale: 2,
                             backgroundColor: '#ffffff',
-                            logging: false,
+                            logging: true, // Enable for debugging
                             useCORS: true,
-                            allowTaint: true
+                            allowTaint: false,
+                            windowWidth: 600,
+                            windowHeight: element.scrollHeight
                         });
 
+                        // Validate canvas
+                        if (!canvas || canvas.width === 0 || canvas.height === 0) {
+                            throw new Error('Canvas generation failed');
+                        }
+
                         if (type === 'image') {
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                             const link = document.createElement('a');
                             link.download = `Cotizacion_Mincoli_${new Date().getTime()}.jpg`;
-                            link.href = canvas.toDataURL('image/jpeg', 0.9);
+                            link.href = dataUrl;
                             link.click();
                         } else if (type === 'pdf') {
                             const { jsPDF } = window.jspdf;
                             const pdf = new jsPDF('p', 'mm', 'a4');
-                            const imgData = canvas.toDataURL('image/jpeg', 0.9);
                             
-                            const imgProps = pdf.getImageProperties(imgData);
-                            const pdfWidth = pdf.internal.pageSize.getWidth();
-                            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                            const imgData = canvas.toDataURL('image/jpeg', 0.95);
                             
-                            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                            // Use canvas dimensions directly
+                            const imgWidth = 190; // A4 width in mm minus margins
+                            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                            
+                            pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
                             pdf.save(`Cotizacion_Mincoli_${new Date().getTime()}.pdf`);
                         } else if (type === 'copy') {
                             canvas.toBlob(async (blob) => {
                                 try {
-                                    const data = [new ClipboardItem({ [blob.type]: blob })];
-                                    await navigator.clipboard.write(data);
-                                    alert('Imagen copiada al portapapeles. ¡Ya puedes pegarla en WhatsApp!');
+                                    if (!blob) throw new Error('Blob creation failed');
+                                    
+                                    if (navigator.clipboard && navigator.clipboard.write) {
+                                        const data = [new ClipboardItem({ [blob.type]: blob })];
+                                        await navigator.clipboard.write(data);
+                                        alert('¡Imagen copiada al portapapeles! Ya puedes pegarla en WhatsApp.');
+                                    } else {
+                                        throw new Error('Clipboard API unavailable');
+                                    }
                                 } catch (err) {
-                                    console.error('Clipboard error', err);
-                                    alert('Tu navegador no permite copiar imágenes al portapapeles. Usa la opción de descargar.');
+                                    console.warn('Clipboard write failed, falling back to preview', err);
+                                    this.previewImage = canvas.toDataURL('image/jpeg', 0.9);
+                                    this.previewModal = true;
                                 }
                             }, 'image/png');
                         }
                     } catch (e) {
                         console.error('Export error', e);
-                        alert('Error al generar la cotización.');
+                        alert('Error al generar la cotización: ' + e.message + '\n\nIntenta de nuevo o usa la opción de WhatsApp (texto).');
                     } finally {
+                        this.isExporting = false;
                         this.isLoading = false;
                     }
                 },
