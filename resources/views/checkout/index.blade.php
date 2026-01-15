@@ -30,7 +30,17 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="col-span-2">
                             <label class="mb-1 block text-sm font-medium text-gray-700">Nombre Completo</label>
-                            <input type="text" name="customer_name" value="{{ old('customer_name', auth()->user()->name ?? '') }}" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 @error('customer_name') border-red-500 @enderror" required>
+                            <input
+                                type="text"
+                                name="customer_name"
+                                value="{{ old('customer_name', auth()->user()->name ?? '') }}"
+                                @class([
+                                    'w-full rounded-lg focus:border-pink-500 focus:ring-pink-500',
+                                    'border-gray-300' => ! $errors->has('customer_name'),
+                                    'border-red-500' => $errors->has('customer_name'),
+                                ])
+                                required
+                            >
                             @error('customer_name')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -38,7 +48,17 @@
 
                         <div class="col-span-2">
                             <label class="mb-1 block text-sm font-medium text-gray-700">Correo Electrónico</label>
-                            <input type="email" name="customer_email" value="{{ old('customer_email', auth()->user()->email ?? '') }}" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 @error('customer_email') border-red-500 @enderror" required>
+                            <input
+                                type="email"
+                                name="customer_email"
+                                value="{{ old('customer_email', auth()->user()->email ?? '') }}"
+                                @class([
+                                    'w-full rounded-lg focus:border-pink-500 focus:ring-pink-500',
+                                    'border-gray-300' => ! $errors->has('customer_email'),
+                                    'border-red-500' => $errors->has('customer_email'),
+                                ])
+                                required
+                            >
                             @error('customer_email')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -46,7 +66,21 @@
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-gray-700">Teléfono</label>
-                            <input type="tel" id="customer_phone" name="customer_phone" value="{{ old('customer_phone') }}" placeholder="Ingresa tu teléfono" inputmode="numeric" autocomplete="off" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 @error('customer_phone') border-red-500 @enderror" required>
+                            <input
+                                type="tel"
+                                id="customer_phone"
+                                name="customer_phone"
+                                value="{{ old('customer_phone') }}"
+                                placeholder="Ingresa tu teléfono"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                @class([
+                                    'w-full rounded-lg focus:border-pink-500 focus:ring-pink-500',
+                                    'border-gray-300' => ! $errors->has('customer_phone'),
+                                    'border-red-500' => $errors->has('customer_phone'),
+                                ])
+                                required
+                            >
                             @error('customer_phone')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -54,7 +88,20 @@
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-gray-700">Confirmar Teléfono</label>
-                            <input type="tel" name="customer_phone_confirmation" placeholder="Ingresa tu número nuevamente" inputmode="numeric" autocomplete="off" onpaste="return false;" class="w-full rounded-lg border-gray-300 focus:border-pink-500 focus:ring-pink-500 @error('customer_phone_confirmation') border-red-500 @enderror" required>
+                            <input
+                                type="tel"
+                                name="customer_phone_confirmation"
+                                placeholder="Ingresa tu número nuevamente"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                onpaste="return false;"
+                                @class([
+                                    'w-full rounded-lg focus:border-pink-500 focus:ring-pink-500',
+                                    'border-gray-300' => ! $errors->has('customer_phone_confirmation'),
+                                    'border-red-500' => $errors->has('customer_phone_confirmation'),
+                                ])
+                                required
+                            >
                             @error('customer_phone_confirmation')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @else
