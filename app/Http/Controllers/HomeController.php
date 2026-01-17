@@ -17,7 +17,18 @@ class HomeController extends Controller
 
         $featuredProducts = Product::where('is_active', true)
             ->where('is_featured', true)
-            ->with(['images', 'category'])
+            ->with(['images', 'category', 'variants'])
+            ->where(function($q) {
+                // Products with variants: at least one variant must have stock
+                $q->whereHas('variants', function($variantQuery) {
+                    $variantQuery->where('stock', '>', 0);
+                })
+                // Products without variants: product itself must have stock
+                ->orWhere(function($noVariantQuery) {
+                    $noVariantQuery->whereDoesntHave('variants')
+                        ->where('stock', '>', 0);
+                });
+            })
             ->take(10)
             ->get();
 

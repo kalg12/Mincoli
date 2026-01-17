@@ -16,7 +16,18 @@ class ShopController extends Controller
             ->get();
 
         $query = Product::where('is_active', true)
-            ->with(['images', 'category', 'variants']);
+            ->with(['images', 'category', 'variants'])
+            ->where(function($q) {
+                // Products with variants: at least one variant must have stock
+                $q->whereHas('variants', function($variantQuery) {
+                    $variantQuery->where('stock', '>', 0);
+                })
+                // Products without variants: product itself must have stock
+                ->orWhere(function($noVariantQuery) {
+                    $noVariantQuery->whereDoesntHave('variants')
+                        ->where('stock', '>', 0);
+                });
+            });
 
         // Filter by category
         if ($request->has('category')) {
@@ -68,6 +79,17 @@ class ShopController extends Controller
         $products = Product::where('is_active', true)
             ->where('category_id', $category->id)
             ->with(['images', 'category', 'variants'])
+            ->where(function($q) {
+                // Products with variants: at least one variant must have stock
+                $q->whereHas('variants', function($variantQuery) {
+                    $variantQuery->where('stock', '>', 0);
+                })
+                // Products without variants: product itself must have stock
+                ->orWhere(function($noVariantQuery) {
+                    $noVariantQuery->whereDoesntHave('variants')
+                        ->where('stock', '>', 0);
+                });
+            })
             ->latest()
             ->paginate(20);
 
@@ -87,7 +109,18 @@ class ShopController extends Controller
         $relatedProducts = Product::where('is_active', true)
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
-            ->with(['images'])
+            ->with(['images', 'variants'])
+            ->where(function($q) {
+                // Products with variants: at least one variant must have stock
+                $q->whereHas('variants', function($variantQuery) {
+                    $variantQuery->where('stock', '>', 0);
+                })
+                // Products without variants: product itself must have stock
+                ->orWhere(function($noVariantQuery) {
+                    $noVariantQuery->whereDoesntHave('variants')
+                        ->where('stock', '>', 0);
+                });
+            })
             ->inRandomOrder()
             ->take(5)
             ->get();
