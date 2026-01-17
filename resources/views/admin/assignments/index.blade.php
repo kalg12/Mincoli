@@ -82,8 +82,8 @@
                         <button type="submit" class="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-bold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
                             <i class="fas fa-filter mr-2"></i> Filtrar
                         </button>
-                        <a href="{{ route('dashboard.assignments.index') }}" class="rounded-lg bg-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600">
-                            <i class="fas fa-times"></i>
+                        <a href="{{ route('dashboard.assignments.index') }}" class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900">
+                            <i class="fas fa-times mr-2"></i> Limpiar
                         </a>
                     </div>
                 </form>
