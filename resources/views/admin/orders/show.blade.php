@@ -162,19 +162,43 @@
                                 {{ $order->status_label }}
                             </span>
                         </div>
-                        <form action="{{ route('dashboard.orders.update-status', $order->id) }}" method="POST">
+                        <form action="{{ route('dashboard.orders.update-status', $order->id) }}" method="POST" x-data="statusManager">
                             @csrf
                             @method('PUT')
-                            <select name="status" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                                <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pendiente</option>
-                                <option value="partially_paid" {{ $order->status === 'partially_paid' ? 'selected' : '' }}>Pago Parcial</option>
-                                <option value="paid" {{ $order->status === 'paid' ? 'selected' : '' }}>Pagado</option>
-                                <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>Enviado</option>
-                                <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Entregado</option>
-                                <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelado</option>
+                            <select name="status" x-model="selectedStatus" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                <option value="pending">Pendiente</option>
+                                <option value="partially_paid">Pago Parcial</option>
+                                <option value="paid">Pagado</option>
+                                <option value="shipped">Enviado</option>
+                                <option value="delivered">Entregado</option>
+                                <option value="cancelled">Cancelado</option>
                             </select>
+
+                            <div x-show="selectedStatus === 'cancelled'" x-transition class="mt-4 rounded-md bg-yellow-50 p-3 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-900/50">
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input id="restore_stock" name="restore_stock" type="checkbox" value="1" checked class="focus:ring-pink-500 h-4 w-4 text-pink-600 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="restore_stock" class="font-medium text-yellow-800 dark:text-yellow-400">Restaurar Stock</label>
+                                        <p class="text-yellow-700 dark:text-yellow-500 text-xs mt-1">Si se marca, se devolverá el stock de todos los productos de este pedido.</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button type="submit" class="mt-4 w-full rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700">Actualizar Estado</button>
                         </form>
+                    </div>
+                </div>
+                
+                <!-- Helper for AlpineJS status -->
+                <script>
+                    document.addEventListener('alpine:init', () => {
+                        Alpine.data('statusManager', () => ({
+                            selectedStatus: '{{ $order->status }}',
+                        }))
+                    })
+                </script>
                     </div>
                 </div>
 

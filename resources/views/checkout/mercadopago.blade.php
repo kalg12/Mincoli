@@ -25,8 +25,12 @@
         });
     </script>
     
-    <div class="mt-8">
-        <a href="{{ $preference->init_point }}" class="text-pink-600 underline">Si no abre automáticamente, haz clic aquí</a>
+    <div class="mt-8 flex flex-col gap-4 justify-center items-center">
+        <a href="{{ $preference->init_point }}" class="text-pink-600 underline">Si no abre automáticamente, haz clic aquí para abrir la pasarela</a>
+        
+        <a href="{{ route('checkout.success', $order) }}" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition">
+            Ya completé/cerré el proceso de pago &rarr;
+        </a>
     </div>
 </div>
 @endsection

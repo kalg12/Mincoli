@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\InventoryMovement;
+use App\Models\OrderStatusHistory;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -47,7 +51,7 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::with('items')->findOrFail($id);
         $request->validate(['status' => 'required|in:pending,paid,shipped,delivered,cancelled,refunded']);
         
         $oldStatus = $order->status;
@@ -55,8 +59,58 @@ class OrderController extends Controller
         $order->save();
 
         if ($oldStatus !== $request->status) {
-            // Log history if table exists or just save
-            // Assuming simple update for now, ideally record history
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'from_status' => $oldStatus,
+                'to_status' => $request->status,
+                'note' => 'Actualizado por administrador',
+            ]);
+        }
+
+        // Restore Stock Logic
+        if ($request->status === 'cancelled' && $request->has('restore_stock')) {
+            foreach ($order->items as $item) {
+                $reason = 'Restauración por cancelación de pedido #' . $order->order_number;
+                
+                if ($item->variant_id) {
+                    $variant = ProductVariant::find($item->variant_id);
+                    if ($variant) {
+                        $variant->increment('stock', $item->quantity);
+                        
+                        InventoryMovement::create([
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'type' => 'in',
+                            'quantity' => $item->quantity,
+                            'reason' => $reason,
+                            'reference_type' => 'Order',
+                            'reference_id' => $order->id,
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+                } else {
+                    $product = Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+
+                        InventoryMovement::create([
+                            'product_id' => $item->product_id,
+                            'variant_id' => null,
+                            'type' => 'in',
+                            'quantity' => $item->quantity,
+                            'reason' => $reason,
+                            'reference_type' => 'Order',
+                            'reference_id' => $order->id,
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+                }
+            }
+            
+            // If restoring stock, we might want to return here with specific message
+            // But we still need to check payment status logic below? 
+            // Usually cancelled orders shouldn't trigger 'paid' logic unless we are uncancelling?
+            // The logic below checks if status === 'paid'.
         }
 
         // Also update payment status if Order is marked as Paid
@@ -70,7 +124,11 @@ class OrderController extends Controller
             }
         }
 
-        return back()->with('success', 'Estado del pedido actualizado correctamente.');
+        $message = ($request->status === 'cancelled' && $request->has('restore_stock')) 
+            ? 'Pedido cancelado y stock restaurado correctamente.' 
+            : 'Estado del pedido actualizado correctamente.';
+
+        return back()->with('success', $message);
     }
 
     public function addPayment(Request $request, Order $order)
