@@ -13,7 +13,7 @@
     
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script>
-        const mp = new MercadoPago("{{ $paymentMethod->settings['public_key'] ?? 'TEST-00000000-0000-0000-0000-000000000000' }}", {
+        const mp = new MercadoPago("{{ $publicKey }}", {
             locale: 'es-MX'
         });
 

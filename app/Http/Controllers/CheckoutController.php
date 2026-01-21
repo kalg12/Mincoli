@@ -10,10 +10,6 @@ use App\Models\Payment;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use MercadoPago\SDK;
-use MercadoPago\Preference;
-use MercadoPago\Item;
-use MercadoPago\Payer;
 use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
@@ -180,21 +176,36 @@ class CheckoutController extends Controller
             $payment->status = 'pending';
             $payment->save();
 
-            DB::commit();
-
-            // Clear Cart
-            session()->forget('cart');
-            session()->put('last_order_id', $order->id);
-
             // Handle Payment Method Specifics
             if ($paymentMethod->code === 'mercadopago') {
-                return $this->processMercadoPago($order, $paymentMethod);
+                $preferenceData = $this->createMercadoPagoPreference($order, $paymentMethod);
+                
+                // Only commit if Preference creation was successful
+                DB::commit();
+                
+                // Clear Cart
+                session()->forget('cart');
+                session()->put('last_order_id', $order->id);
+
+                return view('checkout.mercadopago', $preferenceData);
+
             } elseif ($paymentMethod->code === 'oxxo') {
+                DB::commit();
+                session()->forget('cart');
+                session()->put('last_order_id', $order->id);
                 return redirect()->route('checkout.success', $order);
+
             } elseif ($paymentMethod->code === 'transfer') {
+                DB::commit();
+                session()->forget('cart');
+                session()->put('last_order_id', $order->id);
                 return redirect()->route('checkout.success', $order);
             }
 
+            // Default fallback
+            DB::commit();
+            session()->forget('cart');
+            session()->put('last_order_id', $order->id);
             return redirect()->route('checkout.success', $order);
 
         } catch (\Exception $e) {
@@ -204,61 +215,126 @@ class CheckoutController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all()
             ]);
-            return back()->with('error', 'Ocurrió un error al procesar tu pedido (' . $e->getMessage() . '). Por favor intenta de nuevo.');
+            // Use specific error message if it's from our logic, generic otherwise
+            $errorMessage = $e->getMessage();
+            return back()->with('error', 'Error al procesar el pedido: ' . $errorMessage);
         }
     }
     
-
-
-    private function processMercadoPago($order, $paymentMethod)
+    /**
+     * Creates Mercado Pago preference and returns view data.
+     * Throws exception on failure.
+     */
+    private function createMercadoPagoPreference($order, $paymentMethod)
     {
         $settings = $paymentMethod->settings;
-        if (empty($settings['access_token'])) {
-            // Fallback or error if not configured
-             return redirect()->route('checkout.success', $order)->with('warning', 'Mercado Pago no está configurado correctamente. Contacta al administrador.');
+        
+        // Hybrid Credential Logic: DB Settings > .env Config
+        $accessToken = !empty($settings['access_token']) ? $settings['access_token'] : config('services.mercadopago.access_token');
+        $publicKey = !empty($settings['public_key']) ? $settings['public_key'] : config('services.mercadopago.public_key');
+
+        if (empty($accessToken)) {
+             throw new \Exception('Credenciales de Mercado Pago no configuradas (Access Token faltante).');
         }
 
-        SDK::setAccessToken($settings['access_token']);
-
-        $preference = new Preference();
+        // Initialize SDK with specific config class
+        \MercadoPago\MercadoPagoConfig::setAccessToken($accessToken);
+        
+        $client = new \MercadoPago\Client\Preference\PreferenceClient();
         
         $items = [];
         foreach ($order->items as $orderItem) {
-            $item = new Item();
-            $item->title = $orderItem->product->name . ($orderItem->variant ? " ({$orderItem->variant->name})" : "");
-            $item->quantity = $orderItem->quantity;
-            $item->unit_price = $orderItem->unit_price;
-            // Mercado Pago expects unit_price to be float
-            $item->unit_price = (float)$orderItem->unit_price; 
-            $items[] = $item;
+            $items[] = [
+                "id" => $orderItem->variant_id ? "VAR-" . $orderItem->variant_id : "PROD-" . $orderItem->product_id,
+                "title" => $orderItem->product->name . ($orderItem->variant ? " ({$orderItem->variant->name})" : ""),
+                "quantity" => (int)$orderItem->quantity,
+                "unit_price" => (float)$orderItem->unit_price,
+                "currency_id" => "MXN",
+                "description" => Str::limit($orderItem->product->description ?? 'Producto Mincoli', 255)
+            ];
         }
 
-        // Add tax as an item or included? Usually unit price includes tax if simple. 
-        // Or add a separate item for tax ? better to have inclusive prices for simplicity in this demo or add generic tax item.
-        // If system adds tax on top:
         if ($order->iva_total > 0) {
-            $taxItem = new Item();
-            $taxItem->title = "IVA (16%)";
-            $taxItem->quantity = 1;
-            $taxItem->unit_price = (float)$order->iva_total;
-            $items[] = $taxItem;
+            $items[] = [
+                "id" => "TAX-IVA",
+                "title" => "IVA (16%)",
+                "quantity" => 1,
+                "unit_price" => (float)$order->iva_total,
+                "currency_id" => "MXN"
+            ];
         }
 
-        $preference->items = $items;
+        // Simplify Payer to avoid validation errors with phone/address if not strictly needed
+        // Preference API only requires email. Name/Surname are helpful but strict validation on phone can cause errors.
         
-        $preference->back_urls = [
-            "success" => route('checkout.success', $order),
-            "failure" => route('checkout.index'), // Or failure page
-            "pending" => route('checkout.success', $order)
+        $nameParts = explode(' ', $order->customer_name, 2);
+        $name = $nameParts[0];
+        $surname = $nameParts[1] ?? '';
+
+        $payer = [
+            "name" => $name,
+            "surname" => $surname,
+            "email" => $order->customer_email,
         ];
-        $preference->auto_return = "approved";
 
-        $preference->save();
+        // Only add phone if we are sure it's valid format, otherwise skip to prevent API error
+        // Mercado Pago often validates area_code + number strictly.
+        // For simplicity in this integration, we omit phone to avoid "Api error" on invalid format.
+        
+        try {
+            $request = [
+                "items" => $items,
+                "payer" => $payer,
+                "payment_methods" => [
+                    "excluded_payment_methods" => [],
+                    "installments" => 12
+                ],
+                "back_urls" => [
+                    "success" => secure_url(route('checkout.success', $order, false)),
+                    "failure" => secure_url(route('checkout.index', ['error' => 'payment_failed'], false)), 
+                    "pending" => secure_url(route('checkout.success', $order, false))
+                ],
+                "auto_return" => "approved",
+                "external_reference" => (string)$order->id,
+                "statement_descriptor" => "MINCOLI SHOP",
+                "metadata" => [
+                    "order_number" => $order->order_number
+                ]
+            ];
 
-        if ($preference->id) {
-             return view('checkout.mercadopago', compact('order', 'preference', 'paymentMethod'));
-        } else {
-             return redirect()->route('checkout.success', $order)->with('error', 'Error al conectar con Mercado Pago.');
+            $preference = $client->create($request);
+
+            if ($preference && $preference->id) {
+                return compact('order', 'preference', 'paymentMethod', 'publicKey');
+            } else {
+                 throw new \Exception('No se pudo obtener el ID de preferencia de Mercado Pago (Respuesta vacía).');
+            }
+
+        } catch (\MercadoPago\Exceptions\MPApiException $e) {
+            $response = $e->getApiResponse();
+            $content = $response ? json_encode($response->getContent()) : 'No content';
+            Log::error('Mercado Pago API Error', [
+                'status' => $e->getCode(),
+                'content' => $content,
+                'message' => $e->getMessage()
+            ]);
+            
+            // Try to extract a friendly message from content
+            $friendlyMessage = 'Error de API Mercado Pago';
+            if ($response && $contentArr = $response->getContent()) {
+                if (isset($contentArr['message'])) $friendlyMessage .= ': ' . $contentArr['message'];
+                if (isset($contentArr['cause']) && is_array($contentArr['cause'])) {
+                    foreach($contentArr['cause'] as $cause) {
+                        $friendlyMessage .= ' | ' . ($cause['description'] ?? $cause['code'] ?? '');
+                    }
+                }
+            }
+            
+            throw new \Exception($friendlyMessage);
+
+        } catch (\Exception $e) {
+            Log::error('Mercado Pago General Exception', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            throw new \Exception('Error Interno Mercado Pago: ' . $e->getMessage());
         }
     }
 

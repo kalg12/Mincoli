@@ -38,20 +38,37 @@
                     
                     @if($method->code == 'mercadopago')
                         <div class="space-y-4">
-                            <div>
-                                <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Access Token</label>
-                                <input type="password" name="settings[access_token]" value="{{ $method->settings['access_token'] ?? '' }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900"/>
+                            <div class="rounded-md bg-blue-50 p-4 dark:bg-blue-900/30">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Configuración Híbrida</h3>
+                                        <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                                            <p>Puedes configurar las credenciales aquí o en el archivo <code>.env</code> (recomendado).</p>
+                                            <p class="mt-1">Si dejas estos campos vacíos, el sistema intentará usar las variables de entorno:</p>
+                                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                                <li><code>MERCADOPAGO_PUBLIC_KEY</code></li>
+                                                <li><code>MERCADOPAGO_ACCESS_TOKEN</code></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
                             <div>
                                 <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Public Key</label>
-                                <input type="text" name="settings[public_key]" value="{{ $method->settings['public_key'] ?? '' }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900"/>
+                                <input type="text" name="settings[public_key]" value="{{ $method->settings['public_key'] ?? '' }}" placeholder="{{ config('services.mercadopago.public_key') ? 'Configurado en .env' : 'Ej: APP_USR-...' }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900"/>
                             </div>
+                            
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Entorno</label>
-                                <select name="settings[environment]" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                                    <option value="sandbox" {{ ($method->settings['environment'] ?? '') == 'sandbox' ? 'selected' : '' }}>Sandbox (Pruebas)</option>
-                                    <option value="production" {{ ($method->settings['environment'] ?? '') == 'production' ? 'selected' : '' }}>Producción</option>
-                                </select>
+                                <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Access Token</label>
+                                <div class="relative">
+                                    <input type="password" name="settings[access_token]" value="{{ $method->settings['access_token'] ?? '' }}" placeholder="{{ config('services.mercadopago.access_token') ? 'Configurado en .env' : 'Ej: APP_USR-...' }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900"/>
+                                </div>
                             </div>
                         </div>
                     @elseif($method->code == 'transfer')
