@@ -68,7 +68,7 @@ class OrderController extends Controller
         }
 
         // Restore Stock Logic
-        if ($request->status === 'cancelled' && $request->has('restore_stock')) {
+        if ($request->status === 'cancelled' && $oldStatus !== 'cancelled' && $request->has('restore_stock')) {
             foreach ($order->items as $item) {
                 $reason = 'Restauración por cancelación de pedido #' . $order->order_number;
                 
