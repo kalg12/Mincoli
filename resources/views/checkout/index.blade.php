@@ -127,7 +127,7 @@
                         @foreach($paymentMethods as $method)
                         <div class="border rounded-lg p-4 cursor-pointer hover:border-pink-500 transition relative">
                             <label class="flex items-start cursor-pointer w-full h-full">
-                                <input type="radio" name="payment_method_id" value="{{ $method->id }}" class="mt-1 mr-4 text-pink-600 focus:ring-pink-500" required>
+                                <input type="radio" name="payment_method_id" value="{{ $method->id }}" class="mt-1 mr-4 text-pink-600 focus:ring-pink-500" required {{ old('payment_method_id') == $method->id ? 'checked' : '' }}>
                                 <div>
                                     <span class="block font-semibold text-gray-900">{{ $method->name }}</span>
                                     <span class="block text-sm text-gray-600 mt-1">{{ $method->description }}</span>

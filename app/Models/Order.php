@@ -19,6 +19,7 @@ class Order extends Model
         'shipping_cost',
         'total',
         'notes',
+        'expires_at',
         'placed_at',
         'customer_name',
         'customer_email',
@@ -77,6 +78,13 @@ class Order extends Model
     /**
      * Get all items in this order
      */
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'pending')
+                    ->whereNotNull('expires_at')
+                    ->where('expires_at', '<', now());
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);

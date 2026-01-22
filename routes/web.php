@@ -22,6 +22,7 @@ Route::get('/tienda/producto/{slug}', [ShopController::class, 'product'])->name(
 // Cart Routes
 Route::get('/carrito', [CartController::class, 'index'])->name('cart');
 Route::post('/carrito/agregar', [CartController::class, 'add'])->name('cart.add');
+Route::get('/carrito/agregar', function() { return redirect()->route('cart'); });
 Route::patch('/carrito/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/carrito/{id}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/carrito', [CartController::class, 'clear'])->name('cart.clear');
@@ -31,7 +32,9 @@ Route::get('/api/carrito/datos', [CartController::class, 'getCartData'])->name('
 Route::get('/checkout', [App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/process', [App\Http\Controllers\CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/checkout/success/{order}', [App\Http\Controllers\CheckoutController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/failure', [App\Http\Controllers\CheckoutController::class, 'failure'])->name('checkout.failure');
 Route::get('/checkout/receipt/{order}', [App\Http\Controllers\CheckoutController::class, 'downloadReceipt'])->name('checkout.receipt');
+Route::post('/webhooks/mercadopago', [App\Http\Controllers\CheckoutController::class, 'webhook'])->name('webhooks.mercadopago');
 
 
 // Pages Routes

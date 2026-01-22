@@ -11,8 +11,8 @@ use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-
-class CheckoutController extends Controller
+use MercadoPago\Client\Payment\PaymentClient;
+use MercadoPago\MercadoPagoConfig;
 {
     public function index()
     {
@@ -115,25 +115,22 @@ class CheckoutController extends Controller
             $order->total = $total;
             $order->channel = 'web';
             $order->placed_at = now();
+            // Set Reservation Timeout (e.g., 15 minutes)
+            $order->expires_at = now()->addMinutes(15);
             $order->save();
 
-            // Create Order Items
+            // Create Order Items and Reserve Stock Atomically
             foreach ($cart as $itemData) {
-                $product = Product::with('variants')->find($itemData['product_id']);
+                $product = Product::find($itemData['product_id']);
                 $price = $product->sale_price ?? $product->price;
-                 if(!empty($itemData['variant_id'])) {
-                     $variant = $product->variants->firstWhere('id', $itemData['variant_id']);
-                     if($variant) $price = $variant->sale_price ?? ($variant->price ?? $price);
-                 }
-
+                $variant = null;
+                
+                if(!empty($itemData['variant_id'])) {
+                    $variant = ProductVariant::find($itemData['variant_id']);
+                    if($variant) $price = $variant->sale_price ?? ($variant->price ?? $price);
+                }
 
                 $subtotalItem = $price * $itemData['quantity'];
-                
-                // Calculate IVA for item if needed, or assume included in price. 
-                // Based on previous logic, IVA was calculated ON TOP of subtotal.
-                // So unit_price is exclusive of tax? 
-                // Let's assume unit_price is the base price.
-                
                 $ivaItem = $showIva ? ($subtotalItem * 0.16) : 0;
                 $totalItem = $subtotalItem + $ivaItem;
 
@@ -147,25 +144,22 @@ class CheckoutController extends Controller
                 $orderItem->total = $totalItem;
                 $orderItem->save();
 
-                // Decrement Stock
-                if ($orderItem->variant_id && $variant) {
-                    $variant->decrement('stock', $itemData['quantity']);
+                // ATOMIC RESERVATION (Decrement WHERE stock >= requested)
+                if ($orderItem->variant_id) {
+                    $affected = DB::table('product_variants')
+                        ->where('id', $orderItem->variant_id)
+                        ->where('stock', '>=', $orderItem->quantity)
+                        ->decrement('stock', $orderItem->quantity);
                 } else {
-                    $product->decrement('stock', $itemData['quantity']);
+                    $affected = DB::table('products')
+                        ->where('id', $orderItem->product_id)
+                        ->where('stock', '>=', $orderItem->quantity)
+                        ->decrement('stock', $orderItem->quantity);
                 }
 
-                // Record Movement
-                DB::table('inventory_movements')->insert([
-                    'product_id' => $product->id,
-                    'variant_id' => $orderItem->variant_id,
-                    'type' => 'out',
-                    'quantity' => $itemData['quantity'],
-                    'reason' => 'Venta #' . $order->order_number,
-                    'reference_type' => 'App\Models\Order',
-                    'reference_id' => $order->id,
-                    'created_at' => now(),
-                    'created_by' => auth()->id() ?? null,
-                ]);
+                if ($affected === 0) {
+                    throw new \Exception("Vaya, parece que alguien se llevó el último " . $product->name . " mientras terminabas. Por favor, revisa tu carrito.");
+                }
             }
 
             // Create Payment Record (Pending)
@@ -176,36 +170,33 @@ class CheckoutController extends Controller
             $payment->status = 'pending';
             $payment->save();
 
+            // COMMIT TRANSACTION HERE to prevent Database Locking (SQLite) during external API calls
+            DB::commit();
+
+            // Clear Cart immediately to prevent duplicate orders if user refreshes
+            session()->forget('cart');
+            session()->put('last_order_id', $order->id);
+
             // Handle Payment Method Specifics
             if ($paymentMethod->code === 'mercadopago') {
-                $preferenceData = $this->createMercadoPagoPreference($order, $paymentMethod);
-                
-                // Only commit if Preference creation was successful
-                DB::commit();
-                
-                // Clear Cart
-                session()->forget('cart');
-                session()->put('last_order_id', $order->id);
-
-                return view('checkout.mercadopago', $preferenceData);
+                try {
+                    $preferenceData = $this->createMercadoPagoPreference($order, $paymentMethod);
+                    return view('checkout.mercadopago', $preferenceData);
+                } catch (\Exception $e) {
+                    Log::error('Mercado Pago Init Failed after Order Commit', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+                    // Order is created but payment init failed. Redirect to success/receipt page with error.
+                    return redirect()->route('checkout.success', $order)
+                        ->with('error', 'El pedido fue creado pero hubo un error al conectar con Mercado Pago: ' . $e->getMessage() . '. Por favor intenta pagar nuevamente desde tu historial.');
+                }
 
             } elseif ($paymentMethod->code === 'oxxo') {
-                DB::commit();
-                session()->forget('cart');
-                session()->put('last_order_id', $order->id);
                 return redirect()->route('checkout.success', $order);
 
             } elseif ($paymentMethod->code === 'transfer') {
-                DB::commit();
-                session()->forget('cart');
-                session()->put('last_order_id', $order->id);
                 return redirect()->route('checkout.success', $order);
             }
 
             // Default fallback
-            DB::commit();
-            session()->forget('cart');
-            session()->put('last_order_id', $order->id);
             return redirect()->route('checkout.success', $order);
 
         } catch (\Exception $e) {
@@ -232,6 +223,8 @@ class CheckoutController extends Controller
         // Hybrid Credential Logic: DB Settings > .env Config
         $accessToken = !empty($settings['access_token']) ? $settings['access_token'] : config('services.mercadopago.access_token');
         $publicKey = !empty($settings['public_key']) ? $settings['public_key'] : config('services.mercadopago.public_key');
+        // Use sandbox if configured in .env or if we are investigating issues
+        $isSandbox = config('services.mercadopago.sandbox', true);
 
         if (empty($accessToken)) {
              throw new \Exception('Credenciales de Mercado Pago no configuradas (Access Token faltante).');
@@ -263,25 +256,29 @@ class CheckoutController extends Controller
                 "currency_id" => "MXN"
             ];
         }
-
-        // Simplify Payer to avoid validation errors with phone/address if not strictly needed
-        // Preference API only requires email. Name/Surname are helpful but strict validation on phone can cause errors.
         
         $nameParts = explode(' ', $order->customer_name, 2);
         $name = $nameParts[0];
-        $surname = $nameParts[1] ?? '';
+        $surname = $nameParts[1] ?? 'Guest'; // Ensure surname is not empty if possible
 
         $payer = [
             "name" => $name,
             "surname" => $surname,
             "email" => $order->customer_email,
+             // Phone removed to prevent format validation errors in guest checkout
         ];
-
-        // Only add phone if we are sure it's valid format, otherwise skip to prevent API error
-        // Mercado Pago often validates area_code + number strictly.
-        // For simplicity in this integration, we omit phone to avoid "Api error" on invalid format.
         
         try {
+            // Note: secure_url forces https, which breaks on local http://mincoli.test
+            // standard route() uses the current scheme (http/https) correctly.
+            // Note: MP API requires HTTPS for auto_return back_urls.
+            // We use secure_url() to force HTTPS. Ensure your local environment supports it (e.g., 'herd secure').
+            $backUrls = [
+                "success" => secure_url(route('checkout.success', $order, false)),
+                "failure" => secure_url(route('checkout.failure', ['order_id' => $order->id], false)), 
+                "pending" => secure_url(route('checkout.success', $order, false))
+            ];
+
             $request = [
                 "items" => $items,
                 "payer" => $payer,
@@ -289,11 +286,7 @@ class CheckoutController extends Controller
                     "excluded_payment_methods" => [],
                     "installments" => 12
                 ],
-                "back_urls" => [
-                    "success" => secure_url(route('checkout.success', $order, false)),
-                    "failure" => secure_url(route('checkout.index', ['error' => 'payment_failed'], false)), 
-                    "pending" => secure_url(route('checkout.success', $order, false))
-                ],
+                "back_urls" => $backUrls,
                 "auto_return" => "approved",
                 "external_reference" => (string)$order->id,
                 "statement_descriptor" => "MINCOLI SHOP",
@@ -305,7 +298,18 @@ class CheckoutController extends Controller
             $preference = $client->create($request);
 
             if ($preference && $preference->id) {
-                return compact('order', 'preference', 'paymentMethod', 'publicKey');
+                // Select correct point based on environment
+                $initPoint = $isSandbox ? $preference->sandbox_init_point : $preference->init_point;
+                
+                Log::info('Mercado Pago Preference Created', [
+                    'id' => $preference->id,
+                    'sandbox' => $isSandbox,
+                    'init_point' => $initPoint,
+                    'order_id' => $order->id,
+                    'back_urls' => $backUrls
+                ]);
+
+                return compact('order', 'preference', 'paymentMethod', 'publicKey', 'initPoint', 'isSandbox');
             } else {
                  throw new \Exception('No se pudo obtener el ID de preferencia de Mercado Pago (Respuesta vacía).');
             }
@@ -319,7 +323,6 @@ class CheckoutController extends Controller
                 'message' => $e->getMessage()
             ]);
             
-            // Try to extract a friendly message from content
             $friendlyMessage = 'Error de API Mercado Pago';
             if ($response && $contentArr = $response->getContent()) {
                 if (isset($contentArr['message'])) $friendlyMessage .= ': ' . $contentArr['message'];
@@ -329,7 +332,6 @@ class CheckoutController extends Controller
                     }
                 }
             }
-            
             throw new \Exception($friendlyMessage);
 
         } catch (\Exception $e) {
@@ -338,29 +340,106 @@ class CheckoutController extends Controller
         }
     }
 
-    public function success(Order $order)
+    public function success(Order $order, Request $request)
     {
-        // Security Check: Ensure order belongs to current user or was just placed in this session
+        // Security Check
         $allowed = false;
-        
-        if (auth()->check() && $order->customer_id === auth()->id()) {
-            $allowed = true;
-        } elseif (session()->has('last_order_id') && session('last_order_id') == $order->id) {
-            $allowed = true;
+        if (auth()->check() && $order->customer_id === auth()->id()) $allowed = true;
+        elseif (session()->has('last_order_id') && session('last_order_id') == $order->id) $allowed = true;
+
+        if (!$allowed) abort(403, 'No tienes permiso para ver este pedido.');
+
+        $paymentId = $request->get('payment_id') ?? $request->get('collection_id');
+        if ($paymentId && $order->status === 'pending') {
+            $this->finalizePayment($order, $paymentId, 'Redirect');
         }
 
-        if (!$allowed) {
-            abort(403, 'No tienes permiso para ver este pedido.');
-        }
-
-        $paymentMethod = null;
-        $payment = $order->payments->sortByDesc('created_at')->first();
-        
-        if ($payment) {
-            $paymentMethod = $payment->method;
-        }
-
+        $paymentMethod = $order->payments->sortByDesc('created_at')->first()?->method;
         return view('checkout.success', compact('order', 'paymentMethod'));
+    }
+
+    public function webhook(Request $request)
+    {
+        $type = $request->get('type') ?? $request->get('topic');
+        $id = $request->get('data_id') ?? $request->get('id');
+
+        Log::info('Mercado Pago Webhook', ['type' => $type, 'id' => $id]);
+
+        if ($type === 'payment') {
+            try {
+                $accessToken = config('services.mercadopago.access_token');
+                MercadoPagoConfig::setAccessToken($accessToken);
+                $client = new PaymentClient();
+                $mpPayment = $client->get($id);
+
+                if ($mpPayment && isset($mpPayment->external_reference)) {
+                    $orderId = $mpPayment->external_reference;
+                    $order = Order::find($orderId);
+                    if ($order && $order->status === 'pending' && $mpPayment->status === 'approved') {
+                        $this->finalizePayment($order, $id, 'Webhook');
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Webhook Processing Error', ['error' => $e->getMessage()]);
+            }
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
+    private function finalizePayment(Order $order, $transactionId, $source)
+    {
+        return DB::transaction(function () use ($order, $transactionId, $source) {
+            // LOCK for update to prevent race conditions
+            $order = Order::where('id', $order->id)->lockForUpdate()->first();
+
+            if ($order->status !== 'pending') {
+                return false; // Already processed
+            }
+
+            // Update Order
+            $order->status = 'paid';
+            $order->expires_at = null; // Clear expiration
+            $order->save();
+
+            \App\Models\OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'from_status' => 'pending',
+                'to_status' => 'paid',
+                'note' => "Pago confirmado vía {$source}. Ref: {$transactionId}",
+            ]);
+
+            // Update Payment Record
+            $payment = $order->payments->sortByDesc('created_at')->first();
+            if ($payment) {
+                $payment->status = 'paid';
+                $payment->paid_at = now();
+                $payment->transaction_id = $transactionId;
+                $payment->save();
+            }
+
+            // Record Inventory Movement (IDEMPOTENT - Unique constraint will protect us too)
+            foreach ($order->items as $item) {
+                try {
+                    DB::table('inventory_movements')->insert([
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'type' => 'out',
+                        'quantity' => $item->quantity,
+                        'reason' => 'Venta confirmada #' . $order->order_number,
+                        'reference_type' => 'Order',
+                        'reference_id' => $order->id,
+                        'created_at' => now(),
+                        'created_by' => null,
+                    ]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // If error 19 (unique constraint) just ignore, it means another process won
+                    if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
+                }
+            }
+
+            return true;
+        });
     }
 
     public function downloadReceipt(Order $order)
@@ -373,6 +452,78 @@ class CheckoutController extends Controller
         if (!$allowed) abort(403);
 
         return view('checkout.receipt', compact('order'));
+    }
+    public function failure(Request $request)
+    {
+        $orderId = $request->get('order_id') ?? $request->get('external_reference');
+        
+        if (!$orderId) {
+            return redirect()->route('cart')->with('error', 'No se pudo identificar el pedido cancelado.');
+        }
+
+        $order = Order::with('items')->find($orderId);
+
+        // Security: Ensure order belongs to user or session
+        $allowed = false;
+        if (auth()->check() && $order && $order->customer_id === auth()->id()) $allowed = true;
+        elseif (session()->has('last_order_id') && session('last_order_id') == $orderId) $allowed = true;
+
+        if (!$allowed || !$order) {
+            return redirect()->route('cart')->with('error', 'Pedido no encontrado o no autorizado.');
+        }
+
+        // Cancel Logic (Restore Stock because it was reserved at start)
+        if ($order->status === 'pending') {
+            DB::transaction(function () use ($order) {
+                // Cancel Order
+                $order->status = 'cancelled';
+                $order->expires_at = null;
+                $order->save();
+
+                \App\Models\OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => 'pending',
+                    'to_status' => 'cancelled',
+                    'note' => 'Cancelado automáticamente por fallo/cancelación en pasarela (Restauración de stock y carrito)',
+                ]);
+
+                // Restore Stock (increment)
+                foreach ($order->items as $item) {
+                    if ($item->variant_id) {
+                        \App\Models\ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
+                    } else {
+                        \App\Models\Product::where('id', $item->product_id)->increment('stock', $item->quantity);
+                    }
+                }
+            });
+        }
+
+        // Restore Cart Logic (Simplified restoration)
+        $cart = [];
+        foreach ($order->items as $item) {
+            $product = Product::find($item->product_id);
+            if ($product) {
+                $cartKey = $item->variant_id ? $item->product_id . '-' . $item->variant_id : $item->product_id;
+                $cart[$cartKey] = [
+                    'product_id' => $item->product_id,
+                    'variant_id' => $item->variant_id,
+                    'quantity' => $item->quantity,
+                    'name' => $product->name,
+                    'price' => $item->unit_price,
+                    'image' => $product->images->first()?->url
+                ];
+            }
+        }
+        session()->put('cart', $cart);
+
+        return redirect()->route('checkout.index')
+            ->withInput([
+                'customer_name' => $order->customer_name,
+                'customer_email' => $order->customer_email,
+                'customer_phone' => $order->customer_phone,
+                'payment_method_id' => $order->payments()->first()?->method_id
+            ])
+            ->with('error', 'El proceso de pago fue cancelado o falló. Hemos restaurado tu carrito para que puedas intentar nuevamente.');
     }
 }
 

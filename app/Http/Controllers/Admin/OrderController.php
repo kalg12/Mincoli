@@ -51,84 +51,107 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $order = Order::with('items')->findOrFail($id);
-        $request->validate(['status' => 'required|in:pending,paid,shipped,delivered,cancelled,refunded']);
-        
-        $oldStatus = $order->status;
-        $order->status = $request->status;
-        $order->save();
+        // Use transaction and lockForUpdate to prevent race conditions
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $order = Order::with('items')->lockForUpdate()->findOrFail($id);
+            
+            $request->validate(['status' => 'required|in:pending,paid,shipped,delivered,cancelled,refunded']);
+            
+            $oldStatus = $order->status;
+            
+            // Idempotency Check: No change needed
+            if ($request->status === $oldStatus) {
+                return back()->with('info', 'El estado del pedido no ha cambiado.');
+            }
 
-        if ($oldStatus !== $request->status) {
+            $order->status = $request->status;
+            $order->save();
+
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => $oldStatus,
                 'to_status' => $request->status,
                 'note' => 'Actualizado por administrador',
             ]);
-        }
 
-        // Restore Stock Logic
-        if ($request->status === 'cancelled' && $oldStatus !== 'cancelled' && $request->has('restore_stock')) {
-            foreach ($order->items as $item) {
-                $reason = 'Restauración por cancelación de pedido #' . $order->order_number;
-                
-                if ($item->variant_id) {
-                    $variant = ProductVariant::find($item->variant_id);
-                    if ($variant) {
-                        $variant->increment('stock', $item->quantity);
-                        
+            // ACTION 1: DEDUCT STOCK MOVEMENT (Pending -> Paid)
+            // Stock was ALREADY decremented during reservation. Just record the AUDIT trail.
+            if ($request->status === 'paid' && $oldStatus === 'pending') {
+                foreach ($order->items as $item) {
+                    try {
+                        InventoryMovement::create([
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'type' => 'out',
+                            'quantity' => $item->quantity,
+                            'reason' => 'Venta confirmada por administrador #' . $order->order_number,
+                            'reference_type' => 'Order',
+                            'reference_id' => $order->id,
+                            'created_by' => auth()->id(),
+                        ]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // Idempotency: Ignore duplicate movement if it already exists (e.g. MP webhook arrived just before)
+                        if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
+                    }
+                }
+
+                foreach($order->payments as $payment) {
+                    if ($payment->status !== 'paid') {
+                        $payment->status = 'paid';
+                        $payment->paid_at = now();
+                        $payment->save();
+                    }
+                }
+            }
+
+            // ACTION 2: RESTORE STOCK (Pending -> Cancelled/Refunded)
+            // Restore the "reserved" stock back to available pool. No movement record needed for pending cleanup.
+            if (in_array($request->status, ['cancelled', 'refunded']) && $oldStatus === 'pending') {
+                foreach ($order->items as $item) {
+                    if ($item->variant_id) {
+                        ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
+                    } else {
+                        Product::where('id', $item->product_id)->increment('stock', $item->quantity);
+                    }
+                }
+            }
+
+            // ACTION 3: RESTORE STOCK + RECORD ENTRY (Paid -> Cancelled/Refunded)
+            // Stock was already moved "OUT". We need to "IN" it back and increment.
+            if (in_array($request->status, ['cancelled', 'refunded']) && $oldStatus === 'paid' && $request->has('restore_stock')) {
+                foreach ($order->items as $item) {
+                    if ($item->variant_id) {
+                        ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
+                    } else {
+                        Product::where('id', $item->product_id)->increment('stock', $item->quantity);
+                    }
+
+                    try {
                         InventoryMovement::create([
                             'product_id' => $item->product_id,
                             'variant_id' => $item->variant_id,
                             'type' => 'in',
                             'quantity' => $item->quantity,
-                            'reason' => $reason,
+                            'reason' => 'Restauración por cancelación de pedido pagado #' . $order->order_number,
                             'reference_type' => 'Order',
                             'reference_id' => $order->id,
                             'created_by' => auth()->id(),
                         ]);
-                    }
-                } else {
-                    $product = Product::find($item->product_id);
-                    if ($product) {
-                        $product->increment('stock', $item->quantity);
-
-                        InventoryMovement::create([
-                            'product_id' => $item->product_id,
-                            'variant_id' => null,
-                            'type' => 'in',
-                            'quantity' => $item->quantity,
-                            'reason' => $reason,
-                            'reference_type' => 'Order',
-                            'reference_id' => $order->id,
-                            'created_by' => auth()->id(),
-                        ]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                         if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
                     }
                 }
             }
-            
-            // If restoring stock, we might want to return here with specific message
-            // But we still need to check payment status logic below? 
-            // Usually cancelled orders shouldn't trigger 'paid' logic unless we are uncancelling?
-            // The logic below checks if status === 'paid'.
-        }
 
-        // Also update payment status if Order is marked as Paid
-        if ($request->status === 'paid') {
-            foreach($order->payments as $payment) {
-                if ($payment->status !== 'paid') {
-                    $payment->status = 'paid';
-                    $payment->paid_at = now();
-                    $payment->save();
-                }
+            $message = 'Estado del pedido actualizado correctamente.';
+            if ($request->status === 'paid' && $oldStatus !== 'paid') {
+                $message = 'Pedido marcado como pagado e inventario descontado.';
+            } elseif ($request->status === 'cancelled' && $oldStatus === 'paid' && $request->has('restore_stock')) {
+                $message = 'Pedido cancelado e inventario devuelto.';
             }
-        }
 
-        $message = ($request->status === 'cancelled' && $request->has('restore_stock')) 
-            ? 'Pedido cancelado y stock restaurado correctamente.' 
-            : 'Estado del pedido actualizado correctamente.';
-
-        return back()->with('success', $message);
+            return back()->with('success', $message);
+        });
     }
 
     public function addPayment(Request $request, Order $order)
