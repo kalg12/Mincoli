@@ -205,6 +205,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('assignments/export-pdf', [App\Http\Controllers\Admin\ProductAssignmentController::class, 'exportPdf'])->name('assignments.export-pdf');
     Route::get('assignments/export-excel', [App\Http\Controllers\Admin\ProductAssignmentController::class, 'exportExcel'])->name('assignments.export-excel');
     Route::resource('assignments', App\Http\Controllers\Admin\ProductAssignmentController::class);
+    // Blog Module
+    Volt::route('blog/posts', 'admin.blog.posts.index')->name('blog.posts.index');
+    Volt::route('blog/posts/create', 'admin.blog.posts.create')->name('blog.posts.create');
+    Volt::route('blog/posts/{post}/edit', 'admin.blog.posts.edit')->name('blog.posts.edit');
+    Volt::route('blog/categories', 'admin.blog.categories.index')->name('blog.categories.index');
 });
 
 Route::middleware(['auth'])->group(function () {
