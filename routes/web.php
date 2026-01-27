@@ -14,6 +14,11 @@ use App\Http\Controllers\Api\POSApiController;
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Blog Public Routes
+Volt::route('/blog', 'blog.index')->name('blog.index');
+Volt::route('/blog/{slug}', 'blog.show')->name('blog.show');
+
+
 // Shop Routes
 Route::get('/tienda', [ShopController::class, 'index'])->name('shop');
 Route::get('/tienda/categoria/{slug}', [ShopController::class, 'category'])->name('shop.category');

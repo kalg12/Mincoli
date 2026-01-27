@@ -51,7 +51,11 @@
                 <a href="{{ route('shop') }}" class="text-gray-700 hover:text-pink-600 font-medium transition {{ request()->routeIs('shop*') ? 'text-pink-600' : '' }}">
                     TIENDA
                 </a>
+                <a href="{{ route('blog.index') }}" class="text-gray-700 hover:text-pink-600 font-medium transition {{ request()->routeIs('blog.*') ? 'text-pink-600' : '' }}">
+                    BLOG
+                </a>
             </nav>
+
 
             <!-- Actions -->
             <div class="flex items-center space-x-3">
@@ -79,7 +83,11 @@
                 <a href="{{ route('shop') }}" class="text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('shop*') ? 'text-pink-600' : '' }}">
                     TIENDA
                 </a>
+                <a href="{{ route('blog.index') }}" class="text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('blog.*') ? 'text-pink-600' : '' }}">
+                    BLOG
+                </a>
             </nav>
+
         </div>
     </div>
 </header>

@@ -203,7 +203,11 @@
 </section>
 @endif
 
+<!-- Blog Section -->
+<livewire:blog.home-section />
+
 <!-- Call to Action -->
+
 <section class="py-16 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
     <div class="container mx-auto px-4 text-center">
         <h2 class="text-3xl md:text-4xl font-bold mb-6">
