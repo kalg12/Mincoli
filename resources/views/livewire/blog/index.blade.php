@@ -140,12 +140,31 @@ class extends Component {
                 </div>
             </article>
             @empty
-            <div class="col-span-full py-12 text-center text-gray-500">
-                <i class="fas fa-search text-4xl mb-4 text-gray-300"></i>
-                <p class="text-lg">No se encontraron artículos con los filtros seleccionados.</p>
-                <button wire:click="$set('search', '')" class="text-pink-600 hover:underline mt-2">Limpiar búsqueda</button>
+            <div class="col-span-full py-16 text-center">
+                @if($search || $category)
+                    <div class="bg-white rounded-full h-24 w-24 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                        <i class="fas fa-search text-4xl text-gray-300"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">No encontramos lo que buscas</h3>
+                    <p class="text-gray-500 mb-6 max-w-md mx-auto">No hay resultados para tu búsqueda. Intenta con otros términos o filtros.</p>
+                    <button wire:click="$set('search', '')" class="text-pink-600 font-semibold hover:text-pink-700 hover:underline">
+                        Limpiar búsqueda
+                    </button>
+                @else
+                    <div class="bg-pink-50 rounded-full h-32 w-32 flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-feather-alt text-5xl text-pink-300"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Próximamente contenido increíble</h3>
+                    <p class="text-gray-600 text-lg max-w-lg mx-auto mb-8">
+                        Estamos preparando artículos llenos de novedades y sorpresas para ti. ¡Vuelve pronto!
+                    </p>
+                    <a href="{{ route('home') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 transition shadow-lg hover:shadow-xl">
+                        Volver al Inicio
+                    </a>
+                @endif
             </div>
             @endforelse
+
         </div>
 
         <div class="mt-12">
