@@ -86,7 +86,7 @@ class extends Component {
         ]);
         
         session()->flash('success', 'Artículo actualizado correctamente');
-        return redirect()->route('blog.posts.index');
+        return redirect()->route('dashboard.blog.posts.index');
     }
 
     public function with()
@@ -100,7 +100,7 @@ class extends Component {
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-6 flex justify-between items-center">
         <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Editar Artículo</h1>
-        <a href="{{ route('blog.posts.index') }}" class="text-sm text-zinc-600 hover:text-blue-600 dark:text-zinc-400">Volver al listado</a>
+        <a href="{{ route('dashboard.blog.posts.index') }}" class="text-sm text-zinc-600 hover:text-blue-600 dark:text-zinc-400">Volver al listado</a>
     </div>
 
     <form wire:submit="save" class="grid grid-cols-1 lg:grid-cols-3 gap-8">

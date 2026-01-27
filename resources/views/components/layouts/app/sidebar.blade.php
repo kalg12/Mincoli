@@ -19,9 +19,9 @@
                     <flux:navlist.item icon="photo" :href="route('dashboard.banners.index')" :current="request()->routeIs('dashboard.banners.*')" wire:navigate>Banners</flux:navlist.item>
                 </flux:navlist.group>
 
-                <flux:navlist.group :heading="__('Blog')" class="grid">
-                    <flux:navlist.item icon="newspaper" :href="route('blog.posts.index')" :current="request()->routeIs('blog.posts.*')" wire:navigate>Artículos</flux:navlist.item>
-                    <flux:navlist.item icon="tag" :href="route('blog.categories.index')" :current="request()->routeIs('blog.categories.*')" wire:navigate>Categorías</flux:navlist.item>
+                    <flux:navlist.group :heading="__('Blog')" class="grid">
+                    <flux:navlist.item icon="newspaper" :href="route('dashboard.blog.posts.index')" :current="request()->routeIs('dashboard.blog.posts.*')" wire:navigate>Artículos</flux:navlist.item>
+                    <flux:navlist.item icon="tag" :href="route('dashboard.blog.categories.index')" :current="request()->routeIs('dashboard.blog.categories.*')" wire:navigate>Categorías</flux:navlist.item>
                 </flux:navlist.group>
 
 

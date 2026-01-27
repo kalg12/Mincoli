@@ -71,7 +71,7 @@ class extends Component {
         // Tags handling if added to UI
         
         session()->flash('success', 'Artículo creado exitosamente');
-        return redirect()->route('blog.posts.index');
+        return redirect()->route('dashboard.blog.posts.index');
     }
 
     public function with()
