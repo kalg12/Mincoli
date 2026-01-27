@@ -215,6 +215,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Volt::route('blog/posts/create', 'admin.blog.posts.create')->name('blog.posts.create');
     Volt::route('blog/posts/{post}/edit', 'admin.blog.posts.edit')->name('blog.posts.edit');
     Volt::route('blog/categories', 'admin.blog.categories.index')->name('blog.categories.index');
+    Route::post('upload/image', [App\Http\Controllers\Admin\UploadController::class, 'upload'])->name('upload.image');
 });
 
 Route::middleware(['auth'])->group(function () {
