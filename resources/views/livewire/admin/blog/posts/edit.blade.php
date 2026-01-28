@@ -110,19 +110,19 @@ class extends Component {
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Título</label>
-                        <input type="text" wire:model.live="title" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
+                        <input type="text" wire:model.live="title" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white px-4 py-2">
                         @error('title') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Slug</label>
-                        <input type="text" wire:model="slug" class="mt-1 block w-full rounded-md border-zinc-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
+                        <input type="text" wire:model="slug" class="mt-1 block w-full rounded-md border-zinc-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 px-4 py-2">
                         @error('slug') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Extracto / Resumen</label>
-                        <textarea wire:model="excerpt" rows="3" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"></textarea>
+                        <textarea wire:model="excerpt" rows="3" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white px-4 py-2"></textarea>
                     </div>
 
                     <div>
