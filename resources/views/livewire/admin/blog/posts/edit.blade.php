@@ -127,7 +127,7 @@ class extends Component {
 
                     <div>
                         <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Contenido</label>
-                        <x-editor wire:model="content" />
+                        <x-quill-editor wire:model="content" />
                         @error('content') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                 </div>

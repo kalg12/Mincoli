@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\MercadoPagoConfig;
+
+class CheckoutController extends Controller
 {
     public function index()
     {
