@@ -94,139 +94,63 @@
             const formData = new FormData();
             formData.append('image', file);
             
+            // Show loading placeholder? For now just wait.
             const range = this.quill.getSelection(true);
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            if (!csrfToken) {
-                alert('Error: No se encontró el token CSRF. Recarga la página.');
-                return;
-            }
             
             try {
                 const response = await fetch('{{ route('dashboard.upload.image') }}', {
                     method: 'POST',
                     body: formData,
                     headers: {
-                       'X-CSRF-TOKEN': csrfToken,
-                       'Accept': 'application/json'
+                       'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content')
                     }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.url) {
-                        this.quill.insertEmbed(range.index, 'image', data.url);
-                        this.quill.setSelection(range.index + 1);
-                    } else {
-                         console.error('Server returned success but no URL:', data);
-                         alert('Error al procesar la imagen.');
-                    }
+                    // Insert image
+                    this.quill.insertEmbed(range.index, 'image', data.url);
+                    this.quill.setSelection(range.index + 1);
                 } else {
-                    console.error('Upload failed with status:', response.status);
-                    alert('Error al subir imagen (Status ' + response.status + ')');
+                    alert('Error al subir imagen');
                 }
             } catch (e) {
-                console.error('Upload failed exception', e);
-                alert('Error de conexión al subir imagen: ' + e.message);
+                console.error('Upload failed', e);
+                alert('Error al subir imagen');
             }
-        },
-        showPreviewModal: false
+        }
     }"
     x-ref="quillWrapper"
-    class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-700 overflow-hidden"
+    class="bg-white dark:bg-zinc-900 rounded-lg"
 >
-    <!-- Header with Label and Preview Button -->
-    <div class="flex items-center justify-between px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
-        @if($label)
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $label }}</label>
-        @else
-            <span></span>
-        @endif
-        
-        <button type="button" @click="showPreviewModal = true" class="text-xs flex items-center gap-1 text-zinc-600 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 font-medium transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-            Vista Previa
-        </button>
-    </div>
+    <!-- Label -->
+    @if($label)
+        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{{ $label }}</label>
+    @endif
 
     <!-- Editor Container -->
-    <div x-ref="quillEditor" class="editor-content"></div>
+    <div x-ref="quillEditor"></div>
     
-    <!-- Preview Modal -->
-    <div 
-        x-show="showPreviewModal" 
-        x-cloak
-        style="display: none;"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-    >
-        <div 
-            @click.away="showPreviewModal = false"
-            class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
-        >
-            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Vista Previa</h3>
-                <button type="button" @click="showPreviewModal = false" class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-8 bg-white dark:bg-zinc-950">
-                <div class="prose prose-lg dark:prose-invert max-w-none ql-editor" x-html="content"></div>
-            </div>
-        </div>
-    </div>
-
     <style>
-        /* Modern Quill Toolbar Styles */
-        .ql-toolbar.ql-snow {
-            border: none;
-            border-bottom: 1px solid #e4e4e7;
-            background-color: #ffffff;
-            padding: 12px;
-        }
-        .ql-container.ql-snow {
-            border: none;
-            font-size: 1.125rem; /* text-lg */
-        }
-        
-        /* Dark Mode */
-        .dark .ql-toolbar.ql-snow {
+        /* Dark mode overrides for Quill */
+        .dark .ql-toolbar {
             background-color: #18181b; /* zinc-950 */
-            border-bottom-color: #3f3f46; /* zinc-700 */
+            border-color: #3f3f46 !important; /* zinc-700 */
+            color: #e4e4e7;
         }
-        .dark .ql-container.ql-snow {
-            background-color: #18181b; /* zinc-950 */
-            color: #f4f4f5; /* zinc-100 */
-        }
-        
-        /* Icons Contrast */
-        .dark .ql-snow .ql-stroke { stroke: #d4d4d8; }
-        .dark .ql-snow .ql-fill { fill: #d4d4d8; }
-        .dark .ql-snow .ql-picker { color: #d4d4d8; }
-        
-        /* Active State */
-        .ql-snow .ql-active .ql-stroke { stroke: #2563eb !important; } /* blue-600 */
-        .ql-snow .ql-active .ql-fill { fill: #2563eb !important; }
-        
-        /* Dropdowns (Pickers) - Critical for Contrast Fix */
-        .dark .ql-snow .ql-picker-options {
+        .dark .ql-container {
             background-color: #18181b;
-            border-color: #3f3f46;
+            border-color: #3f3f46 !important;
+            color: #e4e4e7;
         }
-        .dark .ql-snow .ql-picker-item {
-            color: #d4d4d8;
+        .dark .ql-stroke {
+            stroke: #e4e4e7 !important;
         }
-        .dark .ql-snow .ql-picker-item:hover,
-        .dark .ql-snow .ql-picker-item.ql-selected {
-            color: #2563eb;
+        .dark .ql-fill {
+            fill: #e4e4e7 !important;
         }
-        
-        /* Editor Min Height */
-        .ql-editor {
-            min-height: 350px;
-            padding: 1.5rem;
+        .dark .ql-picker {
+            color: #e4e4e7 !important;
         }
-        
-        /* Adjust roundness */
-        .rounded-lg { border-radius: 0.5rem; }
     </style>
 </div>
