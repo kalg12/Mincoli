@@ -54,23 +54,23 @@ class extends Component {
         
         <!-- Nombre -->
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre</label>
-            <input type="text" wire:model.live="name" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Nombre</label>
+            <input type="text" wire:model.live="name" class="block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
             @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
         </div>
 
         <!-- Slug -->
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Slug</label>
-            <input type="text" wire:model="slug" class="mt-1 block w-full rounded-md border-zinc-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400" readonly>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Slug</label>
+            <input type="text" wire:model="slug" class="block w-full rounded-md border-zinc-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400" readonly>
             @error('slug') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
             <p class="mt-1 text-xs text-zinc-500">Se genera automáticamente del nombre.</p>
         </div>
 
         <!-- Descripción -->
         <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Descripción</label>
-            <textarea wire:model="description" rows="3" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"></textarea>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Descripción</label>
+            <textarea wire:model="description" rows="3" class="block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"></textarea>
              @error('description') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
         </div>
 
