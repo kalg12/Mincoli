@@ -10,27 +10,28 @@
             </a>
         </div>
 
-        <form class="space-y-6">
+        <form action="{{ route('dashboard.categories.store') }}" method="POST" class="space-y-6">
+            @csrf
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                 <div class="space-y-4">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Nombre de la categoría</label>
-                        <input type="text" placeholder="Ej: Joyería" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="text" name="name" placeholder="Ej: Joyería" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900" required>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Slug</label>
-                        <input type="text" placeholder="joyeria" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="text" name="slug" placeholder="joyeria" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">Se genera automáticamente del nombre</p>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Descripción</label>
-                        <textarea rows="3" placeholder="Describe la categoría..." class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900"></textarea>
+                        <textarea name="description" rows="3" placeholder="Describe la categoría..." class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900"></textarea>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Estado</label>
-                        <select class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                            <option>Activa</option>
-                            <option>Inactiva</option>
+                        <select name="status" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <option value="active">Activa</option>
+                            <option value="inactive">Inactiva</option>
                         </select>
                     </div>
                 </div>
