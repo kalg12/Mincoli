@@ -9,18 +9,9 @@ use Livewire\Attributes\Rule;
 new 
 #[Layout('components.layouts.app')]
 class extends Component {
-    #[Rule([
-        'required' => 'El nombre es obligatorio',
-        'min' => 'El nombre debe tener al menos 3 caracteres',
-        'max' => 'El nombre no puede exceder los 255 caracteres'
-    ], as: 'nombre')]
     #[Rule('required|min:3|max:255')]
     public $name = '';
 
-    #[Rule([
-        'required' => 'El slug es obligatorio',
-        'unique' => 'Este slug ya está en uso, por favor intenta con otro nombre'
-    ], as: 'slug')]
     #[Rule('required|unique:blog_categories,slug')]
     public $slug = '';
 
