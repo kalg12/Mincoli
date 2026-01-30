@@ -9,9 +9,18 @@ use Livewire\Attributes\Rule;
 new 
 #[Layout('components.layouts.app')]
 class extends Component {
+    #[Rule([
+        'required' => 'El nombre es obligatorio',
+        'min' => 'El nombre debe tener al menos 3 caracteres',
+        'max' => 'El nombre no puede exceder los 255 caracteres'
+    ], as: 'nombre')]
     #[Rule('required|min:3|max:255')]
     public $name = '';
 
+    #[Rule([
+        'required' => 'El slug es obligatorio',
+        'unique' => 'Este slug ya está en uso, por favor intenta con otro nombre'
+    ], as: 'slug')]
     #[Rule('required|unique:blog_categories,slug')]
     public $slug = '';
 
@@ -19,6 +28,18 @@ class extends Component {
     public $description = '';
 
     public $is_active = true;
+
+    // Define messages for validation
+    public function messages() 
+    {
+        return [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.min' => 'El nombre debe tener al menos 3 caracteres.',
+            'name.max' => 'El nombre no puede exceder los 255 caracteres.',
+            'slug.required' => 'El slug es obligatorio.',
+            'slug.unique' => 'Este slug ya está en uso, intenta con otro.',
+        ];
+    }
 
     public function updatedName($value)
     {
@@ -55,23 +76,23 @@ class extends Component {
         <!-- Nombre -->
         <div>
             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Nombre</label>
-            <input type="text" wire:model.live="name" class="block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white">
-            @error('name') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+            <input type="text" wire:model.live="name" class="block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white px-4 py-3">
+            @error('name') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
         </div>
 
         <!-- Slug -->
         <div>
             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Slug</label>
-            <input type="text" wire:model="slug" class="block w-full rounded-md border-zinc-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400" readonly>
-            @error('slug') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+            <input type="text" wire:model="slug" class="block w-full rounded-md border-zinc-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 px-4 py-3" readonly>
+            @error('slug') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
             <p class="mt-1 text-xs text-zinc-500">Se genera automáticamente del nombre.</p>
         </div>
 
         <!-- Descripción -->
         <div>
             <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Descripción</label>
-            <textarea wire:model="description" rows="3" class="block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"></textarea>
-             @error('description') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+            <textarea wire:model="description" rows="3" class="block w-full rounded-md border-zinc-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white px-4 py-3"></textarea>
+             @error('description') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
         </div>
 
         <!-- Estado -->
