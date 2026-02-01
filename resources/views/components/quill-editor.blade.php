@@ -50,11 +50,43 @@
                 Quill.register('modules/imageResize', window.ImageResize);
             }
 
+            // EXTEND IMAGE BLOT: Preserve width, height, and style (alignment)
+            var BaseImage = Quill.import('formats/image');
+            const ATTRIBUTES = ['height', 'width', 'style'];
+
+            class Image extends BaseImage {
+                static formats(domNode) {
+                    return ATTRIBUTES.reduce(function(formats, attribute) {
+                        if (domNode.hasAttribute(attribute)) {
+                            formats[attribute] = domNode.getAttribute(attribute);
+                        }
+                        return formats;
+                    }, {});
+                }
+                format(name, value) {
+                    if (ATTRIBUTES.indexOf(name) > -1) {
+                        if (value) {
+                            this.domNode.setAttribute(name, value);
+                        } else {
+                            this.domNode.removeAttribute(name);
+                        }
+                    } else {
+                        super.format(name, value);
+                    }
+                }
+            }
+            Quill.register(Image, true);
+
+            // USE INLINE STYLES FOR ALIGNMENT AND DIRECTION
+            // This ensures text alignment (left, center, right) works on frontend without Quill CSS classes
+            var AlignStyle = Quill.import('attributors/style/align');
+            Quill.register(AlignStyle, true);
+
             const toolbarOptions = [
                 [{ 'header': [2, 3, false] }],
                 ['bold', 'italic', 'underline', 'strike'],
                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'align': [] }], // Handles text alignment
+                [{ 'align': [] }], // Now uses inline styles
                 ['link', 'image'],
                 ['clean']
             ];
