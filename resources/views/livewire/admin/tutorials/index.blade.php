@@ -231,18 +231,30 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     <!-- Player Modal -->
     @if($showPlayerModal && $currentTutorial)
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <!-- Close button outside for easier hitting -->
-        <button wire:click="closePlayer" class="absolute top-6 right-6 z-50 text-white/50 hover:text-white transition p-2 bg-black/50 rounded-full">
-            <flux:icon name="x-mark" class="w-8 h-8" />
+    <div 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-md"
+        x-data
+        x-on:keydown.escape.window="$wire.closePlayer()"
+    >
+        <!-- Backdrop -->
+        <div class="absolute inset-0 z-[-1]" wire:click="closePlayer"></div>
+
+        <!-- Close button -->
+        <button wire:click="closePlayer" class="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 text-white/70 hover:text-white transition p-2 bg-black/40 hover:bg-black/60 rounded-full backdrop-blur-sm group">
+            <span class="sr-only">Cerrar</span>
+            <flux:icon name="x-mark" class="w-8 h-8 group-hover:scale-110 transition" />
         </button>
 
-        <div class="relative w-full max-w-6xl bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="flex-1 relative bg-black flex items-center justify-center">
-                <div class="aspect-video w-full h-full max-h-[80vh]">
+        <!-- Modal Container: fits content, constrained by screen -->
+        <div class="relative flex flex-col w-full max-w-[95vw] sm:max-w-5xl lg:max-w-7xl max-h-[90vh] bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            
+            <!-- Video Wrapper: Flexible height/width based on constraints -->
+            <div class="flex-1 bg-black flex items-center justify-center overflow-hidden w-full h-full min-h-0">
+                <!-- Using aspect-video here with object-contain logic -->
+                <div class="relative w-full h-full max-h-[80vh] aspect-video mx-auto">
                     <iframe 
                         class="w-full h-full"
-                        src="https://www.youtube.com/embed/{{ $currentTutorial->youtube_id }}?autoplay=1&rel=0" 
+                        src="https://www.youtube.com/embed/{{ $currentTutorial->youtube_id }}?autoplay=1&rel=0&modestbranding=1" 
                         title="{{ $currentTutorial->title }}" 
                         frameborder="0" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -251,19 +263,14 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </div>
             </div>
             
-            <div class="p-6 bg-zinc-900 border-t border-zinc-800 shrink-0">
-                <div class="flex justify-between items-start gap-4">
-                    <div>
-                        <h2 class="text-2xl font-bold text-white mb-2">{{ $currentTutorial->title }}</h2>
-                        @if($currentTutorial->description)
-                        <p class="text-zinc-400 text-lg">{{ $currentTutorial->description }}</p>
-                        @endif
-                    </div>
-                </div>
+            <!-- Info Section -->
+            <div class="p-5 sm:p-6 bg-zinc-900 border-t border-zinc-800 shrink-0">
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2 line-clamp-1">{{ $currentTutorial->title }}</h2>
+                @if($currentTutorial->description)
+                <p class="text-zinc-400 text-sm sm:text-base leading-relaxed line-clamp-2">{{ $currentTutorial->description }}</p>
+                @endif
             </div>
         </div>
-        <!-- Close on click outside -->
-        <div class="absolute inset-0 -z-10" wire:click="closePlayer"></div>
     </div>
     @endif
 </div>
