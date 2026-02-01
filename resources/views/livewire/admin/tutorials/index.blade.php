@@ -232,7 +232,7 @@ new #[Layout('components.layouts.app')] class extends Component {
     <!-- Player Modal -->
     @if($showPlayerModal && $currentTutorial)
     <div 
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-md"
+        class="fixed inset-0 z-50 flex items-center justify-center p-0 bg-black/95 backdrop-blur-md"
         x-data
         x-on:keydown.escape.window="$wire.closePlayer()"
     >
@@ -240,32 +240,38 @@ new #[Layout('components.layouts.app')] class extends Component {
         <div class="absolute inset-0 z-[-1]" wire:click="closePlayer"></div>
 
         <!-- Close button -->
-        <button wire:click="closePlayer" class="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 text-white/70 hover:text-white transition p-2 bg-black/40 hover:bg-black/60 rounded-full backdrop-blur-sm group">
+        <button wire:click="closePlayer" class="absolute top-4 right-4 z-50 text-white/70 hover:text-white transition p-2 bg-black/40 hover:bg-black/60 rounded-full backdrop-blur-sm group">
             <span class="sr-only">Cerrar</span>
-            <flux:icon name="x-mark" class="w-8 h-8 group-hover:scale-110 transition" />
+            <flux:icon name="x-mark" class="w-6 h-6 group-hover:scale-110 transition" />
         </button>
 
-        <!-- Modal Container: Width-driven 16:9 constraint -->
-        <div class="relative w-full max-w-6xl bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 flex flex-col max-h-[90vh]">
+        <!-- Modal Container: Full screen optimized -->
+        <div class="relative w-full h-full max-w-none max-h-none bg-black flex flex-col">
             
-            <!-- Video Wrapper: Always 16:9, drives the width -->
-            <div class="w-full aspect-video bg-black">
-                <iframe 
-                    class="w-full h-full"
-                    src="https://www.youtube.com/embed/{{ $currentTutorial->youtube_id }}?autoplay=1&rel=0&modestbranding=1" 
-                    title="{{ $currentTutorial->title }}" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
+            <!-- Video Container: Responsive 16:9 with better sizing -->
+            <div class="flex-1 flex items-center justify-center min-h-0">
+                <div class="relative w-full h-full max-w-full">
+                    <div class="aspect-video w-full h-full max-h-[85vh] flex items-center justify-center">
+                        <iframe 
+                            class="w-full h-full"
+                            src="https://www.youtube.com/embed/{{ $currentTutorial->youtube_id }}?autoplay=1&rel=0&modestbranding=1&controls=1&showinfo=0" 
+                            title="{{ $currentTutorial->title }}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
             </div>
             
-            <!-- Info Section: Scrollable if too tall -->
-            <div class="p-6 bg-zinc-900 border-t border-zinc-800 overflow-y-auto">
-                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">{{ $currentTutorial->title }}</h2>
-                @if($currentTutorial->description)
-                <p class="text-zinc-400 text-sm sm:text-base leading-relaxed">{{ $currentTutorial->description }}</p>
-                @endif
+            <!-- Info Section: Fixed bottom, always visible -->
+            <div class="bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 px-6 py-4">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-lg sm:text-xl font-bold text-white mb-1">{{ $currentTutorial->title }}</h2>
+                    @if($currentTutorial->description)
+                    <p class="text-zinc-400 text-sm leading-relaxed">{{ $currentTutorial->description }}</p>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
