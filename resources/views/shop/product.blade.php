@@ -230,7 +230,7 @@
     <div class="bg-white rounded-lg shadow-lg p-8 mb-12">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción del Producto</h2>
         <div class="prose max-w-none text-gray-700">
-            {!! nl2br(e($product->description)) !!}
+            {!! $product->description !!}
         </div>
     </div>
     @endif

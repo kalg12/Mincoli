@@ -1,9 +1,9 @@
-@props(['model', 'label' => 'Contenido'])
+    @props(['model', 'label' => 'Contenido', 'name' => null, 'value' => ''])
 
 <div
     wire:ignore
     x-data="{
-        content: @entangle($attributes->wire('model')),
+        content: @if($attributes->wire('model')->value()) @entangle($attributes->wire('model')) @else {{ json_encode($value) }} @endif,
         quill: null,
         init() {
             // Load Quill CSS
@@ -189,6 +189,11 @@
 
     <!-- Editor Container -->
     <div x-ref="quillEditor"></div>
+    
+    <!-- Hidden Input for Standard Forms -->
+    @if($name)
+    <input type="hidden" name="{{ $name }}" x-model="content">
+    @endif
     
     <style>
         /* Dark mode overrides for Quill */
