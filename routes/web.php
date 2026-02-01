@@ -217,7 +217,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Volt::route('blog/categories', 'admin.blog.categories.index')->name('blog.categories.index');
     Volt::route('blog/categories/create', 'admin.blog.categories.create')->name('blog.categories.create');
     Volt::route('blog/categories/{category}/edit', 'admin.blog.categories.edit')->name('blog.categories.edit');
+    Volt::route('blog/categories/{category}/edit', 'admin.blog.categories.edit')->name('blog.categories.edit');
     Route::post('upload/image', [App\Http\Controllers\Admin\UploadController::class, 'upload'])->name('upload.image');
+
+    // Tutorials
+    Volt::route('tutorials', 'admin.tutorials.index')->name('tutorials.index');
 });
 
 Route::middleware(['auth'])->group(function () {
