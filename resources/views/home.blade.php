@@ -96,11 +96,15 @@
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @forelse($categories as $category)
             <a href="{{ route('shop.category', $category->slug) }}" class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                <div class="aspect-w-16 aspect-h-12 bg-gradient-to-br from-pink-100 to-purple-100">
-                    <!-- Category Image Placeholder -->
-                    <div class="w-full h-64 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-                        <i class="fas fa-box-open text-6xl text-pink-300 group-hover:text-pink-400 transition"></i>
-                    </div>
+                <div class="aspect-w-16 aspect-h-12 bg-gradient-to-br from-pink-100 to-purple-100 relative">
+                    @if(isset($category->random_image))
+                        <img src="{{ $category->random_image }}" alt="{{ $category->name }}" class="w-full h-64 object-cover object-center group-hover:scale-110 transition-transform duration-500">
+                    @else
+                        <!-- Category Image Placeholder -->
+                        <div class="w-full h-64 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+                            <i class="fas fa-box-open text-6xl text-pink-300 group-hover:text-pink-400 transition"></i>
+                        </div>
+                    @endif
                 </div>
                 <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
                     <h3 class="text-2xl font-bold text-white mb-2">{{ $category->name }}</h3>
