@@ -172,12 +172,12 @@
                     <label class="font-semibold text-gray-900 mb-2 block">Cantidad:</label>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center border-2 border-gray-300 rounded-lg">
-                            <button type="button" id="qty_minus" onclick="decreaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 transition" disabled>
+                            <button type="button" id="qty_minus" onclick="decreaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 transition" @if($product->variants->count() > 0) disabled @endif>
                                 <i class="fas fa-minus"></i>
                             </button>
                             <input type="number" id="quantity" value="1" min="1" max="{{ $product->total_stock }}"
-                                   class="w-16 text-center border-0 focus:ring-0" disabled>
-                            <button type="button" id="qty_plus" onclick="increaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 transition" disabled>
+                                   class="w-16 text-center border-0 focus:ring-0" @if($product->variants->count() > 0) disabled @endif>
+                            <button type="button" id="qty_plus" onclick="increaseQuantity()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 transition" @if($product->variants->count() > 0) disabled @endif>
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
