@@ -245,29 +245,26 @@ new #[Layout('components.layouts.app')] class extends Component {
             <flux:icon name="x-mark" class="w-8 h-8 group-hover:scale-110 transition" />
         </button>
 
-        <!-- Modal Container: fits content, constrained by screen -->
-        <div class="relative flex flex-col w-full max-w-[95vw] sm:max-w-5xl lg:max-w-7xl max-h-[90vh] bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+        <!-- Modal Container: Width-driven 16:9 constraint -->
+        <div class="relative w-full max-w-6xl bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 flex flex-col max-h-[90vh]">
             
-            <!-- Video Wrapper: Flexible height/width based on constraints -->
-            <div class="flex-1 bg-black flex items-center justify-center overflow-hidden w-full h-full min-h-0">
-                <!-- Using aspect-video here with object-contain logic -->
-                <div class="relative w-full h-full max-h-[80vh] aspect-video mx-auto">
-                    <iframe 
-                        class="w-full h-full"
-                        src="https://www.youtube.com/embed/{{ $currentTutorial->youtube_id }}?autoplay=1&rel=0&modestbranding=1" 
-                        title="{{ $currentTutorial->title }}" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
+            <!-- Video Wrapper: Always 16:9, drives the width -->
+            <div class="w-full aspect-video bg-black">
+                <iframe 
+                    class="w-full h-full"
+                    src="https://www.youtube.com/embed/{{ $currentTutorial->youtube_id }}?autoplay=1&rel=0&modestbranding=1" 
+                    title="{{ $currentTutorial->title }}" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
             </div>
             
-            <!-- Info Section -->
-            <div class="p-5 sm:p-6 bg-zinc-900 border-t border-zinc-800 shrink-0">
-                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2 line-clamp-1">{{ $currentTutorial->title }}</h2>
+            <!-- Info Section: Scrollable if too tall -->
+            <div class="p-6 bg-zinc-900 border-t border-zinc-800 overflow-y-auto">
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">{{ $currentTutorial->title }}</h2>
                 @if($currentTutorial->description)
-                <p class="text-zinc-400 text-sm sm:text-base leading-relaxed line-clamp-2">{{ $currentTutorial->description }}</p>
+                <p class="text-zinc-400 text-sm sm:text-base leading-relaxed">{{ $currentTutorial->description }}</p>
                 @endif
             </div>
         </div>
