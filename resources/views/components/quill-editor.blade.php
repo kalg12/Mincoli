@@ -15,22 +15,46 @@
                 document.head.appendChild(link);
             }
 
-            // Load Quill JS
+            // Load Quill JS and Image Resize Module
             if (!window.Quill) {
                 const script = document.createElement('script');
                 script.src = 'https://cdn.quilljs.com/1.3.6/quill.js';
-                script.onload = () => this.initQuill();
+                script.onload = () => {
+                   this.loadImageResizeModule();
+                };
+                document.head.appendChild(script);
+            } else {
+                if (!window.ImageResize) {
+                     this.loadImageResizeModule();
+                } else {
+                     this.initQuill();
+                }
+            }
+        },
+        loadImageResizeModule() {
+            if (!document.getElementById('quill-image-resize')) {
+                const script = document.createElement('script');
+                script.id = 'quill-image-resize';
+                script.src = 'https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js';
+                script.onload = () => {
+                    this.initQuill();
+                };
                 document.head.appendChild(script);
             } else {
                 this.initQuill();
             }
         },
         initQuill() {
+            // Register ImageResize module
+            if (window.ImageResize && !Quill.imports['modules/imageResize']) {
+                Quill.register('modules/imageResize', window.ImageResize);
+            }
+
             const toolbarOptions = [
                 [{ 'header': [2, 3, false] }],
                 ['bold', 'italic', 'underline', 'strike'],
                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'align': [] }],
+                [{ 'align': [] }], // Handles text alignment
                 ['link', 'image'],
                 ['clean']
             ];
@@ -43,6 +67,9 @@
                         handlers: {
                             image: () => this.imageHandler()
                         }
+                    },
+                    imageResize: {
+                        displaySize: true
                     }
                 },
                 placeholder: 'Escribe tu artículo aquí...'
