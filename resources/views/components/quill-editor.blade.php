@@ -152,5 +152,9 @@
         .dark .ql-picker {
             color: #e4e4e7 !important;
         }
+        /* Fix excessive spacing */
+        .ql-editor p {
+            margin-bottom: 0.5em;
+        }
     </style>
 </div>
