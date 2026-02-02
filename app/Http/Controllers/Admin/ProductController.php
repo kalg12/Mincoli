@@ -19,9 +19,18 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'subcategory', 'variants', 'images'])
-            ->latest()
-            ->paginate(15);
+        $query = Product::with(['category', 'subcategory', 'variants', 'images'])
+            ->latest();
+
+        if (request()->filled('category_id')) {
+            $catId = request()->category_id;
+            $query->where(function($q) use ($catId) {
+                $q->where('category_id', $catId)
+                  ->orWhere('subcategory_id', $catId);
+            });
+        }
+
+        $products = $query->paginate(15);
 
         return view('admin.products.index', compact('products'));
     }

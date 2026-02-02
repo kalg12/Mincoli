@@ -68,7 +68,9 @@
                                             <div class="text-xs text-zinc-400 line-clamp-1">{{ $category->description ?? 'Sin descripción' }}</div>
                                             <!-- Mobile Meta -->
                                             <div class="md:hidden mt-1 flex items-center gap-2 text-xs text-zinc-500">
-                                                <span>{{ $category->products_count }} prod.</span>
+                                                <a href="{{ route('dashboard.products.index', ['category_id' => $category->id]) }}" class="hover:text-pink-600 hover:underline">
+                                                    {{ $category->products_count }} prod.
+                                                </a>
                                                 <span class="text-zinc-300">•</span>
                                                 <span class="{{ $category->is_active ? 'text-emerald-600' : 'text-zinc-400' }}">
                                                     {{ $category->is_active ? 'Activa' : 'Inactiva' }}
@@ -78,9 +80,9 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 hidden md:table-cell">
-                                    <span class="inline-flex items-center rounded-md bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">
+                                    <a href="{{ route('dashboard.products.index', ['category_id' => $category->id]) }}" class="inline-flex items-center rounded-md bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors">
                                         {{ $category->products_count }} producto{{ $category->products_count != 1 ? 's' : '' }}
-                                    </span>
+                                    </a>
                                 </td>
                                 <td class="px-6 py-4 hidden sm:table-cell">
                                     @if($category->is_active)
@@ -130,7 +132,9 @@
                                                 <div class="text-xs text-zinc-400 line-clamp-1">{{ $sub->description ?? 'Sin descripción' }}</div>
                                                 <!-- Mobile Meta -->
                                                 <div class="md:hidden mt-1 flex items-center gap-2 text-xs text-zinc-500">
-                                                    <span>{{ $sub->products_count }} prod.</span>
+                                                    <a href="{{ route('dashboard.products.index', ['category_id' => $sub->id]) }}" class="hover:text-pink-600 hover:underline">
+                                                        {{ $sub->products_count }} prod.
+                                                    </a>
                                                     <span class="text-zinc-300">•</span>
                                                     <span class="{{ $sub->is_active ? 'text-emerald-600' : 'text-zinc-400' }}">
                                                         {{ $sub->is_active ? 'Activa' : 'Inactiva' }}
@@ -140,7 +144,9 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-3 text-xs hidden md:table-cell">
-                                        {{ $sub->products_count }} productos
+                                        <a href="{{ route('dashboard.products.index', ['category_id' => $sub->id]) }}" class="hover:text-pink-600 hover:underline transition-colors">
+                                            {{ $sub->products_count }} productos
+                                        </a>
                                     </td>
                                     <td class="px-6 py-3 hidden sm:table-cell">
                                         @if($sub->is_active)
