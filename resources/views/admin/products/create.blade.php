@@ -28,7 +28,7 @@
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Descripción</label>
-                        <textarea name="description" rows="4" placeholder="Describe las características del producto..." class="w-full rounded-lg border {{ $borderClass('description') }} bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">{{ old('description') }}</textarea>
+                        <x-quill-editor name="description" :value="old('description')" label="" />
                         @error('description')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                     </div>
                     <div class="grid grid-cols-3 gap-4">
