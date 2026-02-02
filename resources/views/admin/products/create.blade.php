@@ -42,15 +42,24 @@
                             <input type="text" name="barcode" value="{{ old('barcode') }}" placeholder="123456789012" class="w-full rounded-lg border {{ $borderClass('barcode') }} bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
                             @error('barcode')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                         </div>
-                        <div>
-                            <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Categoría</label>
-                            <select name="category_id" required class="w-full rounded-lg border {{ $borderClass('category_id') }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                                <option value="">Seleccionar categoría</option>
-                                @foreach($categories ?? [] as $cat)
-                                    <option value="{{ $cat->id }}" @selected(old('category_id') == $cat->id)>{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('category_id')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Categoría Principal</label>
+                                <select name="category_id" id="category_id" required class="w-full rounded-lg border {{ $borderClass('category_id') }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                    <option value="">Seleccionar categoría</option>
+                                    @foreach($categories ?? [] as $cat)
+                                        <option value="{{ $cat->id }}" @selected(old('category_id') == $cat->id)>{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Subcategoría <span class="text-xs text-zinc-500">(opcional)</span></label>
+                                <select name="subcategory_id" id="subcategory_id" class="w-full rounded-lg border {{ $borderClass('subcategory_id') }} bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                    <option value="">Seleccionar subcategoría</option>
+                                </select>
+                                @error('subcategory_id')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -134,6 +143,35 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function(){
+        const categories = @json($categories);
+        const categorySelect = document.getElementById('category_id');
+        const subcategorySelect = document.getElementById('subcategory_id');
+        const oldSubcategoryId = "{{ old('subcategory_id') }}";
+
+        function updateSubcategories() {
+            const categoryId = categorySelect.value;
+            const category = categories.find(c => c.id == categoryId);
+            
+            subcategorySelect.innerHTML = '<option value="">Seleccionar subcategoría</option>';
+            
+            if (category && category.children && category.children.length > 0) {
+                category.children.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.name;
+                    if (sub.id == oldSubcategoryId) {
+                        option.selected = true;
+                    }
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        }
+
+        categorySelect.addEventListener('change', updateSubcategories);
+        if (categorySelect.value) {
+            updateSubcategories();
+        }
+
         var fileInput = document.getElementById('create_image_file_input');
         var fileCard = document.getElementById('createImageLocalPreviewCard');
         var fileImg = document.getElementById('createImageLocalPreviewImg');

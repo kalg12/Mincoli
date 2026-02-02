@@ -3,7 +3,9 @@
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Editar categoría</h1>
+                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {{ $category->parent_id ? 'Editar subcategoría' : 'Editar categoría' }}
+                    </h1>
                     <p class="text-sm text-zinc-600 dark:text-zinc-400">Organiza tu catálogo por categorías</p>
                 </div>
                 <a href="{{ route('dashboard.categories.index') }}" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900">Volver</a>
@@ -23,8 +25,17 @@
                         @enderror
                     </div>
                     <div>
+                        <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Categoría superior (opcional)</label>
+                        <select name="parent_id" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <option value="">Ninguna (Categoría principal)</option>
+                            @foreach($parentCategories as $parent)
+                                <option value="{{ $parent->id }}" {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>{{ $parent->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Slug</label>
-                        <input type="text" value="{{ $category->slug }}" disabled class="w-full rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"/>
+                        <input type="text" name="slug" id="slug" value="{{ $category->slug }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900"/>
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Se genera automáticamente del nombre</p>
                     </div>
                 </div>
@@ -55,4 +66,13 @@
             </div>
         </form>
     </div>
+    <script>
+        document.getElementById('name').addEventListener('input', function() {
+            const name = this.value;
+            const slug = name.toLowerCase()
+                .replace(/[^\w ]+/g, '')
+                .replace(/ +/g, '-');
+            document.getElementById('slug').value = slug;
+        });
+    </script>
 </x-layouts.app>

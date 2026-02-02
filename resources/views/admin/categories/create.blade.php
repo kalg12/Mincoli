@@ -2,7 +2,9 @@
     <div class="p-6 space-y-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Nueva categoría</h1>
+                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">
+                    {{ request('parent_id') ? 'Nueva subcategoría' : 'Nueva categoría' }}
+                </h1>
                 <p class="text-sm text-zinc-600 dark:text-zinc-400">Organiza joyería, ropa y dulces</p>
             </div>
             <a href="{{ route('dashboard.categories.index') }}" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900">
@@ -16,11 +18,21 @@
                 <div class="space-y-4">
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Nombre de la categoría</label>
-                        <input type="text" name="name" placeholder="Ej: Joyería" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900" required>
+                        <input type="text" name="name" id="name" placeholder="Ej: Joyería" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900" required>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Categoría superior (opcional)</label>
+                        <select name="parent_id" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <option value="">Ninguna (Categoría principal)</option>
+                            @foreach($parentCategories as $parent)
+                                <option value="{{ $parent->id }}" @selected(request('parent_id') == $parent->id)>{{ $parent->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">Selecciona si esta es una subcategoría</p>
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Slug</label>
-                        <input type="text" name="slug" placeholder="joyeria" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                        <input type="text" name="slug" id="slug" placeholder="joyeria" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">Se genera automáticamente del nombre</p>
                     </div>
                     <div>
@@ -47,4 +59,13 @@
             </div>
         </form>
     </div>
+    <script>
+        document.getElementById('name').addEventListener('input', function() {
+            const name = this.value;
+            const slug = name.toLowerCase()
+                .replace(/[^\w ]+/g, '')
+                .replace(/ +/g, '-');
+            document.getElementById('slug').value = slug;
+        });
+    </script>
 </x-layouts.app>

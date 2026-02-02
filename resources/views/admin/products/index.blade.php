@@ -77,7 +77,12 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">{{ $product->category->name ?? 'N/A' }}</td>
+                            <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">
+                                <div class="text-sm font-medium">{{ $product->category->name ?? 'N/A' }}</div>
+                                @if($product->subcategory)
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-500">{{ $product->subcategory->name }}</div>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-zinc-900 dark:text-zinc-100">${{ number_format($product->price, 2) }}</td>
                             <td class="px-6 py-4">
                                 @php

@@ -19,7 +19,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'variants', 'images'])
+        $products = Product::with(['category', 'subcategory', 'variants', 'images'])
             ->latest()
             ->paginate(15);
 
@@ -38,8 +38,11 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::where('is_active', true)->get();
-
+        $categories = Category::whereNull('parent_id')
+            ->where('is_active', true)
+            ->with(['children' => fn($q) => $q->where('is_active', true)])
+            ->get();
+ 
         return view('admin.products.create', compact('categories'));
     }
 
@@ -51,6 +54,7 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',
@@ -117,8 +121,11 @@ class ProductController extends Controller
             'inventoryMovements.variant',
         ])->findOrFail($id);
 
-        $categories = Category::where('is_active', true)->get();
-
+        $categories = Category::whereNull('parent_id')
+            ->where('is_active', true)
+            ->with(['children' => fn($q) => $q->where('is_active', true)])
+            ->get();
+ 
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
@@ -133,6 +140,7 @@ class ProductController extends Controller
             'barcode' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
+            'subcategory_id' => 'nullable|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'cost' => 'nullable|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0',

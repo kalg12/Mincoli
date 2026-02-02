@@ -109,13 +109,20 @@
                                 @error('sku')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Categoría <span class="text-red-500">*</span></label>
-                                <select name="category_id" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" required>
+                                <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Categoría Principal <span class="text-red-500">*</span></label>
+                                <select name="category_id" id="category_id" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" required>
                                     @foreach($categories ?? [] as $category)
                                         <option value="{{ $category->id }}" @if($product->category_id == $category->id) selected @endif>{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('category_id')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Subcategoría</label>
+                                <select name="subcategory_id" id="subcategory_id" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                                    <option value="">Ninguna</option>
+                                </select>
+                                @error('subcategory_id')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                             </div>
                             <div>
                                 <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código de Barras</label>
@@ -665,7 +672,41 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.js-variant-color').forEach(function(el){
+            const categories = @json($categories);
+        const categorySelect = document.getElementById('category_id');
+        const subcategorySelect = document.getElementById('subcategory_id');
+        const currentSubcategoryId = "{{ $product->subcategory_id }}";
+        const oldSubcategoryId = "{{ old('subcategory_id') }}";
+
+        function updateSubcategories(initial = false) {
+            const categoryId = categorySelect.value;
+            const category = categories.find(c => c.id == categoryId);
+            
+            subcategorySelect.innerHTML = '<option value="">Ninguna</option>';
+            
+            if (category && category.children && category.children.length > 0) {
+                category.children.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.name;
+                    if (initial) {
+                        if (sub.id == (oldSubcategoryId || currentSubcategoryId)) {
+                            option.selected = true;
+                        }
+                    } else if (sub.id == oldSubcategoryId) {
+                        option.selected = true;
+                    }
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        }
+
+        categorySelect.addEventListener('change', () => updateSubcategories(false));
+        if (categorySelect.value) {
+            updateSubcategories(true);
+        }
+
+        document.querySelectorAll('.js-variant-color').forEach(function(el){
                 var c = el.getAttribute('data-color');
                 if (c) { el.style.backgroundColor = c; }
             });

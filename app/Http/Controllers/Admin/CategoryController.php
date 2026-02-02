@@ -11,13 +11,17 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::withCount('products')->latest()->get();
+        $categories = Category::with(['parent'])->withCount('products')->latest()->get();
         return view('admin.categories.index', compact('categories'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.categories.create');
+        $parentCategories = Category::whereNull('parent_id')
+            ->orWhere('parent_id', 0)
+            ->orWhere('parent_id', '')
+            ->get();
+        return view('admin.categories.create', compact('parentCategories'));
     }
 
     public function store(Request $request)
@@ -25,11 +29,13 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
             'status' => 'required|in:active,inactive',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $request->slug ?: Str::slug($validated['name']);
         $validated['is_active'] = $validated['status'] === 'active';
+        $validated['parent_id'] = $validated['parent_id'] ?: null;
 
         Category::create($validated);
 
@@ -41,7 +47,10 @@ class CategoryController extends Controller
     public function edit($id)
     {
         $category = Category::findOrFail($id);
-        return view('admin.categories.edit', compact('category'));
+        $parentCategories = Category::whereNull('parent_id')
+            ->where('id', '!=', $id)
+            ->get();
+        return view('admin.categories.edit', compact('category', 'parentCategories'));
     }
 
     public function update(Request $request, $id)
@@ -51,11 +60,13 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:categories,id',
             'status' => 'required|in:active,inactive',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = $request->slug ?: Str::slug($validated['name']);
         $validated['is_active'] = $validated['status'] === 'active';
+        $validated['parent_id'] = $validated['parent_id'] ?: null;
         unset($validated['status']);
 
         $category->update($validated);

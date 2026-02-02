@@ -35,9 +35,15 @@
                     @endif
                 </div>
                 <h3 class="mb-2 text-lg font-semibold text-zinc-900 dark:text-white">{{ $category->name }}</h3>
+                @if($category->parent)
+                    <p class="mb-2 text-xs text-zinc-500 dark:text-zinc-500">Subcategoría de: <span class="font-medium text-pink-600 dark:text-pink-400">{{ $category->parent->name }}</span></p>
+                @endif
                 <p class="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{{ $category->products_count }} producto{{ $category->products_count != 1 ? 's' : '' }}</p>
                 <div class="flex gap-2">
                     <a href="{{ route('dashboard.categories.edit', $category->id) }}" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors text-center">Editar</a>
+                    @if(!$category->parent_id)
+                        <a href="{{ route('dashboard.categories.create', ['parent_id' => $category->id]) }}" class="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-pink-600 hover:bg-pink-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-pink-400 dark:hover:bg-zinc-700/50 dark:focus:ring-offset-zinc-900 transition-colors text-center">Subcategoría</a>
+                    @endif
                     <form action="{{ route('dashboard.categories.destroy', $category->id) }}" method="POST" class="flex-1" onsubmit="return confirm('¿Estás seguro? Esta acción no se puede deshacer.');">
                         @csrf
                         @method('DELETE')
