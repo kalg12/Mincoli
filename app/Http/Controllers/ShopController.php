@@ -20,6 +20,19 @@ class ShopController extends Controller
             ->withCount('products')
             ->get();
 
+        foreach ($parentCategories as $category) {
+            $randomProduct = Product::where('category_id', $category->id)
+                ->orWhere('subcategory_id', $category->id) // Include subcategory products if any
+                ->where('is_active', true)
+                ->whereHas('images')
+                ->inRandomOrder()
+                ->first();
+
+            if ($randomProduct && $randomProduct->images->first()) {
+                $category->random_image = $randomProduct->images->first()->url;
+            }
+        }
+
         $query = Product::where('is_active', true)
             ->with(['images', 'category', 'variants'])
             ->where(function($q) {
@@ -110,6 +123,18 @@ class ShopController extends Controller
         $products = $products->paginate(20);
 
         $subcategories = $category->children()->withCount('products')->get();
+
+        foreach ($subcategories as $subcategory) {
+            $randomProduct = Product::where('subcategory_id', $subcategory->id)
+                ->where('is_active', true)
+                ->whereHas('images')
+                ->inRandomOrder()
+                ->first();
+
+            if ($randomProduct && $randomProduct->images->first()) {
+                $subcategory->random_image = $randomProduct->images->first()->url;
+            }
+        }
         
         $currentCategory = $category;
 
