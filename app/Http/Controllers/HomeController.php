@@ -17,7 +17,10 @@ class HomeController extends Controller
             ->get();
 
         foreach ($categories as $category) {
-            $randomProduct = Product::where('category_id', $category->id)
+            $randomProduct = Product::where(function($query) use ($category) {
+                    $query->where('category_id', $category->id)
+                          ->orWhere('subcategory_id', $category->id);
+                })
                 ->where('is_active', true)
                 ->whereHas('images')
                 ->inRandomOrder()

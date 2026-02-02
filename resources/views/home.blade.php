@@ -93,9 +93,9 @@
             </p>
         </div>
 
-        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-center gap-6">
             @forelse($categories as $category)
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow w-64">
                 <div class="p-4 pb-2">
                     <h3 class="text-xl font-bold text-gray-900 line-clamp-1">{{ $category->name }}</h3>
                 </div>

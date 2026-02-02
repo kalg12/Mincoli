@@ -71,7 +71,7 @@ class ProductController extends Controller
             'status' => 'required|in:published,draft,out_of_stock',
             'iva_rate' => 'nullable|numeric|min:0',
             'image_url' => 'nullable|url|max:500',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:5120',
         ]);
 
         $payload = $validated;
@@ -157,7 +157,7 @@ class ProductController extends Controller
             'status' => 'required|in:published,draft,out_of_stock',
             'iva_rate' => 'nullable|numeric|min:0',
             'image_url' => 'nullable|url|max:500',
-            'image' => 'nullable|image|max:5120',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:5120',
         ]);
 
         $payload = $validated;
