@@ -14,6 +14,12 @@
             <a href="{{ route('shop.category', $product->category->slug) }}" class="text-gray-600 hover:text-pink-600">
                 {{ $product->category->name }}
             </a>
+            @if($product->subcategory)
+            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+            <a href="{{ route('shop') }}?category={{ $product->category->slug }}&subcategory={{ $product->subcategory->id }}" class="text-gray-600 hover:text-pink-600">
+                {{ $product->subcategory->name }}
+            </a>
+            @endif
             <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
             <span class="text-gray-900 font-medium">{{ $product->name }}</span>
         </nav>
@@ -109,6 +115,17 @@
                                 </a>
                             </dd>
                         </div>
+                        @if($product->subcategory)
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Subcategoría:</dt>
+                            <dd class="font-medium">
+                                <a href="{{ route('shop') }}?category={{ $product->category->slug }}&subcategory={{ $product->subcategory->id }}"
+                                   class="text-pink-600 hover:text-pink-700">
+                                    {{ $product->subcategory->name }}
+                                </a>
+                            </dd>
+                        </div>
+                        @endif
                         @if($product->barcode)
                         <div class="flex justify-between">
                             <dt class="text-gray-600">Código de barras:</dt>
