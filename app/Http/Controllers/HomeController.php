@@ -12,6 +12,7 @@ class HomeController extends Controller
     public function index()
     {
         $categories = Category::where('is_active', true)
+            ->whereNull('parent_id')
             ->withCount('products')
             ->get();
 

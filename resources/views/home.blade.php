@@ -93,29 +93,26 @@
             </p>
         </div>
 
-        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @forelse($categories as $category)
-            <a href="{{ route('shop.category', $category->slug) }}" class="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                <div class="aspect-w-16 aspect-h-12 bg-gradient-to-br from-pink-100 to-purple-100 relative">
-                    @if(isset($category->random_image))
-                        <img src="{{ $category->random_image }}" alt="{{ $category->name }}" class="w-full h-64 object-cover object-center group-hover:scale-110 transition-transform duration-500">
-                    @else
-                        <!-- Category Image Placeholder -->
-                        <div class="w-full h-64 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-                            <i class="fas fa-box-open text-6xl text-pink-300 group-hover:text-pink-400 transition"></i>
-                        </div>
-                    @endif
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+                <div class="p-4 pb-2">
+                    <h3 class="text-xl font-bold text-gray-900 line-clamp-1">{{ $category->name }}</h3>
                 </div>
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-                    <h3 class="text-2xl font-bold text-white mb-2">{{ $category->name }}</h3>
-                    <p class="text-white/80 text-sm">
-                        {{ $category->products_count }} producto{{ $category->products_count != 1 ? 's' : '' }}
-                    </p>
+                
+                <div class="px-4 flex-grow flex flex-col">
+                     <a href="{{ route('shop.category', $category->slug) }}" class="block flex-grow">
+                        @if(isset($category->random_image))
+                            <img src="{{ $category->random_image }}" alt="{{ $category->name }}" class="w-full h-64 object-cover object-center mb-2 rounded-sm">
+                        @else
+                            <div class="w-full h-64 bg-gray-50 flex items-center justify-center mb-2 rounded-sm">
+                                <i class="fas fa-box-open text-4xl text-gray-300"></i>
+                            </div>
+                        @endif
+                    </a>
                 </div>
-                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2">
-                    <span class="text-pink-600 font-semibold">Ver más →</span>
-                </div>
-            </a>
+
+            </div>
             @empty
             <div class="col-span-full text-center py-12">
                 <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>

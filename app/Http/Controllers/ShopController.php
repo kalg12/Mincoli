@@ -14,6 +14,11 @@ class ShopController extends Controller
         $categories = Category::where('is_active', true)
             ->withCount('products')
             ->get();
+            
+        $parentCategories = Category::where('is_active', true)
+            ->whereNull('parent_id')
+            ->withCount('products')
+            ->get();
 
         $query = Product::where('is_active', true)
             ->with(['images', 'category', 'variants'])
@@ -36,6 +41,11 @@ class ShopController extends Controller
                 $query->where('category_id', $category->id);
                 $currentCategory = $category;
             }
+        }
+
+        // Filter by subcategory
+        if ($request->has('subcategory')) {
+            $query->where('subcategory_id', $request->subcategory);
         }
 
         // Filter by price range
@@ -63,7 +73,7 @@ class ShopController extends Controller
 
         $products = $query->paginate(20);
 
-        return view('shop.index', compact('categories', 'products', 'currentCategory'));
+        return view('shop.index', compact('categories', 'products', 'currentCategory', 'parentCategories'));
     }
 
     public function category($slug)
@@ -90,12 +100,20 @@ class ShopController extends Controller
                         ->where('stock', '>', 0);
                 });
             })
-            ->latest()
-            ->paginate(20);
+            ->latest();
 
+        // Filter by subcategory
+        if (request()->has('subcategory')) {
+            $products->where('subcategory_id', request()->subcategory);
+        }
+        
+        $products = $products->paginate(20);
+
+        $subcategories = $category->children()->withCount('products')->get();
+        
         $currentCategory = $category;
 
-        return view('shop.index', compact('categories', 'products', 'currentCategory'));
+        return view('shop.index', compact('categories', 'products', 'currentCategory', 'subcategories'));
     }
 
     public function product($slug)
