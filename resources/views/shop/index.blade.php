@@ -76,12 +76,12 @@
         <main class="flex-1">
             <!-- Categories Grid (Only on Shop Index) -->
             @if(Route::currentRouteName() == 'shop' && !request('category') && isset($parentCategories) && $parentCategories->count() > 0)
-            <div class="mb-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Categorías</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="mb-8 text-center">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 inline-block">Categorías</h2>
+                <div class="flex flex-wrap justify-center gap-4">
                     @foreach($parentCategories as $cat)
                     <a href="{{ route('shop.category', $cat->slug) }}" 
-                       class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all flex flex-col items-center text-center group">
+                       class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all flex flex-col items-center text-center group w-40">
                         <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2 group-hover:bg-pink-50 transition-colors">
                             @if(isset($cat->random_image))
                                 <img src="{{ $cat->random_image }}" alt="{{ $cat->name }}" class="w-10 h-10 object-cover rounded-full">
@@ -129,10 +129,10 @@
             <!-- Subcategories Grid -->
             @if(isset($subcategories) && $subcategories->count() > 0)
             <div class="mb-8">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="flex flex-wrap justify-center gap-4">
                     @foreach($subcategories as $sub)
                     <a href="{{ route('shop') }}?category={{ $currentCategory->slug }}&subcategory={{ $sub->id }}" 
-                       class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all flex flex-col items-center text-center group">
+                       class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all flex flex-col items-center text-center group w-40">
                         <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-2 group-hover:bg-pink-50 transition-colors">
                             <i class="fas fa-box text-2xl text-gray-400 group-hover:text-pink-500"></i>
                         </div>
