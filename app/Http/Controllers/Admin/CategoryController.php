@@ -9,9 +9,19 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::with(['parent'])->withCount('products')->latest()->get();
+        $query = Category::with(['parent'])->withCount('products');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $categories = $query->latest()->get();
         return view('admin.categories.index', compact('categories'));
     }
 
