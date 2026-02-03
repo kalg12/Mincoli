@@ -175,14 +175,26 @@ $downloadAndStoreDriveImage = function (?string $url) {
     }
 };
 
-$handleImages = function ($product, $variant, $row) {
+$handleImages = function ($product, $variant, $row, &$processedUrls) {
     if (!empty($row['Imagenes'])) {
+        // Clear existing images for this Specific item (Product or Variant) 
+        // to avoid duplicates on re-import
+        if ($variant) {
+            $variant->images()->delete();
+        } else {
+            $product->images()->whereNull('variant_id')->delete();
+        }
+
         $imageUrls = explode(',', $row['Imagenes']);
         $pos = ($product->images()->max('position') ?? -1) + 1;
         foreach ($imageUrls as $url) {
             $url = trim($url);
             if (!$url) continue;
             
+            // Generate a unique key for product+url to avoid adding same image twice to same product
+            $urlKey = $product->id . '_' . $url;
+            if (isset($processedUrls[$urlKey])) continue;
+
             $storedUrl = $this->downloadAndStoreDriveImage($url);
             if ($storedUrl) {
                 ProductImage::create([
@@ -191,15 +203,17 @@ $handleImages = function ($product, $variant, $row) {
                     'url' => $storedUrl,
                     'position' => $pos++,
                 ]);
+                $processedUrls[$urlKey] = true;
             }
         }
     }
 };
 
-$startImport = function () {
+$startImport = function () use ($handleImages) {
     $this->step = 'processing';
     $this->processedRows = 0;
     $this->errors = [];
+    $processedUrls = []; // Tracked per import run
     
     try {
         $path = $this->file->getRealPath();
@@ -225,8 +239,8 @@ $startImport = function () {
                 if (isset($this->overrides[$count])) {
                     $row = array_merge($row, $this->overrides[$count]);
                 }
-                                try {
-                            DB::transaction(function () use ($row) {
+                try {
+                            DB::transaction(function () use ($row, $handleImages, &$processedUrls) {
                                 // Find or create category
                                 $categoryName = $row['Categoria'] ?? 'Sin Categoria';
                                 $category = Category::firstOrCreate(
@@ -282,7 +296,7 @@ $startImport = function () {
                                             'created_by' => Auth::id(),
                                         ]);
                                     }
-                                    $this->handleImages($existingVariant->product, $existingVariant, $row);
+                                    $handleImages($existingVariant->product, $existingVariant, $row, $processedUrls);
                                 } elseif ($existingProduct) {
                                     // Update existing main product
                                     $oldStock = $existingProduct->stock;
@@ -306,14 +320,14 @@ $startImport = function () {
                                             'created_by' => Auth::id(),
                                         ]);
                                     }
-                                    $this->handleImages($existingProduct, null, $row);
+                                    $handleImages($existingProduct, null, $row, $processedUrls);
                                 } else {
                                     // NEW ITEM
                                     // Check if we should treat it as a variant of an existing product name
                                     $parentByName = Product::where('name', $name)->first();
 
-                                    // If we have a parent by name AND this SKU is different from parent's SKU, it's a variant
-                                    if ($parentByName && $parentByName->sku !== $sku) {
+                                    if ($parentByName) {
+                                        // Subsequent variant
                                         $variant = $parentByName->variants()->create([
                                             'sku' => $sku,
                                             'name' => $name,
@@ -329,12 +343,12 @@ $startImport = function () {
                                             'variant_id' => $variant->id,
                                             'type' => 'in',
                                             'quantity' => $targetStock,
-                                            'reason' => 'Importación masiva (Nueva Variante)',
+                                            'reason' => 'Importación (Nueva Variante)',
                                             'created_by' => Auth::id(),
                                         ]);
-                                        $this->handleImages($parentByName, $variant, $row);
+                                        $handleImages($parentByName, $variant, $row, $processedUrls);
                                     } else {
-                                        // New Main Product
+                                        // First time seeing this name -> Create Product AND First Variant
                                         $product = Product::create([
                                             'sku' => $sku,
                                             'name' => $name ?: 'Nuevo Producto',
@@ -349,14 +363,28 @@ $startImport = function () {
                                             'is_active' => true,
                                         ]);
 
+                                        // Creating the first variant explicitly so it can have its own images/stock record
+                                        $variant = $product->variants()->create([
+                                            'sku' => $sku,
+                                            'name' => $name,
+                                            'size' => $row['Talla'] ?? null,
+                                            'color' => $row['Color'] ?? null,
+                                            'material' => $row['Material'] ?? null,
+                                            'price' => $price,
+                                            'stock' => $targetStock,
+                                        ]);
+
                                         InventoryMovement::create([
                                             'product_id' => $product->id,
+                                            'variant_id' => $variant->id,
                                             'type' => 'in',
                                             'quantity' => $targetStock,
-                                            'reason' => 'Importación masiva (Nuevo Producto)',
+                                            'reason' => 'Importación (Nuevo Producto)',
                                             'created_by' => Auth::id(),
                                         ]);
-                                        $this->handleImages($product, null, $row);
+                                        
+                                        // Associating images to both the product gallery and specific variant
+                                        $handleImages($product, $variant, $row, $processedUrls);
                                     }
                                 }
                             });
@@ -383,14 +411,21 @@ $downloadTemplate = function() {
         // Add BOM for Excel compatibility with UTF-8
         fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
         fputcsv($file, $headers);
-        // Main product
-        fputcsv($file, ['Producto Ejemplo', 'SKU-001', 'Mincoli', 'Joyería', 'Anillos', '1200.00', '10', 'Descripción del producto', '', '', '', 'https://link-a-imagen.com/1.jpg']);
-        // Variant of the same product (matching by Name)
-        fputcsv($file, ['Producto Ejemplo', 'SKU-001-ORO', '', '', '', '1500.00', '5', '', 'Dorado', 'Oro 14k', '7', '']);
+        
+        // Example 1: Product with variants (linked by EXACT SAME Name)
+        // Row 1: First variant. Put the main product photos here.
+        fputcsv($file, ['Anillo Luna', 'AN-LU-P', 'Mincoli', 'Joyería', 'Anillos', '1200.00', '10', 'Hermoso diseño de luna', 'Plata', 'Plata 925', 'P', 'https://tu-sitio.com/foto-anillo-plata.jpg']);
+        
+        // Row 2: Second variant (Same Name). Put the specific photos for this color/talla here.
+        fputcsv($file, ['Anillo Luna', 'AN-LU-O', '', '', '', '1500.00', '5', '', 'Oro', 'Oro 14k', 'P', 'https://tu-sitio.com/foto-anillo-oro.jpg']);
+        
+        // Example 2: Simple product (just one row)
+        fputcsv($file, ['Collar Estelar', 'COL-EST', 'Mincoli', 'Joyería', 'Collares', '2500.00', '3', 'Collar de lujo', 'Dorado', 'Oro 24k', 'U', 'https://tu-sitio.com/collar.jpg']);
+        
         fclose($file);
     };
 
-    return response()->streamDownload($callback, 'plantilla_productos.csv', [
+    return response()->streamDownload($callback, 'plantilla_mincoli.csv', [
         'Content-Type' => 'text/csv; charset=utf-8',
     ]);
 };
