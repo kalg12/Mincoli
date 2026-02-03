@@ -122,7 +122,7 @@ class ShopController extends Controller
         
         $products = $products->paginate(20);
 
-        $subcategories = $category->children()->withCount('products')->get();
+        $subcategories = $category->children()->where('is_active', true)->withCount('products')->get();
 
         foreach ($subcategories as $subcategory) {
             $randomProduct = Product::where('subcategory_id', $subcategory->id)
