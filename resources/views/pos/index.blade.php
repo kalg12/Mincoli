@@ -187,7 +187,7 @@
                                         class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:ring-1 focus:ring-pink-600 focus:border-pink-600 transition-all">
                                     
                                     <!-- Customer Results -->
-                                    <div x-show="customerResults.length > 0" class="absolute z-50 left-0 right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto">
+                                    <div x-show="customerSearch.length > 0" class="absolute z-50 left-0 right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto" x-cloak>
                                         <ul class="divide-y divide-zinc-800">
                                             <template x-for="c in customerResults" :key="c.id">
                                                 <li>
@@ -197,6 +197,19 @@
                                                     </button>
                                                 </li>
                                             </template>
+                                            <!-- Fallback for manual entry -->
+                                            <li x-show="customerResults.length === 0 || customerSearch.length > 0">
+                                                <button @click="manualCustomerMode = true; manualCustomer.name = customerSearch; customerSearch = ''" 
+                                                        class="w-full text-left p-3 hover:bg-zinc-800 transition-colors flex items-center gap-2 group">
+                                                    <div class="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-pink-600 text-white flex items-center justify-center transition-colors">
+                                                        <i class="fas fa-user-plus text-xs"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-xs font-bold text-zinc-400 group-hover:text-white">Usar como Cliente Temporal</div>
+                                                        <div class="text-[10px] text-zinc-600 group-hover:text-zinc-400" x-text="'Nombre/Tel: ' + customerSearch"></div>
+                                                    </div>
+                                                </button>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -259,24 +272,24 @@
 
                             <div class="mt-3 flex items-center justify-between">
                                 <!-- Quantity Controls -->
-                                <div class="flex items-center bg-zinc-900 rounded-lg p-1 border border-zinc-800 shadow-inner">
-                                    <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center text-zinc-100 hover:bg-zinc-800 hover:text-white rounded-md transition-colors">
+                                <div class="flex items-center bg-zinc-900 rounded-lg p-1 border border-zinc-800 shadow-inner gap-1">
+                                    <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center bg-zinc-800 text-zinc-300 hover:bg-pink-600 hover:text-white rounded-md transition-all">
                                         <i class="fas fa-minus text-xs"></i>
                                     </button>
                                     <span class="w-8 text-center text-sm font-black text-white" x-text="item.quantity"></span>
-                                    <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center text-zinc-100 hover:bg-zinc-800 hover:text-white rounded-md transition-colors">
+                                    <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center bg-zinc-800 text-zinc-300 hover:bg-pink-600 hover:text-white rounded-md transition-all">
                                         <i class="fas fa-plus text-xs"></i>
                                     </button>
                                 </div>
 
                                 <!-- Actions -->
-                                <button @click="removeFromCart(index)" class="w-8 h-8 flex items-center justify-center bg-red-950/20 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-900/30">
+                                <button @click="removeFromCart(index)" class="w-8 h-8 flex items-center justify-center bg-zinc-800 text-zinc-500 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-zinc-700 hover:border-red-600">
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </div>
                         </div>
                     </template>
-                                        <div x-show="cart.length === 0" class="h-48 flex flex-col items-center justify-center text-zinc-700">
+                    <div x-show="cart.length === 0" class="h-48 flex flex-col items-center justify-center text-zinc-700">
                         <i class="fas fa-shopping-basket text-4xl mb-3 opacity-20"></i>
                          <p class="text-xs font-black uppercase tracking-[0.2em] opacity-20">Carrito vacío</p>
                     </div>
@@ -377,28 +390,28 @@
         </div>
     <!-- Hidden Quotation Template for Export -->
     <div id="quotation-template" 
-         class="fixed left-0 top-0 bg-white text-zinc-900 p-10 w-[600px] leading-tight pointer-events-none" 
+         class="fixed left-0 top-0 bg-white p-10 w-[600px] leading-tight pointer-events-none" 
          :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + ';'"
-         style="font-family: 'Inter', sans-serif;">
-        <div class="flex justify-between items-center border-b-2 border-zinc-900 pb-6">
+         style="font-family: 'Inter', sans-serif; color: #18181b;">
+        <div class="flex justify-between items-center pb-6" style="border-bottom: 2px solid #ec4899;">
             <div>
-                <h1 class="text-3xl font-black uppercase tracking-tighter">Mincoli</h1>
-                <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Tienda Online</p>
+                <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="h-12 w-auto mb-2">
+                <p class="text-xs font-bold uppercase tracking-widest" style="color: #71717a;">Tienda Online</p>
             </div>
             <div class="text-right">
-                <h2 class="text-xl font-black uppercase">Cotización</h2>
-                <p class="text-[10px] text-zinc-500 font-bold" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
+                <h2 class="text-xl font-black uppercase" style="color: #db2777;">Cotización</h2>
+                <p class="text-[10px] font-bold" style="color: #71717a;" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
             </div>
         </div>
 
         <div class="mt-8 grid grid-cols-2 gap-8">
             <div>
-                <h3 class="text-[10px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Cliente</h3>
+                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #a1a1aa;">Cliente</h3>
                 <p class="text-sm font-black uppercase" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
-                <p class="text-xs font-bold text-zinc-500" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
+                <p class="text-xs font-bold" style="color: #71717a;" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
             </div>
             <div class="text-right">
-                <h3 class="text-[10px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Métodos de Pago</h3>
+                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #a1a1aa;">Métodos de Pago</h3>
                 <p class="text-[9px] font-bold leading-relaxed">Depósitos OXXO: 2242 1701 8074 1927</p>
                 <p class="text-[9px] font-bold leading-relaxed">CLABE AZTECA: 1271 8001 3158 064 597</p>
             </div>
@@ -407,23 +420,23 @@
         <div class="mt-10">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-zinc-200">
-                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest">Producto</th>
-                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest text-center">Cant.</th>
-                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest text-right">Precio</th>
-                        <th class="py-3 text-[10px] font-black uppercase text-zinc-400 tracking-widest text-right">Total</th>
+                    <tr style="border-bottom: 1px solid #e4e4e7;">
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest" style="color: #a1a1aa;">Producto</th>
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-center" style="color: #a1a1aa;">Cant.</th>
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #a1a1aa;">Precio</th>
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #a1a1aa;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-for="item in cart" :key="item.id + (item.variant ? '-' + item.variant.id : '')">
-                        <tr class="border-b border-zinc-100">
+                        <tr style="border-bottom: 1px solid #f4f4f5;">
                             <td class="py-4">
                                 <div class="text-xs font-black uppercase" x-text="item.name"></div>
-                                <div x-show="item.variant" class="text-[9px] text-zinc-500 font-bold mt-0.5" x-text="item.variant ? item.variant.name : ''"></div>
+                                <div x-show="item.variant" class="text-[9px] font-bold mt-0.5" style="color: #71717a;" x-text="item.variant ? item.variant.name : ''"></div>
                             </td>
                             <td class="py-4 text-center text-xs font-bold" x-text="item.quantity"></td>
                             <td class="py-4 text-right text-xs font-bold" x-text="'$' + parseFloat(item.price).toLocaleString()"></td>
-                            <td class="py-4 text-right text-xs font-black" x-text="'$' + (item.price * item.quantity).toLocaleString()"></td>
+                            <td class="py-4 text-right text-xs font-black" style="color: #db2777;" x-text="'$' + (item.price * item.quantity).toLocaleString()"></td>
                         </tr>
                     </template>
                 </tbody>
@@ -432,23 +445,23 @@
 
         <div class="mt-8 flex justify-end">
             <div class="w-48 space-y-2">
-                <div class="flex justify-between text-[10px] font-bold text-zinc-500 uppercase" x-show="showIva">
+                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #71717a;" x-show="showIva">
                     <span>Subtotal</span>
                     <span x-text="'$' + subtotal.toLocaleString()"></span>
                 </div>
-                <div class="flex justify-between text-[10px] font-bold text-zinc-500 uppercase" x-show="showIva">
+                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #71717a;" x-show="showIva">
                     <span>IVA (16%)</span>
                     <span x-text="'$' + (total - subtotal).toLocaleString()"></span>
                 </div>
-                <div class="flex justify-between items-center py-3 border-t-2 border-zinc-900 mt-2">
+                <div class="flex justify-between items-center py-3 mt-2" style="border-top: 2px solid #ec4899;">
                     <span class="text-xs font-black uppercase tracking-tight">Total</span>
-                    <span class="text-xl font-black" x-text="'$' + total.toLocaleString()"></span>
+                    <span class="text-xl font-black" style="color: #db2777;" x-text="'$' + total.toLocaleString()"></span>
                 </div>
             </div>
         </div>
 
-        <div class="mt-12 text-center pt-8 border-t border-zinc-100">
-            <p class="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">¡Gracias por tu preferencia! — mincoli.com</p>
+        <div class="mt-12 text-center pt-8" style="border-top: 1px solid #f4f4f5;">
+            <p class="text-[9px] font-bold uppercase tracking-[0.2em]" style="color: #a1a1aa;">¡Gracias por tu preferencia! — mincoli.com</p>
         </div>
     </div>
 </div>
@@ -711,7 +724,17 @@
                     try {
                         // Wait for Alpine to show and render the template
                         await this.$nextTick();
-                        await new Promise(r => setTimeout(r, 1500));
+                        
+                        // Ensure logo is loaded
+                        const logoImg = document.querySelector('#quotation-template img');
+                        if (logoImg && !logoImg.complete) {
+                             await new Promise((resolve) => {
+                                logoImg.onload = resolve;
+                                logoImg.onerror = resolve; // Continue even if error
+                             });
+                        }
+                        
+                        await new Promise(r => setTimeout(r, 1000)); // Extra buffer for fonts
                         
                         const element = document.getElementById('quotation-template');
                         
@@ -720,13 +743,24 @@
                             throw new Error('Template not rendered');
                         }
                         
+                        // Safety check for Image constructor
+                        if (typeof window.Image !== 'function') {
+                            console.warn('Image constructor corrupted, attempting restore...');
+                            // Create an iframe to recover native Image constructor if absolutely necessary
+                            const iframe = document.createElement('iframe');
+                            iframe.style.display = 'none';
+                            document.body.appendChild(iframe);
+                            window.Image = iframe.contentWindow.Image;
+                            document.body.removeChild(iframe);
+                        }
+                        
                         // Capture with html2canvas
                         const canvas = await html2canvas(element, {
                             scale: 2,
                             backgroundColor: '#ffffff',
-                            logging: true, // Enable for debugging
+                            logging: false, 
                             useCORS: true,
-                            allowTaint: false,
+                            allowTaint: false, // Must be false for toDataURL
                             windowWidth: 600,
                             windowHeight: element.scrollHeight
                         });
@@ -746,7 +780,7 @@
                             const { jsPDF } = window.jspdf;
                             const pdf = new jsPDF('p', 'mm', 'a4');
                             
-                            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                            const imgData = canvas.toDataURL('image/jpeg', 0.98);
                             
                             // Use canvas dimensions directly
                             const imgWidth = 190; // A4 width in mm minus margins
@@ -768,8 +802,13 @@
                                     }
                                 } catch (err) {
                                     console.warn('Clipboard write failed, falling back to preview', err);
-                                    this.previewImage = canvas.toDataURL('image/jpeg', 0.9);
-                                    this.previewModal = true;
+                                    // Fallback mainly for non-secure contexts (http) or unsupported browsers
+                                    alert('No pudimos copiar al portapapeles directamente. Descarga la imagen en su lugar.');
+                                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                                    const link = document.createElement('a');
+                                    link.download = `Cotizacion_Mincoli_${new Date().getTime()}.jpg`;
+                                    link.href = dataUrl;
+                                    link.click();
                                 }
                             }, 'image/png');
                         }
