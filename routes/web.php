@@ -23,6 +23,7 @@ Volt::route('/blog/{slug}', 'blog.show')->name('blog.show');
 Route::get('/tienda', [ShopController::class, 'index'])->name('shop');
 Route::get('/tienda/categoria/{slug}', [ShopController::class, 'category'])->name('shop.category');
 Route::get('/tienda/producto/{slug}', [ShopController::class, 'product'])->name('shop.product');
+Route::get('/buscar', [ShopController::class, 'search'])->name('shop.search');
 
 // Cart Routes
 Route::get('/carrito', [CartController::class, 'index'])->name('cart');

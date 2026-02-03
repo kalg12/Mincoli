@@ -64,35 +64,55 @@
             @endif
 
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">
-                        @if(request('category'))
-                            {{ $currentCategory->name ?? 'Categoría' }}
-                        @else
-                            Todos los Productos
-                        @endif
-                    </h1>
-                    <p class="text-gray-600 text-sm mt-1">{{ $products->total() }} productos encontrados</p>
+            <div class="flex flex-col gap-4 mb-6">
+                <!-- Search Bar (Mobile Friendly) -->
+                <div class="order-2 lg:order-1">
+                    <form action="{{ route('shop.search') }}" method="GET" class="relative w-full max-w-2xl mx-auto">
+                        <input 
+                            type="text" 
+                            name="q" 
+                            placeholder="Buscar por nombre, SKU o código de barras..." 
+                            class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            value="{{ request('q') }}"
+                        >
+                        <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                            <i class="fas fa-search mr-2"></i>
+                            Buscar
+                        </button>
+                    </form>
                 </div>
 
-                <!-- Sort -->
-                <form method="GET" action="{{ route('shop') }}" class="flex items-center space-x-2">
-                    @if(request('category'))
-                    <input type="hidden" name="category" value="{{ request('category') }}">
-                    @endif
-                    @if(request('subcategory'))
-                    <input type="hidden" name="subcategory" value="{{ request('subcategory') }}">
-                    @endif
-                    <label class="text-sm text-gray-600">Ordenar:</label>
-                    <select name="sort" onchange="this.form.submit()"
-                            class="border-gray-300 rounded-lg text-sm">
-                        <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Más recientes</option>
-                        <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Precio: Menor a Mayor</option>
-                        <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Precio: Mayor a Menor</option>
-                        <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Nombre A-Z</option>
-                    </select>
-                </form>
+                <!-- Category Title and Sort -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center order-1 lg:order-2 gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            @if(request('category'))
+                                {{ $currentCategory->name ?? 'Categoría' }}
+                            @else
+                                Todos los Productos
+                            @endif
+                        </h1>
+                        <p class="text-gray-600 text-sm mt-1">{{ $products->total() }} productos encontrados</p>
+                    </div>
+
+                    <!-- Sort -->
+                    <form method="GET" action="{{ route('shop') }}" class="flex items-center space-x-2">
+                        @if(request('category'))
+                        <input type="hidden" name="category" value="{{ request('category') }}">
+                        @endif
+                        @if(request('subcategory'))
+                        <input type="hidden" name="subcategory" value="{{ request('subcategory') }}">
+                        @endif
+                        <label class="text-sm text-gray-600">Ordenar:</label>
+                        <select name="sort" onchange="this.form.submit()"
+                                class="border-gray-300 rounded-lg text-sm">
+                            <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Más recientes</option>
+                            <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Precio: Menor a Mayor</option>
+                            <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Precio: Mayor a Menor</option>
+                            <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Nombre A-Z</option>
+                        </select>
+                    </form>
+                </div>
             </div>
 
             <!-- Subcategories Grid -->

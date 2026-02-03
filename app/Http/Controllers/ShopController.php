@@ -152,6 +152,103 @@ class ShopController extends Controller
         return view('shop.index', compact('categories', 'products', 'currentCategory', 'subcategories', 'parentCategories'));
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->get('q', '');
+        
+        if (empty($query)) {
+            return redirect()->route('shop');
+        }
+
+        $categories = Category::where('is_active', true)
+            ->withCount('products')
+            ->get();
+
+        $parentCategories = Category::where('is_active', true)
+            ->whereNull('parent_id')
+            ->with(['children' => function($q) {
+                $q->where('is_active', true)->withCount('subcategoryProducts');
+            }])
+            ->withCount('products')
+            ->get();
+
+        $products = Product::where('is_active', true)
+            ->with(['images', 'category', 'variants'])
+            ->where(function ($q) use ($query) {
+                // Búsqueda exacta primero (SKU y Barcode)
+                $q->where('sku', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%")
+                  // Búsqueda en nombre y descripción
+                  ->orWhere('name', 'like', "%{$query}%")
+                  ->orWhere('description', 'like', "%{$query}%")
+                  // Búsqueda en variantes
+                  ->orWhereHas('variants', function ($variantQuery) use ($query) {
+                      $variantQuery->where('name', 'like', "%{$query}%")
+                                  ->orWhere('sku', 'like', "%{$query}%")
+                                  ->orWhere('barcode', 'like', "%{$query}%")
+                                  ->orWhere('size', 'like', "%{$query}%")
+                                  ->orWhere('color', 'like', "%{$query}%");
+                  });
+            })
+            ->where(function($q) {
+                // Products with variants: at least one variant must have stock
+                $q->whereHas('variants', function($variantQuery) {
+                    $variantQuery->where('stock', '>', 0);
+                })
+                // Products without variants: product itself must have stock
+                ->orWhere(function($noVariantQuery) {
+                    $noVariantQuery->whereDoesntHave('variants')
+                        ->where('stock', '>', 0);
+                });
+            })
+            ->orderByRaw("
+                CASE 
+                    WHEN sku LIKE ? THEN 1
+                    WHEN barcode LIKE ? THEN 1
+                    WHEN name LIKE ? THEN 2
+                    ELSE 3
+                END
+            ", ["%{$query}%", "%{$query}%", "%{$query}%"]);
+
+        // Aplicar filtros adicionales si existen
+        if ($request->has('category')) {
+            $category = Category::where('slug', $request->category)->first();
+            if ($category) {
+                $products->where('category_id', $category->id);
+            }
+        }
+
+        if ($request->has('min_price')) {
+            $products->where('price', '>=', $request->min_price);
+        }
+        if ($request->has('max_price')) {
+            $products->where('price', '<=', $request->max_price);
+        }
+
+        // Sorting
+        switch ($request->get('sort', 'relevance')) {
+            case 'price_asc':
+                $products->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $products->orderBy('price', 'desc');
+                break;
+            case 'name':
+                $products->orderBy('name', 'asc');
+                break;
+            case 'newest':
+                $products->latest();
+                break;
+            default:
+                // Mantener orden por relevancia
+                break;
+        }
+
+        $products = $products->paginate(20);
+
+        return view('shop.search', compact('products', 'categories', 'query', 'parentCategories'));
+    }
+
     public function product($slug)
     {
         $product = Product::where('slug', $slug)

@@ -59,6 +59,27 @@
 
             <!-- Actions -->
             <div class="flex items-center space-x-3">
+                <!-- Search (Desktop) -->
+                <div class="hidden lg:block">
+                    <form action="{{ route('shop.search') }}" method="GET" class="relative">
+                        <input 
+                            type="text" 
+                            name="q" 
+                            placeholder="Buscar..." 
+                            class="w-48 pl-4 pr-10 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                            value="{{ request('q') }}"
+                        >
+                        <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-600 transition">
+                            <i class="fas fa-search text-sm"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Search (Mobile) -->
+                <button onclick="toggleMobileSearch()" class="lg:hidden text-gray-700 hover:text-pink-600 transition">
+                    <i class="fas fa-search text-lg"></i>
+                </button>
+
                 <!-- Cart -->
                 <button onclick="window.openCartDrawer()" class="relative text-gray-700 hover:text-pink-600 transition">
                     <i class="fas fa-shopping-cart text-lg"></i>
@@ -72,6 +93,23 @@
                     <i class="fas fa-bars text-xl"></i>
                 </button>
             </div>
+        </div>
+
+        <!-- Mobile Search Bar -->
+        <div id="mobile-search-bar" class="hidden lg:hidden pb-3">
+            <form action="{{ route('shop.search') }}" method="GET" class="relative">
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Buscar productos por nombre, SKU o código de barras..." 
+                    class="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+                    value="{{ request('q') }}"
+                    autofocus
+                >
+                <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-pink-600 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
         </div>
 
         <!-- Mobile Navigation -->
@@ -97,6 +135,33 @@
     document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() {
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
+    });
+
+    // Mobile search toggle
+    function toggleMobileSearch() {
+        const searchBar = document.getElementById('mobile-search-bar');
+        const menu = document.getElementById('mobile-menu');
+        
+        // Close menu when opening search
+        if (!searchBar.classList.contains('hidden')) {
+            searchBar.classList.add('hidden');
+        } else {
+            searchBar.classList.remove('hidden');
+            menu.classList.add('hidden');
+            // Focus on input
+            searchBar.querySelector('input').focus();
+        }
+    }
+
+    // Close mobile search when clicking outside
+    document.addEventListener('click', function(e) {
+        const searchBar = document.getElementById('mobile-search-bar');
+        const searchButton = e.target.closest('[onclick="toggleMobileSearch()"]');
+        const searchInput = e.target.closest('#mobile-search-bar input');
+        
+        if (!searchBar.contains(e.target) && !searchButton && !searchInput) {
+            searchBar.classList.add('hidden');
+        }
     });
 </script>
 @endpush
