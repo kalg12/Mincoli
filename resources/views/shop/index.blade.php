@@ -22,7 +22,7 @@
         </aside>
 
         <!-- Mobile Filter Button -->
-        <button id="mobile-filter-btn" class="lg:hidden fixed top-4 right-4 z-40 bg-pink-600 text-white px-4 py-2 rounded-lg shadow-lg font-bold flex items-center gap-2 hover:bg-pink-700 transition-all transform hover:scale-105">
+        <button id="mobile-filter-btn" class="lg:hidden fixed top-32 right-0 z-40 bg-pink-600 text-white px-4 py-2 rounded-l-lg shadow-lg font-bold flex items-center gap-2 hover:bg-pink-700 transition-all transform hover:scale-105">
             <i class="fas fa-filter"></i> FILTROS
         </button>
 
