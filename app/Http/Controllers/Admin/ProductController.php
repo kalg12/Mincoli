@@ -22,6 +22,7 @@ class ProductController extends Controller
         $query = Product::with(['category', 'subcategory', 'variants', 'images'])
             ->latest();
 
+        // Filtro por categoría
         if (request()->filled('category_id')) {
             $catId = request()->category_id;
             $query->where(function($q) use ($catId) {
@@ -30,9 +31,34 @@ class ProductController extends Controller
             });
         }
 
-        $products = $query->paginate(15);
+        // Filtro por subcategoría
+        if (request()->filled('subcategory_id')) {
+            $query->where('subcategory_id', request()->subcategory_id);
+        }
 
-        return view('admin.products.index', compact('products'));
+        // Obtener el número de productos por página desde la solicitud, default 30
+        $perPage = request()->get('per_page', 30);
+        
+        // Validar que el per_page sea un valor permitido
+        $allowedPerPage = [10, 15, 20, 30, 50, 100];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 30;
+        }
+
+        $products = $query->paginate($perPage);
+
+        // Obtener categorías y subcategorías para los filtros
+        $categories = Category::whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+            
+        $subcategories = Category::whereNotNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.products.index', compact('products', 'categories', 'subcategories'));
     }
 
     public function trash()

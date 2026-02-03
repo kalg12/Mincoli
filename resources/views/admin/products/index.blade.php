@@ -25,24 +25,79 @@
 
         <!-- Filters -->
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900">
-            <div class="flex gap-3 items-center">
-                <input type="text" placeholder="Buscar productos..." class="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
-                <select class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                    <option>Todas las categorías</option>
-                    <option>Joyería</option>
-                    <option>Ropa</option>
-                    <option>Dulces</option>
-                </select>
-                <select class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
-                    <option>Todos los estados</option>
-                    <option>Publicado</option>
-                    <option>Borrador</option>
-                    <option>Agotado</option>
-                </select>
-                <button onclick="printSelectedLabels()" class="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700">
-                    <svg class="inline-block h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Imprimir etiquetas
-                </button>
+            <div class="flex gap-3 items-center justify-between">
+                <div class="flex gap-3 items-center flex-1">
+                    <input type="text" placeholder="Buscar productos..." class="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900">
+                    
+                    <!-- Filtro de Categoría -->
+                    <form method="GET" class="inline">
+                        @foreach(request()->except(['category_id', 'subcategory_id', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <select name="category_id" onchange="this.form.submit(); document.getElementById('subcategoryFilter').value='';" class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <option value="">Todas las categorías</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                    
+                    <!-- Filtro de Subcategoría -->
+                    <form method="GET" class="inline">
+                        @foreach(request()->except(['subcategory_id', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <input type="hidden" name="category_id" value="{{ request('category_id') }}">
+                        <select name="subcategory_id" id="subcategoryFilter" onchange="this.form.submit()" class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <option value="">Todas las subcategorías</option>
+                            @if(request('category_id'))
+                                @foreach($subcategories->where('parent_id', request('category_id')) as $subcategory)
+                                    <option value="{{ $subcategory->id }}" {{ request('subcategory_id') == $subcategory->id ? 'selected' : '' }}>
+                                        {{ $subcategory->name }}
+                                    </option>
+                                @endforeach
+                            @else
+                                @foreach($subcategories as $subcategory)
+                                    <option value="{{ $subcategory->id }}" {{ request('subcategory_id') == $subcategory->id ? 'selected' : '' }}>
+                                        {{ $subcategory->parent->name ?? 'Sin categoría' }} - {{ $subcategory->name }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </form>
+                    
+                    <select class="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                        <option>Todos los estados</option>
+                        <option>Publicado</option>
+                        <option>Borrador</option>
+                        <option>Agotado</option>
+                    </select>
+                    <button onclick="printSelectedLabels()" class="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700">
+                        <svg class="inline-block h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        Imprimir etiquetas
+                    </button>
+                </div>
+                
+                <!-- Products per page selector -->
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Mostrar</label>
+                    <form method="GET" class="inline">
+                        @foreach(request()->except(['per_page', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endforeach
+                        <select name="per_page" onchange="this.form.submit()" class="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="15" {{ request('per_page') == 15 ? 'selected' : '' }}>15</option>
+                            <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
+                            <option value="30" {{ request('per_page') == 30 ? 'selected' : (request('per_page') ? '' : 'selected') }}>30</option>
+                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                        </select>
+                    </form>
+                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">productos</label>
+                </div>
             </div>
         </div>
 
@@ -201,13 +256,57 @@
             <div class="flex items-center justify-between border-t border-zinc-200 px-6 py-4 dark:border-zinc-700">
                 <p class="text-sm text-zinc-600 dark:text-zinc-400">
                     @if($products->total() > 0)
-                        Mostrando {{ $products->firstItem() }} de {{ $products->total() }} productos
+                        Mostrando {{ $products->firstItem() }} al {{ $products->lastItem() }} de {{ $products->total() }} productos
                     @else
                         Sin productos
                     @endif
                 </p>
-                <div class="flex gap-2">
-                    {{ $products->links() }}
+                <div class="flex items-center gap-2">
+                    <!-- Custom pagination -->
+                    @if($products->hasPages())
+                        <div class="flex items-center gap-1">
+                            <!-- Previous -->
+                            @if($products->onFirstPage())
+                                <span class="relative inline-flex items-center rounded-l-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                </span>
+                            @else
+                                <a href="{{ $products->previousPageUrl() }}" class="relative inline-flex items-center rounded-l-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                </a>
+                            @endif
+                            
+                            <!-- Page numbers -->
+                            @foreach($elements = $products->links()->elements as $element)
+                                @if(is_string($element))
+                                    <span class="relative inline-flex items-center border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ $element }}</span>
+                                @endif
+                                
+                                @if(is_object($element) && $element->url)
+                                    <a href="{{ $element->url }}" class="relative inline-flex items-center border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 {{ $element->page == $products->currentPage() ? 'z-10 bg-pink-50 border-pink-500 text-pink-600 dark:bg-pink-900/30 dark:border-pink-500 dark:text-pink-400' : '' }} dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                                        {{ $element->page }}
+                                    </a>
+                                @endif
+                                
+                                @if(is_object($element) && !$element->url)
+                                    <span class="relative inline-flex items-center border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                        {{ $element->page }}
+                                    </span>
+                                @endif
+                            @endforeach
+                            
+                            <!-- Next -->
+                            @if($products->hasMorePages())
+                                <a href="{{ $products->nextPageUrl() }}" class="relative inline-flex items-center rounded-r-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            @else
+                                <span class="relative inline-flex items-center rounded-r-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

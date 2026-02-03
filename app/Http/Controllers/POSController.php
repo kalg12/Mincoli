@@ -23,15 +23,31 @@ class POSController extends Controller
     /**
      * Dashboard de POS
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $categories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+        
+        // Obtener el número de productos por página desde la solicitud, default 30
+        $perPage = $request->get('per_page', 30);
+        
+        // Validar que el per_page sea un valor permitido
+        $allowedPerPage = [10, 20, 30, 50, 100];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 30;
+        }
         
         // Cargar productos con sus variantes e imagenes para el grid inicial
         $products = Product::where('is_active', true)
             ->with(['variants', 'images', 'category'])
             ->latest()
-            ->paginate(24);
+            ->paginate($perPage);
+            
+        // Transformar los productos para incluir image_url
+        $products->getCollection()->transform(function ($product) {
+            $product->image_url = $product->images->first()?->url 
+                ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->name) . '&background=27272a&color=a1a1aa&size=256';
+            return $product;
+        });
 
         $stats = [
             'today_sales' => POSTransaction::whereDate('created_at', today())
@@ -49,6 +65,7 @@ class POSController extends Controller
             'products' => $products,
             'stats' => $stats,
             'showIva' => $showIva,
+            'perPage' => $perPage,
         ]);
     }
 
@@ -210,6 +227,13 @@ class POSController extends Controller
     public function searchProduct(Request $request)
     {
         $query = $request->get('q');
+        $perPage = $request->get('per_page', 30);
+        
+        // Validar que el per_page sea un valor permitido
+        $allowedPerPage = [10, 20, 30, 50, 100];
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 30;
+        }
 
         $products = Product::where('is_active', true)
             ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
@@ -219,8 +243,14 @@ class POSController extends Controller
                     ->orWhere('name', 'like', "%$query%");
             })
             ->with(['variants', 'images'])
-            ->limit(48)
-            ->get();
+            ->paginate($perPage);
+            
+        // Transformar los productos para incluir image_url
+        $products->getCollection()->transform(function ($product) {
+            $product->image_url = $product->images->first()?->url 
+                ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->name) . '&background=27272a&color=a1a1aa&size=256';
+            return $product;
+        });
 
         return response()->json($products);
     }

@@ -7,12 +7,28 @@
             <div class="flex-1 flex flex-col min-w-0">
                 <!-- Top Header: Search & Info -->
                 <div class="p-3 bg-zinc-900 border-b border-zinc-800">
-                    <div class="relative max-w-2xl mx-auto">
-                        <input type="text" x-model="search" @input.debounce.300ms="filterProducts()"
-                            placeholder="Buscar productos..."
-                            class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-4 py-2 pl-10 text-sm text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5">
-                            <i class="fas fa-search text-zinc-400 text-sm"></i>
+                    <div class="flex items-center gap-4 max-w-4xl mx-auto">
+                        <div class="relative flex-1">
+                            <input type="text" x-model="search" @input.debounce.300ms="filterProducts()"
+                                placeholder="Buscar productos..."
+                                class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-4 py-2 pl-10 text-sm text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5">
+                                <i class="fas fa-search text-zinc-400 text-sm"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Products per page selector -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-bold uppercase text-zinc-500 tracking-widest">Mostrar</label>
+                            <select x-model="perPage" @change="updatePerPage()" 
+                                    class="rounded-lg bg-zinc-950 border-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <label class="text-xs font-bold uppercase text-zinc-500 tracking-widest">productos</label>
                         </div>
                     </div>
                 </div>
@@ -41,14 +57,14 @@
                         <template x-for="product in filteredProducts" :key="product.id">
                             <div @click="handleProductClick(product)" 
                                 class="group bg-zinc-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all flex flex-col border border-zinc-800 shadow-lg cursor-pointer">
-                                <!-- Product Image -->
-                                <div class="aspect-square bg-zinc-800 relative overflow-hidden flex items-center justify-center">
-                                     <img :src="product.image_url" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" :alt="product.name" 
-                                          x-on:error="$el.src = 'https://ui-avatars.com/api/?name='+product.name+'&background=27272a&color=a1a1aa&size=256'">
-                                     <div x-show="product.variants.length > 0" class="absolute top-2 right-2 bg-zinc-950/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase text-zinc-400 border border-zinc-800">
-                                        <span x-text="product.variants.length"></span> VARS
-                                     </div>
-                                </div>
+                                 <!-- Product Image -->
+                                 <div class="aspect-square bg-zinc-800 relative overflow-hidden flex items-center justify-center">
+                                      <img :src="product.image_url" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" :alt="product.name" 
+                                           x-on:error="$el.src = 'https://ui-avatars.com/api/?name='+encodeURIComponent(product.name)+'&background=27272a&color=a1a1aa&size=256'">
+                                      <div x-show="product.variants && product.variants.length > 0" class="absolute top-2 right-2 bg-zinc-950/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase text-zinc-400 border border-zinc-800">
+                                         <span x-text="product.variants.length"></span> VARS
+                                      </div>
+                                 </div>
                                 <!-- Product Info -->
                                 <div class="p-3 flex-1 flex flex-col justify-between">
                                     <div>
@@ -77,9 +93,49 @@
                          <p class="text-xs font-black uppercase tracking-[0.2em] opacity-40">Buscando productos...</p>
                     </div>
 
-                    <div x-show="filteredProducts.length === 0 && !isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-700">
+                     <div x-show="filteredProducts.length === 0 && !isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-700">
                         <i class="fas fa-box-open text-5xl mb-4 opacity-20"></i>
                         <p class="text-xs font-black uppercase tracking-[0.2em] opacity-40">No se encontraron productos</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div x-show="lastPage > 1" class="mt-6 border-t border-zinc-800 pt-4">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-zinc-500">
+                                <span x-text="totalProducts"></span> productos totales
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button @click="prevPage()" :disabled="currentPage <= 1"
+                                        class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-bold uppercase">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                
+                                <div class="flex items-center gap-1">
+                                    <template x-for="page in Math.min(lastPage, 5)" :key="page">
+                                        <button @click="goToPage(page)"
+                                                :class="currentPage === page ? 'bg-pink-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'"
+                                                class="w-8 h-8 rounded-lg text-xs font-bold transition-all">
+                                            <span x-text="page"></span>
+                                        </button>
+                                    </template>
+                                    
+                                    <span x-show="lastPage > 5" class="text-zinc-500 text-xs px-2">...</span>
+                                    
+                                    <template x-for="page in Math.max(0, lastPage - 2)" :key="'last-' + page">
+                                        <button @click="goToPage(page)"
+                                                :class="currentPage === page ? 'bg-pink-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'"
+                                                class="w-8 h-8 rounded-lg text-xs font-bold transition-all">
+                                            <span x-text="page"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                                
+                                <button @click="nextPage()" :disabled="currentPage >= lastPage"
+                                        class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-bold uppercase">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -400,24 +456,37 @@
                 activeCategoryId: null,
                 isLoading: false,
                 isExporting: false, // Flag for export visibility
-                products: @json($products->items()),
+                 products: @json($products->items()),
                 cart: [],
                 showIva: {{ $showIva ? 'true' : 'false' }},
-                
-                // Variants logic
-                variantModal: false,
-                selectingProduct: null,
-                
-                // Customer logic
-                customerSearch: '',
-                customerResults: [],
-                linkedCustomer: null,
-                manualCustomerMode: false,
-                manualCustomer: { name: '', phone: '' },
-                
-                // Image Preview (Clipboard Fallback)
-                previewModal: false,
-                previewImage: null,
+                 perPage: {{ $perPage }},
+                 currentPage: {{ $products->currentPage() }},
+                 lastPage: {{ $products->lastPage() }},
+                 totalProducts: {{ $products->total() }},
+
+                 async updatePerPage() {
+                    this.currentPage = 1;
+                    await this.filterProducts();
+                 },
+
+                 async goToPage(page) {
+                    this.currentPage = page;
+                    await this.filterProducts();
+                 },
+
+                 async nextPage() {
+                    if (this.currentPage < this.lastPage) {
+                        this.currentPage++;
+                        await this.filterProducts();
+                    }
+                 },
+
+                 async prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        await this.filterProducts();
+                    }
+                 },
 
                  async filterProducts() {
                     // Si no hay busqueda ni categoria, podemos recargar los productos iniciales
@@ -425,10 +494,23 @@
                     try {
                         const params = new URLSearchParams({
                             q: this.search,
-                            category_id: this.activeCategoryId || ''
+                            category_id: this.activeCategoryId || '',
+                            per_page: this.perPage || 30,
+                            page: this.currentPage || 1
                         });
                         const resp = await fetch(`{{ route('dashboard.pos.searchProduct') }}?${params.toString()}`);
-                        this.products = await resp.json();
+                        const result = await resp.json();
+                        
+                        if (result.data) {
+                            // Es una respuesta paginada
+                            this.products = result.data;
+                            this.currentPage = result.current_page;
+                            this.lastPage = result.last_page;
+                            this.totalProducts = result.total;
+                        } else {
+                            // Es un array simple (búsqueda normal)
+                            this.products = result;
+                        }
                     } catch (e) {
                         console.error('Error searching products', e);
                     } finally {
