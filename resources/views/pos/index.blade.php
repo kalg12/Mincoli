@@ -197,33 +197,6 @@
                                                     </button>
                                                 </li>
                                             </template>
-                                            <!-- Fallback for manual entry -->
-                                            <li x-show="customerResults.length === 0 && customerSearch.length > 0">
-                                                <button @click="manualCustomerMode = true; manualCustomer.name = customerSearch; customerSearch = ''" 
-                                                        class="w-full text-left p-3 hover:bg-zinc-800 transition-colors flex items-center gap-2 group">
-                                                    <div class="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-pink-600 text-white flex items-center justify-center transition-colors">
-                                                        <i class="fas fa-user-plus text-xs"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="text-xs font-bold text-zinc-400 group-hover:text-white">Usar como Cliente Temporal</div>
-                                                        <div class="text-[10px] text-zinc-600 group-hover:text-zinc-400" x-text="'Nombre/Tel: ' + customerSearch"></div>
-                                                    </div>
-                                                </button>
-                                            </li>
-                                            
-                                            <!-- Always show manual entry option -->
-                                            <li>
-                                                <button @click="manualCustomerMode = true; manualCustomer = { name: '', phone: '' }; customerSearch = ''" 
-                                                        class="w-full text-left p-3 hover:bg-pink-600/10 transition-colors flex items-center gap-2 group">
-                                                    <div class="w-8 h-8 rounded-full bg-pink-600/20 group-hover:bg-pink-600 text-pink-400 group-hover:text-white flex items-center justify-center transition-colors">
-                                                        <i class="fas fa-user-plus text-xs"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="text-xs font-bold text-pink-400 group-hover:text-white">Agregar Nuevo Cliente Manualmente</div>
-                                                        <div class="text-[10px] text-zinc-600 group-hover:text-zinc-400">Ingresa nombre y celular</div>
-                                                    </div>
-                                                </button>
-                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -404,9 +377,9 @@
         </div>
     <!-- Hidden Quotation Template for Export -->
     <div id="quotation-template" 
-         class="fixed left-0 top-0 bg-white p-10 w-[600px] leading-tight pointer-events-none" 
-         :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + ';'"
-         style="font-family: 'Inter', sans-serif; color: #18181b;">
+         class="fixed bg-white p-10 w-[600px] leading-tight pointer-events-none" 
+         :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + '; left: ' + (isExporting ? '0' : '-9999px') + '; top: ' + (isExporting ? '0' : '-9999px') + ';'"
+         style="font-family: 'Inter', sans-serif; color: #18181b; left: -9999px; top: -9999px;">
          <div class="flex justify-between items-center pb-6" style="border-bottom: 2px solid #ec4899;">
              <div>
                  <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="h-16 w-auto mb-2 object-contain">
@@ -505,16 +478,64 @@
                 activeSubcategoryId: null,
                 isLoading: false,
                 isExporting: false,
-                products: @json($products->items()),
-                categories: @json($categories),
-                cart: [],
-                showIva: {{ $showIva ? 'true' : 'false' }},
-                perPage: {{ $perPage }},
-                currentPage: {{ $products->currentPage() }},
-                lastPage: {{ $products->lastPage() }},
-                totalProducts: {{ $products->total() }},
+                 products: @json($products->items()),
+                 categories: @json($categories),
+                 cart: [],
+                 showIva: {{ $showIva ? 'true' : 'false' }},
+                 perPage: {{ $perPage }},
+                 currentPage: {{ $products->currentPage() }},
+                 lastPage: {{ $products->lastPage() }},
+                 totalProducts: {{ $products->total() }},
 
-                async updatePerPage() {
+                 // Customer logic
+                 customerSearch: '',
+                 customerResults: [],
+                 linkedCustomer: null,
+                 manualCustomerMode: false,
+                 manualCustomer: { name: '', phone: '' },
+
+                 // Initialize customer data from localStorage
+                 init() {
+                     try {
+                         // Load persisted customer data
+                         const savedCustomer = localStorage.getItem('posLinkedCustomer');
+                         const savedManualCustomer = localStorage.getItem('posManualCustomer');
+                         const savedManualMode = localStorage.getItem('posManualCustomerMode');
+                         
+                         if (savedCustomer) {
+                             this.linkedCustomer = JSON.parse(savedCustomer);
+                         }
+                         
+                         if (savedManualCustomer) {
+                             this.manualCustomer = JSON.parse(savedManualCustomer);
+                         }
+                         
+                         if (savedManualMode === 'true') {
+                             this.manualCustomerMode = true;
+                         }
+                         
+                         // Watch for changes and save to localStorage
+                         this.$watch('linkedCustomer', (value) => {
+                             if (value) {
+                                 localStorage.setItem('posLinkedCustomer', JSON.stringify(value));
+                             } else {
+                                 localStorage.removeItem('posLinkedCustomer');
+                             }
+                         });
+                         
+                         this.$watch('manualCustomer', (value) => {
+                             localStorage.setItem('posManualCustomer', JSON.stringify(value));
+                         });
+                         
+                         this.$watch('manualCustomerMode', (value) => {
+                             localStorage.setItem('posManualCustomerMode', value);
+                         });
+                     } catch (e) {
+                         console.error('Error initializing customer data:', e);
+                     }
+                 },
+
+                 async updatePerPage() {
                     this.currentPage = 1;
                     await this.filterProducts();
                 },
@@ -688,14 +709,18 @@
                     this.cart.splice(index, 1);
                 },
 
-                clearCart() {
-                    if (confirm('¿Estás seguro de vaciar el carrito?')) {
-                        this.cart = [];
-                        this.linkedCustomer = null;
-                        this.manualCustomer = { name: '', phone: '' };
-                        this.manualCustomerMode = false;
-                    }
-                },
+                 clearCart() {
+                     if (confirm('¿Estás seguro de vaciar el carrito?')) {
+                         this.cart = [];
+                         this.linkedCustomer = null;
+                         this.manualCustomer = { name: '', phone: '' };
+                         this.manualCustomerMode = false;
+                         // Clear localStorage
+                         localStorage.removeItem('posLinkedCustomer');
+                         localStorage.removeItem('posManualCustomer');
+                         localStorage.removeItem('posManualCustomerMode');
+                     }
+                 },
 
                 async searchCustomers() {
                     if (this.customerSearch.length < 3) {
@@ -886,6 +911,10 @@
                                 this.manualCustomer = { name: '', phone: '' };
                                 this.manualCustomerMode = false;
                                 this.customerSearch = '';
+                                // Clear localStorage
+                                localStorage.removeItem('posLinkedCustomer');
+                                localStorage.removeItem('posManualCustomer');
+                                localStorage.removeItem('posManualCustomerMode');
                             }
                         } else {
                             alert('Error: ' + result.message);
