@@ -17,6 +17,9 @@ class ShopController extends Controller
             
         $parentCategories = Category::where('is_active', true)
             ->whereNull('parent_id')
+            ->with(['children' => function($q) {
+                $q->where('is_active', true)->withCount('subcategoryProducts');
+            }])
             ->withCount('products')
             ->get();
 
@@ -99,6 +102,14 @@ class ShopController extends Controller
             ->withCount('products')
             ->get();
 
+        $parentCategories = Category::where('is_active', true)
+            ->whereNull('parent_id')
+            ->with(['children' => function($q) {
+                $q->where('is_active', true)->withCount('subcategoryProducts');
+            }])
+            ->withCount('products')
+            ->get();
+
         $products = Product::where('is_active', true)
             ->where('category_id', $category->id)
             ->with(['images', 'category', 'variants'])
@@ -138,7 +149,7 @@ class ShopController extends Controller
         
         $currentCategory = $category;
 
-        return view('shop.index', compact('categories', 'products', 'currentCategory', 'subcategories'));
+        return view('shop.index', compact('categories', 'products', 'currentCategory', 'subcategories', 'parentCategories'));
     }
 
     public function product($slug)

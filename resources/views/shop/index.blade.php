@@ -22,15 +22,15 @@
         </aside>
 
         <!-- Mobile Filter Button -->
-        <button id="mobile-filter-btn" class="lg:hidden fixed bottom-4 right-4 z-40 bg-pink-600 text-white px-6 py-3 rounded-full shadow-lg font-bold flex items-center gap-2 hover:bg-pink-700 transition-all transform hover:scale-105">
+        <button id="mobile-filter-btn" class="lg:hidden fixed top-4 right-4 z-40 bg-pink-600 text-white px-4 py-2 rounded-lg shadow-lg font-bold flex items-center gap-2 hover:bg-pink-700 transition-all transform hover:scale-105">
             <i class="fas fa-filter"></i> FILTROS
         </button>
 
         <!-- Mobile Filter Drawer overlay -->
-        <div id="mobile-filter-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden lg:hidden transition-opacity duration-300 opacity-0"></div>
+        <div id="mobile-filter-overlay" class="fixed inset-0 bg-black/25 backdrop-blur-sm z-50 hidden lg:hidden transition-opacity duration-300 opacity-0"></div>
 
         <!-- Mobile Filter Drawer -->
-        <div id="mobile-filter-drawer" class="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto">
+        <div id="mobile-filter-drawer" class="fixed inset-y-0 right-0 w-[70%] max-w-md bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto">
             <div class="p-4">
                @include('shop.partials.filters')
             </div>

@@ -29,6 +29,14 @@ class Category extends Model
     }
 
     /**
+     * Get all products where this category is used as subcategory
+     */
+    public function subcategoryProducts(): HasMany
+    {
+        return $this->hasMany(Product::class, 'subcategory_id');
+    }
+
+    /**
      * Get all inventory movements for products in this category
      */
     public function inventoryMovements(): HasManyThrough
