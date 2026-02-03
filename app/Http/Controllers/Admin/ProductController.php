@@ -303,6 +303,26 @@ class ProductController extends Controller
         return back()->with('success', $product->is_featured ? 'Producto marcado como destacado' : 'Producto desmarcado como destacado');
     }
 
+    public function toggleActive($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->is_active = !$product->is_active;
+        
+        // Sync status with is_active
+        if ($product->is_active) {
+            $product->status = 'published';
+        } else {
+            // Keep existing status if it was out_of_stock, otherwise set to draft
+            if ($product->status !== 'out_of_stock') {
+                $product->status = 'draft';
+            }
+        }
+        
+        $product->save();
+
+        return back()->with('success', $product->is_active ? 'Producto activado correctamente' : 'Producto desactivada correctamente');
+    }
+
     public function storeVariant(Request $request, $productId)
     {
         $product = Product::findOrFail($productId);

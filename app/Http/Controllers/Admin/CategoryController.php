@@ -86,6 +86,15 @@ class CategoryController extends Controller
             ->with('success', 'Categoría actualizada correctamente');
     }
 
+    public function toggleActive($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->is_active = !$category->is_active;
+        $category->save();
+
+        return back()->with('success', $category->is_active ? 'Categoría activada correctamente' : 'Categoría desactivada correctamente');
+    }
+
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
