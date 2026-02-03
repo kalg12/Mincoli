@@ -10,6 +10,12 @@
                     <a href="{{ route('dashboard.products.trash') }}" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900">
                         Papelera
                     </a>
+                    
+                    <!-- Template Download Link (invisible, used by JS) -->
+                    <button onclick="window.dispatchEvent(new CustomEvent('open-import-modal'))" class="rounded-lg border border-dashed border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-500 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                        <i class="fas fa-file-import mr-2"></i> Importar
+                    </button>
+
                     <a href="{{ route('dashboard.products.create') }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-zinc-900">
                         Nuevo producto
                     </a>
@@ -206,6 +212,8 @@
             </div>
         </div>
     </div>
+
+    <livewire:admin.products.import-modal />
 
     <script>
         function toggleAllCheckboxes(source) {
