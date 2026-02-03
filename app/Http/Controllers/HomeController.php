@@ -32,6 +32,9 @@ class HomeController extends Controller
         }
 
         $featuredProducts = Product::where('is_active', true)
+            ->whereHas('category', function($q) {
+                $q->where('is_active', true);
+            })
             ->where('is_featured', true)
             ->with(['images', 'category', 'variants'])
             ->where(function($q) {

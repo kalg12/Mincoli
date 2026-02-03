@@ -37,6 +37,9 @@ class ShopController extends Controller
         }
 
         $query = Product::where('is_active', true)
+            ->whereHas('category', function($q) {
+                $q->where('is_active', true);
+            })
             ->with(['images', 'category', 'variants'])
             ->where(function($q) {
                 // Products with variants: at least one variant must have stock
@@ -175,6 +178,9 @@ class ShopController extends Controller
         $words = array_filter(explode(' ', $query));
 
         $products = Product::where('is_active', true)
+            ->whereHas('category', function($q) {
+                $q->where('is_active', true);
+            })
             ->with(['images', 'category', 'variants'])
             ->where(function ($q) use ($query, $words) {
                 // Búsqueda inteligente
@@ -287,6 +293,9 @@ class ShopController extends Controller
     {
         $product = Product::where('slug', $slug)
             ->where('is_active', true)
+            ->whereHas('category', function($q) {
+                $q->where('is_active', true);
+            })
             ->with(['images', 'category', 'variants'])
             ->firstOrFail();
 
