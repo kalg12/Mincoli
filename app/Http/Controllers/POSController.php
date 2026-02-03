@@ -25,7 +25,14 @@ class POSController extends Controller
      */
     public function index(Request $request): View
     {
-        $categories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+        // Obtener categorías con sus subcategorías
+        $categories = \App\Models\Category::whereNull('parent_id')
+            ->where('is_active', true)
+            ->with(['children' => function($query) {
+                $query->where('is_active', true)->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get();
         
         // Obtener el número de productos por página desde la solicitud, default 30
         $perPage = $request->get('per_page', 30);
@@ -41,6 +48,13 @@ class POSController extends Controller
             ->with(['variants', 'images', 'category'])
             ->latest()
             ->paginate($perPage);
+            
+        // Transformar los productos para incluir image_url
+        $products->getCollection()->transform(function ($product) {
+            $product->image_url = $product->images->first()?->url 
+                ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->name) . '&background=27272a&color=a1a1aa&size=256';
+            return $product;
+        });
 
         $stats = [
             'today_sales' => POSTransaction::whereDate('created_at', today())

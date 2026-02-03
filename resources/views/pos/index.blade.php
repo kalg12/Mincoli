@@ -198,7 +198,7 @@
                                                 </li>
                                             </template>
                                             <!-- Fallback for manual entry -->
-                                            <li x-show="customerResults.length === 0 || customerSearch.length > 0">
+                                            <li x-show="customerResults.length === 0 && customerSearch.length > 0">
                                                 <button @click="manualCustomerMode = true; manualCustomer.name = customerSearch; customerSearch = ''" 
                                                         class="w-full text-left p-3 hover:bg-zinc-800 transition-colors flex items-center gap-2 group">
                                                     <div class="w-8 h-8 rounded-full bg-zinc-800 group-hover:bg-pink-600 text-white flex items-center justify-center transition-colors">
@@ -207,6 +207,20 @@
                                                     <div>
                                                         <div class="text-xs font-bold text-zinc-400 group-hover:text-white">Usar como Cliente Temporal</div>
                                                         <div class="text-[10px] text-zinc-600 group-hover:text-zinc-400" x-text="'Nombre/Tel: ' + customerSearch"></div>
+                                                    </div>
+                                                </button>
+                                            </li>
+                                            
+                                            <!-- Always show manual entry option -->
+                                            <li>
+                                                <button @click="manualCustomerMode = true; manualCustomer = { name: '', phone: '' }; customerSearch = ''" 
+                                                        class="w-full text-left p-3 hover:bg-pink-600/10 transition-colors flex items-center gap-2 group">
+                                                    <div class="w-8 h-8 rounded-full bg-pink-600/20 group-hover:bg-pink-600 text-pink-400 group-hover:text-white flex items-center justify-center transition-colors">
+                                                        <i class="fas fa-user-plus text-xs"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-xs font-bold text-pink-400 group-hover:text-white">Agregar Nuevo Cliente Manualmente</div>
+                                                        <div class="text-[10px] text-zinc-600 group-hover:text-zinc-400">Ingresa nombre y celular</div>
                                                     </div>
                                                 </button>
                                             </li>
@@ -271,21 +285,21 @@
                             </div>
 
                             <div class="mt-3 flex items-center justify-between">
-                                <!-- Quantity Controls -->
-                                <div class="flex items-center bg-zinc-900 rounded-lg p-1 border border-zinc-800 shadow-inner gap-1">
-                                    <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center bg-zinc-800 text-zinc-300 hover:bg-pink-600 hover:text-white rounded-md transition-all">
-                                        <i class="fas fa-minus text-xs"></i>
-                                    </button>
-                                    <span class="w-8 text-center text-sm font-black text-white" x-text="item.quantity"></span>
-                                    <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center bg-zinc-800 text-zinc-300 hover:bg-pink-600 hover:text-white rounded-md transition-all">
-                                        <i class="fas fa-plus text-xs"></i>
-                                    </button>
-                                </div>
+                                 <!-- Quantity Controls -->
+                                 <div class="flex items-center bg-zinc-900 rounded-lg p-1 border border-zinc-800 shadow-inner">
+                                     <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-pink-600 rounded transition-all text-sm font-bold">
+                                         −
+                                     </button>
+                                     <span class="w-8 text-center text-sm font-black text-white" x-text="item.quantity"></span>
+                                     <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-pink-600 rounded transition-all text-sm font-bold">
+                                         +
+                                     </button>
+                                 </div>
 
-                                <!-- Actions -->
-                                <button @click="removeFromCart(index)" class="w-8 h-8 flex items-center justify-center bg-zinc-800 text-zinc-500 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-zinc-700 hover:border-red-600">
-                                    <i class="fas fa-trash-alt text-xs"></i>
-                                </button>
+                                 <!-- Actions -->
+                                 <button @click="removeFromCart(index)" class="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-red-600 rounded-lg transition-all border border-zinc-700 hover:border-red-600 text-sm font-bold">
+                                     ×
+                                 </button>
                             </div>
                         </div>
                     </template>
@@ -393,16 +407,16 @@
          class="fixed left-0 top-0 bg-white p-10 w-[600px] leading-tight pointer-events-none" 
          :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + ';'"
          style="font-family: 'Inter', sans-serif; color: #18181b;">
-        <div class="flex justify-between items-center pb-6" style="border-bottom: 2px solid #ec4899;">
-            <div>
-                <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="h-12 w-auto mb-2">
-                <p class="text-xs font-bold uppercase tracking-widest" style="color: #71717a;">Tienda Online</p>
-            </div>
-            <div class="text-right">
-                <h2 class="text-xl font-black uppercase" style="color: #db2777;">Cotización</h2>
-                <p class="text-[10px] font-bold" style="color: #71717a;" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
-            </div>
-        </div>
+         <div class="flex justify-between items-center pb-6" style="border-bottom: 2px solid #ec4899;">
+             <div>
+                 <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="h-16 w-auto mb-2 object-contain">
+                 <p class="text-xs font-bold uppercase tracking-widest" style="color: #71717a;">Tienda Online</p>
+             </div>
+             <div class="text-right">
+                 <h2 class="text-xl font-black uppercase" style="color: #db2777;">Cotización</h2>
+                 <p class="text-[10px] font-bold" style="color: #71717a;" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
+             </div>
+         </div>
 
         <div class="mt-8 grid grid-cols-2 gap-8">
             <div>
@@ -517,14 +531,33 @@
                     }
                 },
 
-                async prevPage() {
+                 async prevPage() {
                     if (this.currentPage > 1) {
                         this.currentPage--;
                         await this.filterProducts();
                     }
                 },
 
-                async filterProducts() {
+                setCategory(id) {
+                    this.activeCategoryId = id;
+                    this.activeSubcategoryId = null; // Reset subcategory when changing category
+                    this.currentPage = 1;
+                    this.filterProducts();
+                },
+
+                setSubcategory(id) {
+                    this.activeSubcategoryId = id;
+                    this.currentPage = 1;
+                    this.filterProducts();
+                },
+
+                getSubcategories() {
+                    if (!this.activeCategoryId) return [];
+                    const category = this.categories.find(cat => cat.id === this.activeCategoryId);
+                    return category ? category.children || [] : [];
+                },
+
+                 async filterProducts() {
                     this.isLoading = true;
                     try {
                         const params = new URLSearchParams({
