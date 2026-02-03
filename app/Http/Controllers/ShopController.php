@@ -154,7 +154,7 @@ class ShopController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->get('q', '');
+        $query = trim($request->get('q', ''));
         
         if (empty($query)) {
             return redirect()->route('shop');
@@ -172,30 +172,62 @@ class ShopController extends Controller
             ->withCount('products')
             ->get();
 
+        $words = array_filter(explode(' ', $query));
+
         $products = Product::where('is_active', true)
             ->with(['images', 'category', 'variants'])
-            ->where(function ($q) use ($query) {
-                // Búsqueda exacta primero (SKU y Barcode)
-                $q->where('sku', 'like', "%{$query}%")
-                  ->orWhere('barcode', 'like', "%{$query}%")
-                  // Búsqueda en nombre y descripción
-                  ->orWhere('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  // Búsqueda en variantes
-                  ->orWhereHas('variants', function ($variantQuery) use ($query) {
-                      $variantQuery->where('name', 'like', "%{$query}%")
-                                  ->orWhere('sku', 'like', "%{$query}%")
-                                  ->orWhere('barcode', 'like', "%{$query}%")
-                                  ->orWhere('size', 'like', "%{$query}%")
-                                  ->orWhere('color', 'like', "%{$query}%");
-                  });
+            ->where(function ($q) use ($query, $words) {
+                // Búsqueda inteligente
+                $q->where(function($sub) use ($query, $words) {
+                    // Primero intentamos coincidencia exacta de la frase completa
+                    $sub->where('name', 'like', "%{$query}%")
+                        ->orWhere('sku', 'like', "%{$query}%")
+                        ->orWhere('barcode', 'like', "%{$query}%")
+                        ->orWhere('description', 'like', "%{$query}%");
+
+                    // Si hay varias palabras, buscamos que aparezcan todas (más exacto)
+                    if (count($words) > 1) {
+                        $sub->orWhere(function($andQuery) use ($words) {
+                            foreach ($words as $word) {
+                                if (strlen($word) < 2) continue;
+                                $andQuery->where(function($wordSub) use ($word) {
+                                    $wordSub->where('name', 'like', "%{$word}%")
+                                            ->orWhere('sku', 'like', "%{$word}%")
+                                            ->orWhere('description', 'like', "%{$word}%");
+                                });
+                            }
+                        });
+                    }
+                })
+                // Búsqueda en variantes
+                ->orWhereHas('variants', function ($variantQuery) use ($query, $words) {
+                    $variantQuery->where(function($vSub) use ($query, $words) {
+                        $vSub->where('name', 'like', "%{$query}%")
+                             ->orWhere('sku', 'like', "%{$query}%")
+                             ->orWhere('barcode', 'like', "%{$query}%")
+                             ->orWhere('color', 'like', "%{$query}%")
+                             ->orWhere('size', 'like', "%{$query}%");
+
+                        if (count($words) > 1) {
+                            $vSub->orWhere(function($vAnd) use ($words) {
+                                foreach ($words as $word) {
+                                    if (strlen($word) < 2) continue;
+                                    $vAnd->where(function($vw) use ($word) {
+                                        $vw->where('name', 'like', "%{$word}%")
+                                           ->orWhere('sku', 'like', "%{$word}%")
+                                           ->orWhere('color', 'like', "%{$word}%");
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
             })
             ->where(function($q) {
-                // Products with variants: at least one variant must have stock
+                // Solo productos con stock
                 $q->whereHas('variants', function($variantQuery) {
                     $variantQuery->where('stock', '>', 0);
                 })
-                // Products without variants: product itself must have stock
                 ->orWhere(function($noVariantQuery) {
                     $noVariantQuery->whereDoesntHave('variants')
                         ->where('stock', '>', 0);
@@ -203,12 +235,14 @@ class ShopController extends Controller
             })
             ->orderByRaw("
                 CASE 
-                    WHEN sku LIKE ? THEN 1
-                    WHEN barcode LIKE ? THEN 1
-                    WHEN name LIKE ? THEN 2
-                    ELSE 3
+                    WHEN sku = ? THEN 1
+                    WHEN sku LIKE ? THEN 2
+                    WHEN name = ? THEN 3
+                    WHEN name LIKE ? THEN 4
+                    WHEN name LIKE ? THEN 5
+                    ELSE 6
                 END
-            ", ["%{$query}%", "%{$query}%", "%{$query}%"]);
+            ", [$query, "{$query}%", $query, "{$query}%", "%{$query}%"]);
 
         // Aplicar filtros adicionales si existen
         if ($request->has('category')) {
