@@ -134,7 +134,7 @@ class Product extends Model
     {
         $image = $this->images->first();
         if ($image) {
-            return asset('storage/' . $image->path);
+            return $image->url;
         }
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=111&color=fff&size=512';
     }

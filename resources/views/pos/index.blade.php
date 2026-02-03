@@ -34,20 +34,41 @@
                 </div>
 
                 <!-- Category Navigation -->
-                <div class="px-3 py-2 bg-zinc-900 border-b border-zinc-800 overflow-x-auto no-scrollbar">
-                    <div class="flex gap-1.5">
-                        <button @click="setCategory(null)" 
-                            :class="activeCategoryId === null ? 'bg-pink-600 text-white shadow-pink-500/20' : 'bg-zinc-800 text-zinc-400 hover:text-white'"
-                            class="px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap">
-                            Todo
-                        </button>
-                        @foreach($categories as $category)
-                            <button @click="setCategory({{ $category->id }})"
-                                :class="activeCategoryId === {{ $category->id }} ? 'bg-pink-600 text-white shadow-pink-500/20' : 'bg-zinc-800 text-zinc-400 hover:text-white'"
-                                class="px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap">
-                                {{ $category->name }}
+                <div class="bg-zinc-900 border-b border-zinc-800">
+                    <!-- Parent Categories (Tabs) -->
+                    <div class="px-3 overflow-x-auto no-scrollbar border-b border-zinc-800/50">
+                        <div class="flex gap-4">
+                            <button @click="setCategory(null)" 
+                                :class="activeCategoryId === null ? 'text-pink-500 border-pink-500' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
+                                class="py-3 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border-b-2">
+                                Todo
                             </button>
-                        @endforeach
+                            @foreach($categories as $category)
+                                <button @click="setCategory({{ $category->id }})"
+                                    :class="activeCategoryId === {{ $category->id }} ? 'text-pink-500 border-pink-500' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
+                                    class="py-3 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border-b-2">
+                                    {{ $category->name }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                    
+                    <!-- Subcategories (Pills) -->
+                    <div class="px-3 py-2 overflow-x-auto no-scrollbar bg-zinc-950/30" x-show="activeCategoryId !== null && getSubcategories().length > 0">
+                        <div class="flex gap-2">
+                            <button @click="setSubcategory(null)"
+                                :class="activeSubcategoryId === null ? 'bg-zinc-800 text-white border border-zinc-700' : 'bg-transparent text-zinc-500 border border-transparent hover:text-zinc-300'"
+                                class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap">
+                                Ver Todo
+                            </button>
+                            <template x-for="sub in getSubcategories()" :key="sub.id">
+                                <button @click="setSubcategory(sub.id)"
+                                    :class="activeSubcategoryId === sub.id ? 'bg-zinc-800 text-pink-500 border border-pink-500/30' : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:border-zinc-700'"
+                                    class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap"
+                                    x-text="sub.name">
+                                </button>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
@@ -56,13 +77,13 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                         <template x-for="product in filteredProducts" :key="product.id">
                             <div @click="handleProductClick(product)" 
-                                class="group bg-zinc-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all flex flex-col border border-zinc-800 shadow-lg cursor-pointer">
+                                class="group bg-zinc-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all flex flex-col border border-zinc-800 shadow-lg cursor-pointer h-full">
                                  <!-- Product Image -->
-                                 <div class="aspect-square bg-zinc-800 relative overflow-hidden flex items-center justify-center">
-                                      <img :src="product.image_url" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" :alt="product.name" 
-                                           x-on:error="$el.src = 'https://ui-avatars.com/api/?name='+encodeURIComponent(product.name)+'&background=27272a&color=a1a1aa&size=256'">
-                                      <div x-show="product.variants && product.variants.length > 0" class="absolute top-2 right-2 bg-zinc-950/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase text-zinc-400 border border-zinc-800">
-                                         <span x-text="product.variants.length"></span> VARS
+                                 <div class="aspect-[4/3] bg-white relative overflow-hidden flex items-center justify-center">
+                                      <img :src="product.image_url" class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500" :alt="product.name" 
+                                           loading="lazy">
+                                      <div x-show="product.variants && product.variants.length > 0" class="absolute top-2 right-2 bg-zinc-950/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase text-zinc-400 border border-zinc-800 shadow-sm">
+                                         <span x-text="product.variants.length"></span> Opcs
                                       </div>
                                  </div>
                                 <!-- Product Info -->
@@ -454,47 +475,49 @@
             return {
                 search: '',
                 activeCategoryId: null,
+                activeSubcategoryId: null,
                 isLoading: false,
-                isExporting: false, // Flag for export visibility
-                 products: @json($products->items()),
+                isExporting: false,
+                products: @json($products->items()),
+                categories: @json($categories),
                 cart: [],
                 showIva: {{ $showIva ? 'true' : 'false' }},
-                 perPage: {{ $perPage }},
-                 currentPage: {{ $products->currentPage() }},
-                 lastPage: {{ $products->lastPage() }},
-                 totalProducts: {{ $products->total() }},
+                perPage: {{ $perPage }},
+                currentPage: {{ $products->currentPage() }},
+                lastPage: {{ $products->lastPage() }},
+                totalProducts: {{ $products->total() }},
 
-                 async updatePerPage() {
+                async updatePerPage() {
                     this.currentPage = 1;
                     await this.filterProducts();
-                 },
+                },
 
-                 async goToPage(page) {
+                async goToPage(page) {
                     this.currentPage = page;
                     await this.filterProducts();
-                 },
+                },
 
-                 async nextPage() {
+                async nextPage() {
                     if (this.currentPage < this.lastPage) {
                         this.currentPage++;
                         await this.filterProducts();
                     }
-                 },
+                },
 
-                 async prevPage() {
+                async prevPage() {
                     if (this.currentPage > 1) {
                         this.currentPage--;
                         await this.filterProducts();
                     }
-                 },
+                },
 
-                 async filterProducts() {
-                    // Si no hay busqueda ni categoria, podemos recargar los productos iniciales
+                async filterProducts() {
                     this.isLoading = true;
                     try {
                         const params = new URLSearchParams({
                             q: this.search,
                             category_id: this.activeCategoryId || '',
+                            subcategory_id: this.activeSubcategoryId || '',
                             per_page: this.perPage || 30,
                             page: this.currentPage || 1
                         });
@@ -502,13 +525,11 @@
                         const result = await resp.json();
                         
                         if (result.data) {
-                            // Es una respuesta paginada
                             this.products = result.data;
                             this.currentPage = result.current_page;
                             this.lastPage = result.last_page;
                             this.totalProducts = result.total;
                         } else {
-                            // Es un array simple (búsqueda normal)
                             this.products = result;
                         }
                     } catch (e) {
@@ -519,30 +540,25 @@
                 },
 
                 get filteredProducts() {
-                    // Si hay busqueda local o remota, el getter simplemente devuelve this.products
-                    // ya que el backend o el filtro manual ya se encargaron.
-                    // Pero para evitar duplicar logica, podemos mantener un filtro ligero aqui:
-                    return this.products.filter(p => {
-                        const s = this.search.toLowerCase();
-                        const matchesSearch = p.name.toLowerCase().includes(s) || 
-                                             (p.sku && p.sku.toLowerCase().includes(s)) ||
-                                             (p.barcode && p.barcode.toLowerCase().includes(s));
-                        const matchesCategory = this.activeCategoryId === null || p.category_id === this.activeCategoryId;
-                        return matchesSearch && matchesCategory;
-                    });
+                    return this.products;
                 },
 
-                get subtotal() {
-                    const total = this.cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-                    return this.showIva ? (total / 1.16) : total;
-                },
-
-                get total() {
-                    return this.cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+                getSubcategories() {
+                    if (!this.activeCategoryId) return [];
+                    const category = this.categories.find(c => c.id === this.activeCategoryId);
+                    return category ? category.children : [];
                 },
 
                 setCategory(id) {
                     this.activeCategoryId = id;
+                    this.activeSubcategoryId = null; // Reset subcategory
+                    this.currentPage = 1;
+                    this.filterProducts();
+                },
+
+                setSubcategory(id) {
+                    this.activeSubcategoryId = id;
+                    this.currentPage = 1;
                     this.filterProducts();
                 },
 

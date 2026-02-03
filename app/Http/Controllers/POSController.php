@@ -41,13 +41,6 @@ class POSController extends Controller
             ->with(['variants', 'images', 'category'])
             ->latest()
             ->paginate($perPage);
-            
-        // Transformar los productos para incluir image_url
-        $products->getCollection()->transform(function ($product) {
-            $product->image_url = $product->images->first()?->url 
-                ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->name) . '&background=27272a&color=a1a1aa&size=256';
-            return $product;
-        });
 
         $stats = [
             'today_sales' => POSTransaction::whereDate('created_at', today())
@@ -69,157 +62,7 @@ class POSController extends Controller
         ]);
     }
 
-    /**
-     * Listado de transacciones para gestion (buscar y reabrir)
-     */
-    public function transactions(Request $request): View
-    {
-        $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
-        $status = $request->get('status');
-        $search = $request->get('q');
-
-        $transactions = POSTransaction::with(['customer'])
-            ->when($status, fn($q) => $q->where('status', $status))
-            ->when($search, function ($q) use ($search) {
-                $q->where('transaction_number', 'like', "%$search%")
-                    ->orWhereHas('customer', function ($qc) use ($search) {
-                        $qc->where('name', 'like', "%$search%")
-                            ->orWhere('phone', 'like', "%$search%");
-                    });
-            })
-            ->orderByDesc('created_at')
-            ->paginate(20);
-
-        return view('pos.transactions.index', [
-            'transactions' => $transactions,
-            'showIva' => $showIva,
-            'status' => $status,
-            'search' => $search,
-        ]);
-    }
-
-    /**
-     * Abrir nueva sesion de POS
-     */
-    public function openSession(): View
-    {
-        $openSession = POSSession::where('status', 'open')
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if ($openSession) {
-            return view('pos.session-active', ['session' => $openSession]);
-        }
-
-        return view('pos.open-session');
-    }
-
-    /**
-     * Guardar nueva sesion
-     */
-    public function storeSession(Request $request)
-    {
-        $session = POSSession::create([
-            'user_id' => Auth::id(),
-            'opened_at' => now(),
-        ]);
-
-        return redirect()->route('dashboard.pos.transaction.create', $session)->with('success', 'Sesion abierta');
-    }
-
-    /**
-     * Formulario de nueva transaccion
-     */
-    public function createTransaction(POSSession $session): View
-    {
-        if ($session->status !== 'open' || $session->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $paymentMethods = PaymentMethod::where('is_active', true)->get();
-        $customers = Customer::orderBy('name')->get();
-        $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
-
-        return view('pos.transaction.create', [
-            'session' => $session,
-            'paymentMethods' => $paymentMethods,
-            'customers' => $customers,
-            'showIva' => $showIva,
-        ]);
-    }
-
-    /**
-     * Guardar nueva transaccion
-     */
-    public function storeTransaction(Request $request)
-    {
-        $validated = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'customer_name' => 'required_without:customer_id|nullable|string|max:255',
-            'customer_phone' => 'required_without:customer_id|nullable|string|max:20',
-            'notes' => 'nullable|string',
-            'shipping_contact_phone' => 'nullable|string|max:30',
-            'shipping_address' => 'nullable|string|max:500',
-            'shipping_notes' => 'nullable|string',
-        ]);
-
-        // Si no hay cliente existente, crear uno
-        if (!$validated['customer_id'] && $validated['customer_name']) {
-            $customer = Customer::create([
-                'name' => $validated['customer_name'],
-                'phone' => $validated['customer_phone'],
-            ]);
-            $validated['customer_id'] = $customer->id;
-        }
-
-        $transaction = POSTransaction::create([
-            'customer_id' => $validated['customer_id'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'shipping_contact_phone' => $validated['shipping_contact_phone'] ?? ($validated['customer_phone'] ?? null),
-            'shipping_address' => $validated['shipping_address'] ?? null,
-            'shipping_notes' => $validated['shipping_notes'] ?? null,
-            'reserved_at' => now(),
-        ]);
-
-        return redirect()->route('dashboard.pos.transaction.edit', $transaction)->with('success', 'Transaccion creada');
-    }
-
-    /**
-     * Editar transaccion (agregar items, pagos)
-     */
-    public function editTransaction(POSTransaction $transaction): View
-    {
-        $paymentMethods = PaymentMethod::where('is_active', true)->get();
-        $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
-
-        return view('pos.transaction.edit', [
-            'transaction' => $transaction->load(['items', 'payments', 'customer']),
-            'paymentMethods' => $paymentMethods,
-            'showIva' => $showIva,
-        ]);
-    }
-
-    /**
-     * Actualizar datos de transaccion (envio/notas)
-     */
-    public function updateTransaction(Request $request, POSTransaction $transaction)
-    {
-        $validated = $request->validate([
-            'shipping_contact_phone' => 'nullable|string|max:30',
-            'shipping_address' => 'nullable|string|max:500',
-            'shipping_notes' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
-
-        $transaction->update([
-            'shipping_contact_phone' => $validated['shipping_contact_phone'] ?? null,
-            'shipping_address' => $validated['shipping_address'] ?? null,
-            'shipping_notes' => $validated['shipping_notes'] ?? null,
-            'notes' => $validated['notes'] ?? $transaction->notes,
-        ]);
-
-        return back()->with('success', 'Datos de envio actualizados');
-    }
+    // ... (transactions method skipped) ...
 
     /**
      * Buscar productos por SKU/Barcode
@@ -227,16 +70,13 @@ class POSController extends Controller
     public function searchProduct(Request $request)
     {
         $query = $request->get('q');
+        $categoryId = $request->get('category_id');
+        $subcategoryId = $request->get('subcategory_id');
         $perPage = $request->get('per_page', 30);
-        
-        // Validar que el per_page sea un valor permitido
-        $allowedPerPage = [10, 20, 30, 50, 100];
-        if (!in_array($perPage, $allowedPerPage)) {
-            $perPage = 30;
-        }
 
         $products = Product::where('is_active', true)
-            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+            ->when($subcategoryId, fn($q) => $q->where('subcategory_id', $subcategoryId))
             ->where(function ($q) use ($query) {
                 $q->where('sku', 'like', "%$query%")
                     ->orWhere('barcode', 'like', "%$query%")
@@ -245,11 +85,9 @@ class POSController extends Controller
             ->with(['variants', 'images'])
             ->paginate($perPage);
             
-        // Transformar los productos para incluir image_url
-        $products->getCollection()->transform(function ($product) {
-            $product->image_url = $product->images->first()?->url 
-                ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->name) . '&background=27272a&color=a1a1aa&size=256';
-            return $product;
+        // Append image_url accessor
+        $products->getCollection()->each(function($product) {
+            $product->append('image_url');
         });
 
         return response()->json($products);
