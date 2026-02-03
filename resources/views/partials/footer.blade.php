@@ -1,10 +1,10 @@
 <footer class="bg-gray-900 text-white mt-12">
     <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
             <!-- About -->
             <div>
                 <h3 class="text-xl font-bold text-pink-500 mb-4">Mincoli</h3>
-                <p class="text-gray-400 text-sm">
+                <p class="text-gray-400 text-sm max-w-xs mx-auto md:mx-0">
                     Tu tienda en línea favorita para productos mexicanos. Envíos a todo México.
                 </p>
             </div>
@@ -41,22 +41,22 @@
 
                 <h4 class="font-semibold mb-4 mt-6">Contacto Directo</h4>
                 <ul class="space-y-2 text-sm text-gray-400">
-                    <li class="flex items-start">
-                        <i class="fas fa-phone-alt mt-1 mr-2 text-pink-500"></i>
+                    <li class="flex items-center justify-center md:justify-start">
+                        <i class="fas fa-phone-alt mr-2 text-pink-500"></i>
                         <a href="tel:+5256117011660" class="hover:text-pink-500 transition">+52 56 1170 1166</a>
                     </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-envelope mt-1 mr-2 text-pink-500"></i>
+                    <li class="flex items-center justify-center md:justify-start">
+                        <i class="fas fa-envelope mr-2 text-pink-500"></i>
                         <a href="mailto:mincoli.ventas.online@outlook.com" class="hover:text-pink-500 transition break-all">mincoli.ventas.online@outlook.com</a>
                     </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-map-marker-alt mt-1 mr-2 text-pink-500"></i>
+                    <li class="flex items-center justify-center md:justify-start">
+                        <i class="fas fa-map-marker-alt mr-2 text-pink-500"></i>
                         <span>Ciudad de México</span>
                     </li>
                 </ul>
 
                 <!-- Social Links -->
-                <div class="flex space-x-4 mt-4">
+                <div class="flex items-center justify-center md:justify-start space-x-4 mt-4">
                     <a href="https://www.facebook.com/MincoliMx" target="_blank" rel="noopener" title="Facebook" class="text-gray-400 hover:text-pink-500 transition">
                         <i class="fab fa-facebook-f text-lg"></i>
                     </a>

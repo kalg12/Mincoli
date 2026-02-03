@@ -76,18 +76,17 @@
 
         <!-- Mobile Navigation -->
         <div id="mobile-menu" class="hidden md:hidden pb-3">
-            <nav class="flex flex-col space-y-2">
-                <a href="{{ route('home') }}" class="text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('home') ? 'text-pink-600' : '' }}">
+            <nav class="flex flex-col items-center space-y-2 py-4">
+                <a href="{{ route('home') }}" class="w-full text-center text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('home') ? 'text-pink-600' : '' }}">
                     INICIO
                 </a>
-                <a href="{{ route('shop') }}" class="text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('shop*') ? 'text-pink-600' : '' }}">
+                <a href="{{ route('shop') }}" class="w-full text-center text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('shop*') ? 'text-pink-600' : '' }}">
                     TIENDA
                 </a>
-                <a href="{{ route('blog.index') }}" class="text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('blog.*') ? 'text-pink-600' : '' }}">
+                <a href="{{ route('blog.index') }}" class="w-full text-center text-gray-700 hover:text-pink-600 font-medium py-2 {{ request()->routeIs('blog.*') ? 'text-pink-600' : '' }}">
                     BLOG
                 </a>
             </nav>
-
         </div>
     </div>
 </header>
