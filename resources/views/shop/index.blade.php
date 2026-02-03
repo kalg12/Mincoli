@@ -14,63 +14,27 @@
     </div>
 </div>
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 relative">
     <div class="flex flex-col lg:flex-row gap-8">
-        <!-- Sidebar Filters -->
-        <aside class="lg:w-64 flex-shrink-0">
-            <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Filtros</h3>
-
-                <!-- Categories -->
-                <div class="mb-6">
-                    <h4 class="font-semibold text-gray-700 mb-3">Categorías</h4>
-                    <div class="space-y-2">
-                        <a href="{{ route('shop') }}" class="block px-3 py-2 rounded {{ !request('category') ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-gray-50' }}">
-                            Todas las categorías
-                        </a>
-                        @foreach($categories as $cat)
-                        <a href="{{ route('shop.category', $cat->slug) }}"
-                           class="block px-3 py-2 rounded {{ request('category') == $cat->slug ? 'bg-pink-50 text-pink-600' : 'text-gray-700 hover:bg-gray-50' }}">
-                            {{ $cat->name }}
-                            <span class="text-xs text-gray-500">({{ $cat->products_count }})</span>
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Price Range -->
-                <div class="mb-6">
-                    <h4 class="font-semibold text-gray-700 mb-3">Rango de Precio</h4>
-                    <form method="GET" action="{{ route('shop') }}" class="space-y-3">
-                        @if(request('category'))
-                        <input type="hidden" name="category" value="{{ request('category') }}">
-                        @endif
-                        <div>
-                            <label class="text-sm text-gray-600">Mínimo</label>
-                            <input type="number" name="min_price" value="{{ request('min_price') }}"
-                                   class="w-full border-gray-300 rounded-lg mt-1" placeholder="$0">
-                        </div>
-                        <div>
-                            <label class="text-sm text-gray-600">Máximo</label>
-                            <input type="number" name="max_price" value="{{ request('max_price') }}"
-                                   class="w-full border-gray-300 rounded-lg mt-1" placeholder="$999">
-                        </div>
-                        <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 rounded-lg transition">
-                            Aplicar
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Availability -->
-                <div>
-                    <h4 class="font-semibold text-gray-700 mb-3">Disponibilidad</h4>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" class="rounded text-pink-600 focus:ring-pink-500">
-                        <span class="text-sm text-gray-700">Solo productos en stock</span>
-                    </label>
-                </div>
-            </div>
+        <!-- Sidebar Filters (Desktop) -->
+        <aside class="hidden lg:block lg:w-64 flex-shrink-0">
+             @include('shop.partials.filters')
         </aside>
+
+        <!-- Mobile Filter Button -->
+        <button id="mobile-filter-btn" class="lg:hidden fixed bottom-4 right-4 z-40 bg-pink-600 text-white px-6 py-3 rounded-full shadow-lg font-bold flex items-center gap-2 hover:bg-pink-700 transition-all transform hover:scale-105">
+            <i class="fas fa-filter"></i> FILTROS
+        </button>
+
+        <!-- Mobile Filter Drawer overlay -->
+        <div id="mobile-filter-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden lg:hidden transition-opacity duration-300 opacity-0"></div>
+
+        <!-- Mobile Filter Drawer -->
+        <div id="mobile-filter-drawer" class="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto">
+            <div class="p-4">
+               @include('shop.partials.filters')
+            </div>
+        </div>
 
         <!-- Products Grid -->
         <main class="flex-1">
@@ -116,6 +80,9 @@
                 <form method="GET" action="{{ route('shop') }}" class="flex items-center space-x-2">
                     @if(request('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
+                    @endif
+                    @if(request('subcategory'))
+                    <input type="hidden" name="subcategory" value="{{ request('subcategory') }}">
                     @endif
                     <label class="text-sm text-gray-600">Ordenar:</label>
                     <select name="sort" onchange="this.form.submit()"
@@ -231,4 +198,46 @@
         </main>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterBtn = document.getElementById('mobile-filter-btn');
+        const filterDrawer = document.getElementById('mobile-filter-drawer');
+        const filterOverlay = document.getElementById('mobile-filter-overlay');
+        const closeFilterBtns = document.querySelectorAll('.close-filters-btn'); // In partial
+
+        function openFilters() {
+            filterOverlay.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                filterOverlay.classList.remove('opacity-0');
+                filterDrawer.classList.remove('translate-x-full');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFilters() {
+            filterOverlay.classList.add('opacity-0');
+            filterDrawer.classList.add('translate-x-full');
+            setTimeout(() => {
+                filterOverlay.classList.add('hidden');
+            }, 300);
+            document.body.style.overflow = '';
+        }
+
+        if (filterBtn) {
+            filterBtn.addEventListener('click', openFilters);
+        }
+
+        if (filterOverlay) {
+            filterOverlay.addEventListener('click', closeFilters);
+        }
+
+        closeFilterBtns.forEach(btn => {
+            btn.addEventListener('click', closeFilters);
+        });
+    });
+</script>
+@endpush
 @endsection
