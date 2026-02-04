@@ -9,6 +9,7 @@ class LiveIndicator extends Component
 {
     public ?LiveSession $activeLive = null;
     public bool $showPreview = false;
+    public ?string $embedUrl = null;
 
     public function mount(): void
     {
@@ -25,6 +26,45 @@ class LiveIndicator extends Component
             })
             ->with('productHighlights')
             ->first();
+
+        $this->embedUrl = $this->activeLive?->live_url
+            ? $this->buildEmbedUrl($this->activeLive->live_url)
+            : null;
+    }
+
+    private function buildEmbedUrl(string $url): ?string
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+        $path = parse_url($url, PHP_URL_PATH) ?? '';
+
+        if (!$host) {
+            return null;
+        }
+
+        $host = str_replace('www.', '', $host);
+
+        // YouTube
+        if ($host === 'youtube.com' || $host === 'youtu.be') {
+            if ($host === 'youtu.be') {
+                $videoId = ltrim($path, '/');
+            } else {
+                parse_str(parse_url($url, PHP_URL_QUERY) ?? '', $query);
+                $videoId = $query['v'] ?? null;
+            }
+
+            return $videoId
+                ? "https://www.youtube.com/embed/{$videoId}?autoplay=1&mute=1&rel=0"
+                : null;
+        }
+
+        // Facebook Live
+        if ($host === 'facebook.com' || $host === 'fb.watch') {
+            $encoded = urlencode($url);
+            return "https://www.facebook.com/plugins/video.php?href={$encoded}&show_text=0&autoplay=1";
+        }
+
+        // Default: try direct embed
+        return $url;
     }
 
     public function openPreview(): void

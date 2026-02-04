@@ -25,7 +25,7 @@
                 wire:click="closePreview"
             >
                 <div
-                    class="live-preview-modal bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+                    class="live-preview-modal bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
                     @click.stop
                 >
                     <!-- Header -->
@@ -47,20 +47,35 @@
 
                     <!-- Scrollable Content -->
                     <div class="overflow-y-auto flex-grow">
-                        <div class="p-6">
+                        <div class="p-6 space-y-6">
+                            <!-- Player -->
+                            @if ($embedUrl)
+                                <div class="relative w-full overflow-hidden rounded-xl bg-black aspect-video shadow-lg">
+                                    <iframe
+                                        src="{{ $embedUrl }}"
+                                        class="absolute inset-0 h-full w-full"
+                                        frameborder="0"
+                                        allow="autoplay; fullscreen; picture-in-picture"
+                                        allowfullscreen
+                                    ></iframe>
+                                </div>
+                            @else
+                                <div class="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">
+                                    No se pudo incrustar la transmisión. Usa el botón de abajo para abrirla.
+                                </div>
+                            @endif
+
                             <!-- Live Stream Info -->
-                            <div class="p-6 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-200">
-                                <div class="flex items-center gap-3 mb-4">
+                            <div class="rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-pink-50 p-5">
+                                <div class="flex items-center gap-3 mb-3">
                                     <div class="relative flex h-4 w-4">
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600"></span>
                                     </div>
-                                    <p class="text-gray-900 font-bold text-lg">
-                                        Transmisión en vivo
-                                    </p>
+                                    <p class="text-gray-900 font-bold text-lg">Transmisión en vivo</p>
                                 </div>
                                 @if ($activeLive->platform)
-                                    <p class="text-gray-700 mb-3 flex items-center gap-2">
+                                    <p class="text-gray-700 mb-2 flex items-center gap-2">
                                         <i class="fas fa-video text-pink-600"></i>
                                         <strong>Plataforma:</strong>
                                         <span class="text-pink-600 font-semibold capitalize">{{ $activeLive->platform }}</span>
@@ -77,13 +92,13 @@
                     </div>
 
                     <!-- Action Buttons (Fixed at bottom) -->
-                    <div class="border-t border-gray-200 bg-gray-50 p-4 flex gap-3 flex-shrink-0">
+                    <div class="border-t border-gray-200 bg-gray-50 p-4 flex flex-col sm:flex-row gap-3 flex-shrink-0">
                         <button
                             wire:click="goToLive"
                             class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white py-3 rounded-lg font-bold hover:shadow-lg transition duration-300 flex items-center justify-center gap-2 active:scale-95"
                         >
                             <i class="fas fa-broadcast-tower"></i>
-                            Ver Transmisión
+                            Abrir transmisión en otra ventana
                         </button>
                         <button
                             wire:click="closePreview"
