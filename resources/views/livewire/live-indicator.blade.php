@@ -48,102 +48,128 @@
 
         <!-- Full Stream Preview Modal -->
         @if ($showPreview)
-            <div class="fixed inset-0 z-50 flex items-center justify-center">
-                <!-- Backdrop -->
-                <div class="absolute inset-0 bg-black bg-opacity-75" wire:click="closePreview"></div>
-
-                <!-- Modal Container -->
-                <div class="relative w-full max-w-4xl h-[90vh] m-4 bg-white rounded-xl shadow-2xl flex flex-col">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
-                        <div class="flex items-center gap-3">
-                            <div class="relative flex h-4 w-4">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600"></span>
+            @teleport('body')
+                <div 
+                    class="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+                    style="background-color: rgba(0, 0, 0, 0.7);"
+                    wire:click="closePreview"
+                >
+                    <!-- Modal Container - Compacto -->
+                    <div 
+                        class="relative w-full max-w-3xl bg-white rounded-xl shadow-2xl overflow-hidden"
+                        style="animation: modalSlideUp 0.2s ease-out;"
+                        @click.stop
+                    >
+                        <!-- Header Limpio -->
+                        <div class="bg-white border-b border-gray-200 px-5 py-3.5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                                    <!-- Live Dot -->
+                                    <span class="relative flex h-2.5 w-2.5 flex-shrink-0">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+                                    </span>
+                                    
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-base font-bold text-gray-900 truncate">
+                                            {{ $activeLive->title }}
+                                        </h3>
+                                        <div class="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                            <span class="font-semibold text-red-600">EN VIVO</span>
+                                            @if ($activeLive->platform)
+                                                <span>•</span>
+                                                <span>{{ $activeLive->platform_label }}</span>
+                                            @endif
+                                            @if ($activeLive->starts_at)
+                                                <span>•</span>
+                                                <span>{{ $activeLive->starts_at->diffForHumans() }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Botón Cerrar -->
+                                <button
+                                    wire:click="closePreview"
+                                    class="flex-shrink-0 ml-3 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
-                            <h3 class="text-xl font-bold text-gray-900">{{ $activeLive->title }}</h3>
                         </div>
-                        <button
-                            wire:click="closePreview"
-                            class="text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
-                    </div>
 
-                    <!-- Content Area -->
-                    <div class="flex-1 overflow-hidden flex flex-col">
-                        <!-- Player -->
+                        <!-- Video Player -->
                         @if ($embedUrl)
-                            <div class="relative w-full overflow-hidden bg-black aspect-video">
+                            <div class="relative w-full bg-black aspect-video">
                                 <iframe
                                     src="{{ $embedUrl }}"
-                                    class="absolute inset-0 h-full w-full"
+                                    class="absolute inset-0 w-full h-full"
                                     frameborder="0"
-                                    allow="autoplay; fullscreen; picture-in-picture"
+                                    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
                                     allowfullscreen
                                 ></iframe>
                             </div>
                         @else
-                            <div class="flex-1 flex items-center justify-center bg-gray-100 p-8">
-                                <div class="text-center">
-                                    <i class="fas fa-video-slash text-6xl text-gray-400 mb-4"></i>
-                                    <p class="text-gray-600 mb-4">No se pudo incrustar la transmisión</p>
+                            <div class="aspect-video flex items-center justify-center bg-gray-50">
+                                <div class="text-center px-6">
+                                    <div class="w-14 h-14 mx-auto mb-3 rounded-full bg-red-50 flex items-center justify-center">
+                                        <i class="fas fa-video-slash text-xl text-red-500"></i>
+                                    </div>
+                                    <p class="text-gray-700 font-semibold text-sm mb-1.5">No se pudo cargar el video</p>
+                                    <p class="text-xs text-gray-500 mb-3">Abre la transmisión en una nueva ventana</p>
                                     <button
                                         wire:click="goToLive"
-                                        class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                                        class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold text-xs transition-colors"
                                     >
-                                        Abrir en nueva ventana
+                                        <i class="fas fa-external-link-alt text-xs"></i>
+                                        Abrir Enlace
                                     </button>
                                 </div>
                             </div>
                         @endif
 
-                        <!-- Stream Info -->
-                        <div class="p-6 bg-gray-50 border-t border-gray-200">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center gap-2">
-                                    <span class="relative flex h-3 w-3">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-                                    </span>
-                                    <h4 class="text-lg font-bold text-gray-900">Transmisión en Vivo</h4>
+                        <!-- Footer Minimalista -->
+                        <div class="bg-white px-5 py-3 border-t border-gray-200">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="flex items-center gap-2 text-sm text-gray-600">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Iniciado {{ $activeLive->starts_at ? $activeLive->starts_at->diffForHumans() : 'ahora' }}</span>
                                 </div>
-                                @if ($activeLive->platform)
-                                    <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 rounded-full px-3 py-1 text-sm font-medium">
-                                        <i class="fas fa-video"></i>
-                                        {{ ucfirst($activeLive->platform) }}
-                                    </span>
-                                @endif
+                                
+                                <div class="flex gap-2">
+                                    <button
+                                        wire:click="goToLive"
+                                        class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                                    >
+                                        <i class="fas fa-external-link-alt text-xs"></i>
+                                        Abrir
+                                    </button>
+                                    <button
+                                        wire:click="closePreview"
+                                        class="inline-flex items-center gap-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
                             </div>
-
-                            @if ($activeLive->starts_at)
-                                <div class="text-sm text-gray-600">
-                                    <i class="fas fa-clock mr-1"></i>
-                                    Iniciado {{ $activeLive->starts_at->diffForHumans() }}
-                                </div>
-                            @endif
                         </div>
                     </div>
-
-                    <!-- Footer Actions -->
-                    <div class="p-4 border-t border-gray-200 bg-white flex gap-3">
-                        <button
-                            wire:click="goToLive"
-                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-                        >
-                            <i class="fas fa-external-link-alt"></i>
-                            Abrir en nueva ventana
-                        </button>
-                        <button
-                            wire:click="closePreview"
-                            class="flex-1 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-3 rounded-lg transition-colors duration-200"
-                        >
-                            Cerrar
-                        </button>
-                    </div>
                 </div>
-            </div>
+
+                <!-- Animación -->
+                <style>
+                    @keyframes modalSlideUp {
+                        from {
+                            opacity: 0;
+                            transform: translateY(8px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                </style>
+            @endteleport
         @endif
     @endif
 </div>
