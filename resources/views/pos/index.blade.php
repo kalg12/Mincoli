@@ -389,78 +389,129 @@
         </div>
     <!-- Hidden Quotation Template for Export -->
     <div id="quotation-template" 
-         class="fixed bg-white p-10 w-[600px] leading-tight pointer-events-none" 
-         :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + '; left: ' + (isExporting ? '0' : '-9999px') + '; top: ' + (isExporting ? '0' : '-9999px') + ';'"
-         style="font-family: 'Arial', sans-serif; color: #18181b; left: -9999px; top: -9999px; letter-spacing: 0.5px;">
-         <div class="flex justify-between items-center pb-6" style="border-bottom: 2px solid #ec4899;">
-             <div>
-                 <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="h-16 w-auto mb-2 object-contain">
-                 <p class="text-xs font-bold uppercase tracking-widest" style="color: #71717a;">Tienda Online</p>
+         style="position: fixed; background-color: #ffffff; padding: 32px; width: 650px; line-height: 1.5; pointer-events: none; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111827; left: -9999px; top: -9999px; letter-spacing: -0.01em; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
+         :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + '; left: ' + (isExporting ? '0' : '-9999px') + '; top: ' + (isExporting ? '0' : '-9999px') + ';'">
+         
+         <!-- Header con logo mejorado -->
+         <div class="flex justify-between items-start pb-8 mb-6" style="border-bottom: 3px solid #ec4899; background-color: #fef2f2; margin: -32px -32px 24px -32px; padding: 32px;">
+             <div class="flex items-center gap-4">
+                 <!-- Logo fallback mejorado -->
+                 <div class="w-20 h-20 rounded-xl flex items-center justify-center shadow-lg" style="min-width: 80px; min-height: 80px; background-color: #ec4899;">
+                     <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="w-16 h-16 object-contain" 
+                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="max-width: 100%; max-height: 100%;">
+                     <span class="text-white font-black text-2xl" style="display: none;">M</span>
+                 </div>
+                 <div>
+                     <h1 class="text-2xl font-black text-gray-900 mb-1">MINCOLI</h1>
+                     <p class="text-sm font-semibold text-gray-600">Tienda Online • Moda y Accesorios</p>
+                 </div>
              </div>
              <div class="text-right">
-                 <h2 class="text-xl font-black uppercase" style="color: #db2777;">Cotización</h2>
-                 <p class="text-[10px] font-bold" style="color: #71717a;" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
+                 <div class="rounded-lg px-4 py-2 mb-2" style="background-color: #fdf2f8; border: 2px solid #f9a8d4;">
+                     <h2 class="text-lg font-black" style="color: #db2777;">COTIZACIÓN</h2>
+                 </div>
+                 <p class="text-xs font-medium text-gray-500" x-text="new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' })"></p>
              </div>
          </div>
 
-        <div class="mt-8 grid grid-cols-2 gap-8">
-            <div>
-                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #000000;">Cliente</h3>
-                <p class="text-sm font-black uppercase" style="color: #000000; word-spacing: 1px;" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
-                <p class="text-xs font-bold" style="color: #000000;" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
+        <!-- Información del cliente y pago mejorada -->
+        <div class="grid grid-cols-2 gap-8 mb-8">
+            <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+                <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em; color: #374151; display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ec4899">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    CLIENTE
+                </h3>
+                <p style="font-size: 16px; font-weight: 700; color: #111827; margin-bottom: 4px;" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
+                <p style="font-size: 14px; font-weight: 600; color: #4b5563;" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : 'Sin teléfono'))"></p>
             </div>
-            <div class="text-right">
-                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #000000;">Métodos de Pago</h3>
-                <p class="text-[9px] font-bold leading-relaxed" style="color: #000000;">Depósitos OXXO: 2242 1701 8074 1927</p>
-                <p class="text-[9px] font-bold leading-relaxed" style="color: #000000;">CLABE AZTECA: 1271 8001 3158 064 597</p>
+            <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+                <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em; color: #374151; display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ec4899">
+                        <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2v-1c0-2.12 3.04-4 6.72-4h2.56c3.68 0 6.72 1.88 6.72 4zM12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z"/>
+                    </svg>
+                    MÉTODOS DE PAGO
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                        <p style="font-size: 12px; font-weight: 900; color: #374151;">DEPÓSITOS OXXO</p>
+                        <p style="font-size: 14px; font-weight: 700; color: #111827;">2242 1701 8074 1927</p>
+                    </div>
+                    <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                        <p style="font-size: 12px; font-weight: 900; color: #374151;">CLABE AZTECA</p>
+                        <p style="font-size: 14px; font-weight: 700; color: #111827;">1271 8001 3158 064 597</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="mt-10">
-            <table class="w-full text-left border-collapse">
+        <!-- Tabla de productos mejorada -->
+        <div style="margin-bottom: 32px;">
+            <div style="background-color: #111827; color: #ffffff; border-radius: 8px 8px 0 0; padding: 12px 16px;">
+                <h3 style="font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">DETALLE DE PRODUCTOS</h3>
+            </div>
+            <table style="width: 100%; border: 2px solid #d1d5db;">
                 <thead>
-                    <tr style="border-bottom: 1px solid #000000;">
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest" style="color: #000000;">Producto</th>
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-center" style="color: #000000;">Cant.</th>
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #000000;">Precio</th>
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #000000;">Total</th>
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; border-right: 1px solid #d1d5db;">PRODUCTO</th>
+                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; border-right: 1px solid #d1d5db;">CANT.</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; border-right: 1px solid #d1d5db;">PRECIO</th>
+                        <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: #374151;">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="item in cart" :key="item.id + (item.variant ? '-' + item.variant.id : '')">
-                        <tr style="border-bottom: 1px solid #e4e4e7;">
-                            <td class="py-4">
-                                <div class="text-xs font-black uppercase" style="color: #000000; word-spacing: 1px;" x-text="item.name"></div>
-                                <div x-show="item.variant" class="text-[9px] font-bold mt-0.5" style="color: #000000;" x-text="item.variant ? item.variant.name : ''"></div>
+                    <template x-for="(item, index) in cart" :key="item.id + (item.variant ? '-' + item.variant.id : '')">
+                        <tr :style="index % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f9fafb;'">
+                            <td style="padding: 16px; border-right: 1px solid #e5e7eb;">
+                                <div style="font-weight: 700; color: #111827;" x-text="item.name"></div>
+                                <div x-show="item.variant" style="font-size: 14px; color: #4b5563; margin-top: 4px;" x-text="'Variante: ' + (item.variant ? item.variant.name : '')"></div>
                             </td>
-                            <td class="py-4 text-center text-xs font-bold" style="color: #000000;" x-text="item.quantity"></td>
-                            <td class="py-4 text-right text-xs font-bold" style="color: #000000;" x-text="'$' + parseFloat(item.price).toLocaleString()"></td>
-                            <td class="py-4 text-right text-xs font-black" style="color: #db2777;" x-text="'$' + (item.price * item.quantity).toLocaleString()"></td>
+                            <td style="padding: 16px; text-align: center; font-weight: 700; color: #111827; border-right: 1px solid #e5e7eb;" x-text="item.quantity"></td>
+                            <td style="padding: 16px; text-align: right; font-weight: 700; color: #111827; border-right: 1px solid #e5e7eb;" x-text="'$' + parseFloat(item.price).toLocaleString('es-MX', {minimumFractionDigits: 2})"></td>
+                            <td style="padding: 16px; text-align: right; font-weight: 900; color: #db2777;" x-text="'$' + (item.price * item.quantity).toLocaleString('es-MX', {minimumFractionDigits: 2})"></td>
                         </tr>
                     </template>
+                    <tr x-show="cart.length === 0">
+                        <td colspan="4" style="padding: 32px; text-align: center; color: #6b7280; font-weight: 600;">No hay productos en el carrito</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="mt-8 flex justify-end">
-            <div class="w-64 space-y-2">
-                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #000000;" x-show="showIva">
-                    <span>Subtotal</span>
-                    <span x-text="'$' + subtotal.toLocaleString()"></span>
-                </div>
-                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #000000;" x-show="showIva">
-                    <span>IVA (16%)</span>
-                    <span x-text="'$' + (total - subtotal).toLocaleString()"></span>
-                </div>
-                <div class="flex justify-between items-center py-3 mt-2" style="border-top: 2px solid #ec4899;">
-                    <span class="text-xs font-black uppercase tracking-tight" style="color: #000000;">Total</span>
-                    <span class="text-2xl font-black" style="color: #db2777; display: block;" x-text="'$' + total.toLocaleString()"></span>
+        <!-- Total mejorado -->
+        <div class="flex justify-end mb-6">
+            <div class="rounded-lg p-6 shadow-lg" style="min-width: 280px; background-color: #fdf2f8; border: 2px solid #f9a8d4;">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-sm font-bold text-gray-700" x-show="showIva">
+                        <span>SUBTOTAL</span>
+                        <span x-text="'$' + subtotal.toLocaleString('es-MX', {minimumFractionDigits: 2})"></span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm font-bold text-gray-700" x-show="showIva">
+                        <span>IVA (16%)</span>
+                        <span x-text="'$' + (total - subtotal).toLocaleString('es-MX', {minimumFractionDigits: 2})"></span>
+                    </div>
+                    <div class="pt-3" style="border-top: 2px solid #f9a8d4;">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-black uppercase tracking-wider text-gray-900">TOTAL A PAGAR</span>
+                            <span class="text-3xl font-black" style="color: #db2777;" x-text="'$' + total.toLocaleString('es-MX', {minimumFractionDigits: 2})"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-12 text-center pt-8" style="border-top: 1px solid #f4f4f5;">
-            <p class="text-[9px] font-bold uppercase tracking-[0.2em]" style="color: #a1a1aa;">¡Gracias por tu preferencia! — mincoli.com</p>
+        <!-- Footer mejorado -->
+        <div style="text-align: center; padding-top: 24px; border-top: 2px solid #d1d5db;">
+            <div style="margin-bottom: 16px;">
+                <p style="font-size: 18px; font-weight: 900; color: #111827; margin-bottom: 8px;">¡Gracias por tu preferencia!</p>
+                <p style="font-size: 14px; font-weight: 600; color: #4b5563;">Te esperamos pronto en</p>
+                <p style="font-size: 20px; font-weight: 900; color: #db2777;">mincoli.com</p>
+            </div>
+            <div style="font-size: 12px; color: #6b7280;">
+                <p>📱 WhatsApp para pedidos: +52 56 1170 11660</p>
+                <p style="margin-top: 4px;">📍 Envíos a toda la República Mexicana</p>
+            </div>
         </div>
     </div>
 </div>
@@ -784,80 +835,49 @@
                 },
 
                 async exportQuotation(type) {
-                    if (this.cart.length === 0) {
-                        alert('El carrito está vacío');
-                        return;
-                    }
-                    
-                    this.isLoading = true;
                     this.isExporting = true;
+                    this.isLoading = true;
                     
                     try {
-                        // Wait for Alpine to show and render the template
-                        await this.$nextTick();
+                        // Crear HTML completamente aislado y simple
+                        const quotationHTML = this.createSimpleQuotationHTML();
                         
-                        // Ensure logo is loaded
-                        const logoImg = document.querySelector('#quotation-template img');
-                        if (logoImg && !logoImg.complete) {
-                             await new Promise((resolve) => {
-                                logoImg.onload = resolve;
-                                logoImg.onerror = resolve; // Continue even if error
-                             });
-                        }
+                        // Crear elemento temporal para html2canvas
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = quotationHTML;
+                        tempDiv.style.position = 'absolute';
+                        tempDiv.style.left = '-9999px';
+                        tempDiv.style.top = '-9999px';
+                        tempDiv.style.width = '650px';
+                        tempDiv.style.backgroundColor = '#ffffff';
+                        document.body.appendChild(tempDiv);
                         
-                        await new Promise(r => setTimeout(r, 1000)); // Extra buffer for fonts
-                        
-                        const element = document.getElementById('quotation-template');
-                        
-                        // Verify element is visible and has content
-                        if (!element || element.offsetHeight === 0) {
-                            throw new Error('Template not rendered');
-                        }
-                        
-                        // Safety check for Image constructor
-                        if (typeof window.Image !== 'function') {
-                            console.warn('Image constructor corrupted, attempting restore...');
-                            // Create an iframe to recover native Image constructor if absolutely necessary
-                            const iframe = document.createElement('iframe');
-                            iframe.style.display = 'none';
-                            document.body.appendChild(iframe);
-                            window.Image = iframe.contentWindow.Image;
-                            document.body.removeChild(iframe);
-                        }
-                        
-                        // Capture with html2canvas
-                        const canvas = await html2canvas(element, {
+                        const canvas = await html2canvas(tempDiv, {
                             scale: 2,
                             backgroundColor: '#ffffff',
-                            logging: false, 
-                            useCORS: true,
-                            allowTaint: false, // Must be false for toDataURL
-                            windowWidth: 600,
-                            windowHeight: element.scrollHeight
+                            logging: false,
+                            removeContainer: true,
+                            width: 650,
+                            height: 800,
+                            windowWidth: 650,
+                            windowHeight: 800
                         });
-
-                        // Validate canvas
-                        if (!canvas || canvas.width === 0 || canvas.height === 0) {
-                            throw new Error('Canvas generation failed');
-                        }
-
-                        if (type === 'image') {
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                            const link = document.createElement('a');
-                            link.download = `Cotizacion_Mincoli_${new Date().getTime()}.jpg`;
-                            link.href = dataUrl;
-                            link.click();
-                        } else if (type === 'pdf') {
-                            const { jsPDF } = window.jspdf;
-                            const pdf = new jsPDF('p', 'mm', 'a4');
+                        
+                        // Limpiar elemento temporal
+                        document.body.removeChild(tempDiv);
+                        
+                        if (type === 'pdf') {
+                            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                            const pdf = new window.jspdf.jsPDF({
+                                orientation: 'portrait',
+                                unit: 'mm',
+                                format: 'a4'
+                            });
                             
-                            const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                            const pdfWidth = pdf.internal.pageSize.getWidth();
+                            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
                             
-                            // Use canvas dimensions directly
-                            const imgWidth = 190; // A4 width in mm minus margins
-                            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                            
-                            pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+                            pdf.addImage(imgData, 'JPEG', 10, 10, pdfWidth - 20, imgHeight);
                             pdf.save(`Cotizacion_Mincoli_${new Date().getTime()}.pdf`);
                         } else if (type === 'copy') {
                             canvas.toBlob(async (blob) => {
@@ -872,9 +892,7 @@
                                         throw new Error('Clipboard API unavailable');
                                     }
                                 } catch (err) {
-                                    console.warn('Clipboard write failed, falling back to preview', err);
-                                    // Fallback mainly for non-secure contexts (http) or unsupported browsers
-                                    alert('No pudimos copiar al portapapeles directamente. Descarga la imagen en su lugar.');
+                                    console.warn('Clipboard write failed, falling back to download', err);
                                     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                                     const link = document.createElement('a');
                                     link.download = `Cotizacion_Mincoli_${new Date().getTime()}.jpg`;
@@ -891,6 +909,130 @@
                         this.isLoading = false;
                     }
                 },
+
+                createSimpleQuotationHTML() {
+                    const now = new Date();
+                    const dateStr = now.toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
+                    const customerName = this.linkedCustomer ? this.linkedCustomer.name : (this.manualCustomer.name ? this.manualCustomer.name : 'Público General');
+                    const customerPhone = this.linkedCustomer ? this.linkedCustomer.phone : (this.manualCustomer.phone ? this.manualCustomer.phone : 'Sin teléfono');
+                    
+                    let itemsHTML = '';
+                    if (this.cart.length > 0) {
+                        itemsHTML = this.cart.map((item, index) => `
+                            <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+                                <td style="padding: 16px; border: 1px solid #e5e7eb; font-weight: 700; color: #111827;">
+                                    ${item.name}
+                                    ${item.variant ? `<br><small style="color: #6b7280;">Variante: ${item.variant.name}</small>` : ''}
+                                </td>
+                                <td style="padding: 16px; border: 1px solid #e5e7eb; text-align: center; font-weight: 700; color: #111827;">${item.quantity}</td>
+                                <td style="padding: 16px; border: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #111827;">$${Number(item.price || 0).toFixed(2)}</td>
+                                <td style="padding: 16px; border: 1px solid #e5e7eb; text-align: right; font-weight: 900; color: #db2777;">$${Number((item.price || 0) * item.quantity).toFixed(2)}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        itemsHTML = '<tr><td colspan="4" style="padding: 32px; text-align: center; color: #6b7280;">No hay productos en el carrito</td></tr>';
+                    }
+
+                    return `
+                        <div style="width: 650px; padding: 32px; background-color: #ffffff; font-family: Arial, sans-serif;">
+                            <!-- Header -->
+                            <div style="border-bottom: 3px solid #ec4899; background-color: #fef2f2; margin: -32px -32px 24px -32px; padding: 32px; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 80px; height: 80px; background-color: #ec4899; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <span style="color: #ffffff; font-weight: 900; font-size: 24px;">M</span>
+                                    </div>
+                                    <div>
+                                        <h1 style="font-size: 24px; font-weight: 900; color: #111827; margin: 0 0 4px 0;">MINCOLI</h1>
+                                        <p style="font-size: 14px; color: #4b5563; margin: 0;">Tienda Online • Moda y Accesorios</p>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="background-color: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 8px; padding: 8px 16px; margin-bottom: 8px;">
+                                        <h2 style="font-size: 18px; font-weight: 900; color: #db2777; margin: 0;">COTIZACIÓN</h2>
+                                    </div>
+                                    <p style="font-size: 12px; color: #6b7280; margin: 0;">${dateStr}</p>
+                                </div>
+                            </div>
+
+                            <!-- Customer Info -->
+                            <div style="display: flex; gap: 32px; margin-bottom: 24px;">
+                                <div style="flex: 1; background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+                                    <h3 style="font-size: 14px; font-weight: 900; color: #374151; margin: 0 0 12px 0; text-transform: uppercase;">CLIENTE</h3>
+                                    <p style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">${customerName}</p>
+                                    <p style="font-size: 14px; color: #4b5563; margin: 0;">${customerPhone}</p>
+                                </div>
+                                <div style="flex: 1; background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+                                    <h3 style="font-size: 14px; font-weight: 900; color: #374151; margin: 0 0 12px 0; text-transform: uppercase;">MÉTODOS DE PAGO</h3>
+                                    <div style="margin-bottom: 8px; background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                                        <p style="font-size: 12px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">DEPÓSITOS OXXO</p>
+                                        <p style="font-size: 14px; font-weight: 700; color: #111827; margin: 0;">2242 1701 8074 1927</p>
+                                    </div>
+                                    <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                                        <p style="font-size: 12px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">CLABE AZTECA</p>
+                                        <p style="font-size: 14px; font-weight: 700; color: #111827; margin: 0;">1271 8001 3158 064 597</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Products Table -->
+                            <div style="margin-bottom: 24px;">
+                                <div style="background-color: #111827; color: #ffffff; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                                    <h3 style="font-size: 14px; font-weight: 900; margin: 0; text-transform: uppercase;">DETALLE DE PRODUCTOS</h3>
+                                </div>
+                                <table style="width: 100%; border: 2px solid #d1d5db; border-collapse: collapse; border-top: none;">
+                                    <thead>
+                                        <tr style="background-color: #f3f4f6;">
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: left; font-size: 12px; font-weight: 900; color: #374151;">PRODUCTO</th>
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: center; font-size: 12px; font-weight: 900; color: #374151;">CANT.</th>
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: right; font-size: 12px; font-weight: 900; color: #374151;">PRECIO</th>
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: right; font-size: 12px; font-weight: 900; color: #374151;">TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${itemsHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Total -->
+                            <div style="text-align: right; margin-bottom: 24px;">
+                                <div style="background-color: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 8px; padding: 24px; display: inline-block; min-width: 280px;">
+                                    ${this.showIva ? `
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #374151;">
+                                        <span>SUBTOTAL</span>
+                                        <span>$${Number(this.subtotal || 0).toFixed(2)}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #374151;">
+                                        <span>IVA (16%)</span>
+                                        <span>$${Number((this.total || 0) - (this.subtotal || 0)).toFixed(2)}</span>
+                                    </div>
+                                    ` : ''}
+                                    <div style="border-top: 2px solid #f9a8d4; padding-top: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 18px; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL A PAGAR</span>
+                                            <span style="font-size: 30px; font-weight: 900; color: #db2777;">$${Number(this.total || 0).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="text-align: center; padding-top: 24px; border-top: 2px solid #d1d5db;">
+                                <div style="margin-bottom: 16px;">
+                                    <p style="font-size: 18px; font-weight: 900; color: #111827; margin: 0 0 8px 0;">¡Gracias por tu preferencia!</p>
+                                    <p style="font-size: 14px; color: #4b5563; margin: 0 0 8px 0;">Te esperamos pronto en</p>
+                                    <p style="font-size: 20px; font-weight: 900; color: #db2777; margin: 0;">mincoli.com</p>
+                                </div>
+                                <div style="font-size: 12px; color: #6b7280;">
+                                    <p style="margin: 0 0 4px 0;">📱 WhatsApp para pedidos: +52 56 1170 11660</p>
+                                    <p style="margin: 0;">📍 Envíos a toda la República Mexicana</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+
 
                 async proceedToOrder() {
                     if (this.cart.length === 0) return;
