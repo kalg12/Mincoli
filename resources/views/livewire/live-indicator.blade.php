@@ -1,7 +1,19 @@
 <div wire:poll.10s>
     @if ($activeLive)
-        <!-- Live Status Card -->
-        <div class="bg-white rounded-lg shadow-xl border-2 border-red-500 p-4 flex items-center gap-3 min-w-[280px] max-w-[320px]">
+        <!-- Mobile: Compact Badge -->
+        <button
+            wire:click="openPreview"
+            class="md:hidden bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide transition-all duration-200 flex items-center gap-2 shadow-lg"
+        >
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span class="relative inline-flex h-full w-full rounded-full bg-white"></span>
+            </span>
+            EN VIVO
+        </button>
+
+        <!-- Desktop: Full Card -->
+        <div class="hidden md:flex bg-white rounded-lg shadow-xl border-2 border-red-500 p-4 items-center gap-3 min-w-[280px] max-w-[320px]">
             <!-- Live Dot Animation -->
             <div class="flex items-center gap-2">
                 <span class="relative flex h-3 w-3">
