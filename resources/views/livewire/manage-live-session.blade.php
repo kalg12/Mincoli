@@ -56,12 +56,12 @@
                             wire:model="platform"
                             class="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
                         >
-                            <option value="Instagram Live">Instagram Live</option>
-                            <option value="Facebook Live">Facebook Live</option>
-                            <option value="TikTok Live">TikTok Live</option>
-                            <option value="YouTube Live">YouTube Live</option>
-                            <option value="Twitch">Twitch</option>
-                            <option value="Otro">Otro</option>
+                            <option value="instagram">Instagram Live</option>
+                            <option value="facebook">Facebook Live</option>
+                            <option value="tiktok">TikTok Live</option>
+                            <option value="other">YouTube Live</option>
+                            <option value="other">Twitch</option>
+                            <option value="other">Otro</option>
                         </select>
                         @error('platform') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
@@ -191,7 +191,6 @@
                         <th class="px-6 py-4 text-left">Transmisión</th>
                         <th class="px-6 py-4 text-left">Plataforma</th>
                         <th class="px-6 py-4 text-left">Estado</th>
-                        <th class="px-6 py-4 text-left">Productos</th>
                         <th class="px-6 py-4 text-right">Acciones</th>
                     </tr>
                 </thead>
@@ -208,7 +207,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                    {{ $live->platform ?? 'N/A' }}
+                                    {{ $live->platform_label ?? 'N/A' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
@@ -230,13 +229,27 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                                    {{ $live->productHighlights()->count() }}
-                                </span>
-                            </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    <!-- Iniciar/Detener -->
+                                    @if ($live->is_live)
+                                        <button
+                                            wire:click="stopLive({{ $live->id }})"
+                                            class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition"
+                                        >
+                                            <i class="fas fa-stop-circle"></i>
+                                            Detener Live
+                                        </button>
+                                    @else
+                                        <button
+                                            wire:click="startLive({{ $live->id }})"
+                                            class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition"
+                                        >
+                                            <i class="fas fa-play-circle"></i>
+                                            Iniciar Live
+                                        </button>
+                                    @endif
+
                                     <!-- Editar -->
                                     <button
                                         wire:click="openForm({{ $live->id }})"
@@ -245,34 +258,6 @@
                                     >
                                         <i class="fas fa-edit"></i>
                                     </button>
-
-                                    <!-- Productos -->
-                                    <button
-                                        wire:click="openProducts({{ $live->id }})"
-                                        title="Agregar productos"
-                                        class="rounded p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 transition"
-                                    >
-                                        <i class="fas fa-box"></i>
-                                    </button>
-
-                                    <!-- Iniciar/Detener -->
-                                    @if ($live->is_live)
-                                        <button
-                                            wire:click="stopLive({{ $live->id }})"
-                                            title="Detener transmisión"
-                                            class="rounded p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition"
-                                        >
-                                            <i class="fas fa-stop-circle"></i>
-                                        </button>
-                                    @else
-                                        <button
-                                            wire:click="startLive({{ $live->id }})"
-                                            title="Iniciar transmisión"
-                                            class="rounded p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 transition"
-                                        >
-                                            <i class="fas fa-play-circle"></i>
-                                        </button>
-                                    @endif
 
                                     <!-- Eliminar -->
                                     <button
@@ -288,7 +273,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center">
+                            <td colspan="4" class="px-6 py-8 text-center">
                                 <i class="fas fa-inbox text-4xl mb-3 opacity-30 text-zinc-400"></i>
                                 <p class="text-lg font-semibold text-zinc-900 dark:text-white">No hay transmisiones creadas</p>
                                 <p class="text-sm text-zinc-600 dark:text-zinc-400">Crea tu primera transmisión en vivo haciendo clic en el botón "Nueva Transmisión"</p>

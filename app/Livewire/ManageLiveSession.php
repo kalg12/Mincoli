@@ -21,7 +21,7 @@ class ManageLiveSession extends Component
     public $title = '';
 
     #[Validate('required')]
-    public $platform = 'Instagram Live';
+    public $platform = 'instagram';
 
     #[Validate('nullable|url')]
     public $live_url = '';
@@ -63,7 +63,7 @@ class ManageLiveSession extends Component
     {
         $this->editingLive = null;
         $this->title = '';
-        $this->platform = 'Instagram Live';
+        $this->platform = 'instagram';
         $this->live_url = '';
         $this->selectedProducts = [];
         $this->resetValidation();
@@ -93,6 +93,7 @@ class ManageLiveSession extends Component
             $this->dispatch('notify', type: 'success', message: 'Transmisión creada correctamente');
         }
 
+        $this->dispatch('live-session-updated');
         $this->closeForm();
     }
 

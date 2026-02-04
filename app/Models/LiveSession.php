@@ -75,4 +75,17 @@ class LiveSession extends Model
     {
         return !$this->is_live && $this->starts_at && now()->isBefore($this->starts_at);
     }
+    /**
+     * Get human readable platform label
+     */
+    public function getPlatformLabelAttribute(): string
+    {
+        return match($this->platform) {
+            'instagram' => 'Instagram Live',
+            'facebook' => 'Facebook Live',
+            'tiktok' => 'TikTok Live',
+            'other' => 'Otro / YouTube',
+            default => ucfirst($this->platform ?? ''),
+        };
+    }
 }
