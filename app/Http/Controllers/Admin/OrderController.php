@@ -54,11 +54,11 @@ class OrderController extends Controller
         // Use transaction and lockForUpdate to prevent race conditions
         return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
             $order = Order::with('items')->lockForUpdate()->findOrFail($id);
-            
+
             $request->validate(['status' => 'required|in:pending,paid,shipped,delivered,cancelled,refunded']);
-            
+
             $oldStatus = $order->status;
-            
+
             // Idempotency Check: No change needed
             if ($request->status === $oldStatus) {
                 return back()->with('info', 'El estado del pedido no ha cambiado.');
@@ -77,22 +77,13 @@ class OrderController extends Controller
             // ACTION 1: DEDUCT STOCK MOVEMENT (Pending -> Paid)
             // Stock was ALREADY decremented during reservation. Just record the AUDIT trail.
             if ($request->status === 'paid' && $oldStatus === 'pending') {
-                foreach ($order->items as $item) {
-                    try {
-                        InventoryMovement::create([
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'type' => 'out',
-                            'quantity' => $item->quantity,
-                            'reason' => 'Venta confirmada por administrador #' . $order->order_number,
-                            'reference_type' => 'Order',
-                            'reference_id' => $order->id,
-                            'created_by' => auth()->id(),
-                        ]);
-                    } catch (\Illuminate\Database\QueryException $e) {
-                        // Idempotency: Ignore duplicate movement if it already exists (e.g. MP webhook arrived just before)
-                        if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
-                    }
+                if (!$this->orderMovementExists($order, 'out')) {
+                    $this->recordOrderMovement(
+                        $order,
+                        'out',
+                        'Venta confirmada por administrador #' . $order->order_number,
+                        auth()->id()
+                    );
                 }
 
                 foreach($order->payments as $payment) {
@@ -104,43 +95,47 @@ class OrderController extends Controller
                 }
             }
 
-            // ACTION 2: RESTORE STOCK (Pending -> Cancelled/Refunded)
-            // Restore the "reserved" stock back to available pool. No movement record needed for pending cleanup.
-            if (in_array($request->status, ['cancelled', 'refunded']) && $oldStatus === 'pending') {
+            // ACTION 2: RESTORE STOCK + RECORD ENTRY (Cancel/Refund)
+            // For pending, stock was reserved. For paid/shipped/delivered, stock was already out.
+            $shouldRestoreStock = $oldStatus === 'pending' || $request->has('restore_stock');
+            if (in_array($request->status, ['cancelled', 'refunded']) && $shouldRestoreStock) {
                 foreach ($order->items as $item) {
                     if ($item->variant_id) {
                         ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
                     } else {
                         Product::where('id', $item->product_id)->increment('stock', $item->quantity);
                     }
+                }
+
+                if (!$this->orderMovementExists($order, 'in')) {
+                    $reason = match ($oldStatus) {
+                        'pending' => 'Cancelación de pedido pendiente #' . $order->order_number,
+                        'paid', 'partially_paid' => 'Restauración por cancelación de pedido pagado #' . $order->order_number,
+                        'shipped' => 'Restauración por cancelación de pedido enviado #' . $order->order_number,
+                        'delivered' => 'Restauración por cancelación de pedido entregado #' . $order->order_number,
+                        default => 'Restauración de inventario por cancelación #' . $order->order_number,
+                    };
+
+                    $this->recordOrderMovement(
+                        $order,
+                        'in',
+                        $reason,
+                        auth()->id()
+                    );
                 }
             }
 
-            // ACTION 3: RESTORE STOCK + RECORD ENTRY (Paid -> Cancelled/Refunded)
-            // Stock was already moved "OUT". We need to "IN" it back and increment.
-            if (in_array($request->status, ['cancelled', 'refunded']) && $oldStatus === 'paid' && $request->has('restore_stock')) {
-                foreach ($order->items as $item) {
-                    if ($item->variant_id) {
-                        ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
-                    } else {
-                        Product::where('id', $item->product_id)->increment('stock', $item->quantity);
-                    }
-
-                    try {
-                        InventoryMovement::create([
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'type' => 'in',
-                            'quantity' => $item->quantity,
-                            'reason' => 'Restauración por cancelación de pedido pagado #' . $order->order_number,
-                            'reference_type' => 'Order',
-                            'reference_id' => $order->id,
-                            'created_by' => auth()->id(),
-                        ]);
-                    } catch (\Illuminate\Database\QueryException $e) {
-                         if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
-                    }
-                }
+            // ACTION 1B: RECORD MOVEMENT WHEN SHIPPING/DELIVERING (if not already recorded)
+            // Some orders go directly to shipped/delivered without passing through paid.
+            if (in_array($request->status, ['shipped', 'delivered']) && !$this->orderMovementExists($order, 'out')) {
+                $this->recordOrderMovement(
+                    $order,
+                    'out',
+                    ($request->status === 'shipped'
+                        ? 'Pedido enviado #' . $order->order_number
+                        : 'Pedido entregado #' . $order->order_number),
+                    auth()->id()
+                );
             }
 
             $message = 'Estado del pedido actualizado correctamente.';
@@ -152,6 +147,44 @@ class OrderController extends Controller
 
             return back()->with('success', $message);
         });
+    }
+
+    private function orderMovementExists(Order $order, string $type): bool
+    {
+        $itemIds = $order->items->pluck('id');
+
+        return InventoryMovement::where('type', $type)
+            ->where(function ($query) use ($order, $itemIds) {
+                $query->where(function ($q) use ($order) {
+                    $q->where('reference_type', 'Order')
+                        ->where('reference_id', $order->id);
+                })
+                ->orWhere(function ($q) use ($itemIds) {
+                    $q->where('reference_type', 'OrderItem')
+                        ->whereIn('reference_id', $itemIds);
+                });
+            })
+            ->exists();
+    }
+
+    private function recordOrderMovement(Order $order, string $type, string $reason, ?int $userId): void
+    {
+        foreach ($order->items as $item) {
+            try {
+                InventoryMovement::create([
+                    'product_id' => $item->product_id,
+                    'variant_id' => $item->variant_id,
+                    'type' => $type,
+                    'quantity' => $item->quantity,
+                    'reason' => $reason,
+                    'reference_type' => 'OrderItem',
+                    'reference_id' => $item->id,
+                    'created_by' => $userId,
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
+            }
+        }
     }
 
     public function addPayment(Request $request, Order $order)
