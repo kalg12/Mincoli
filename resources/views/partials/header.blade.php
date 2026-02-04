@@ -87,7 +87,7 @@
                 <!-- Cart -->
                 <button onclick="window.openCartDrawer()" class="relative text-gray-700 hover:text-pink-600 transition">
                     <i class="fas fa-shopping-cart text-lg"></i>
-                    <span id="header-cart-count" class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 items-center justify-center hidden" style="display: none;">
+                    <span id="header-cart-count" class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 items-center justify-center hidden">
                         0
                     </span>
                 </button>
