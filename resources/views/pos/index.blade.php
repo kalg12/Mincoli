@@ -391,7 +391,7 @@
     <div id="quotation-template" 
          class="fixed bg-white p-10 w-[600px] leading-tight pointer-events-none" 
          :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + '; left: ' + (isExporting ? '0' : '-9999px') + '; top: ' + (isExporting ? '0' : '-9999px') + ';'"
-         style="font-family: 'Inter', sans-serif; color: #18181b; left: -9999px; top: -9999px;">
+         style="font-family: 'Arial', sans-serif; color: #18181b; left: -9999px; top: -9999px; letter-spacing: 0.5px;">
          <div class="flex justify-between items-center pb-6" style="border-bottom: 2px solid #ec4899;">
              <div>
                  <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="h-16 w-auto mb-2 object-contain">
@@ -406,7 +406,7 @@
         <div class="mt-8 grid grid-cols-2 gap-8">
             <div>
                 <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #000000;">Cliente</h3>
-                <p class="text-sm font-black uppercase" style="color: #000000;" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
+                <p class="text-sm font-black uppercase" style="color: #000000; word-spacing: 1px;" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
                 <p class="text-xs font-bold" style="color: #000000;" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
             </div>
             <div class="text-right">
@@ -430,7 +430,7 @@
                     <template x-for="item in cart" :key="item.id + (item.variant ? '-' + item.variant.id : '')">
                         <tr style="border-bottom: 1px solid #e4e4e7;">
                             <td class="py-4">
-                                <div class="text-xs font-black uppercase" style="color: #000000;" x-text="item.name"></div>
+                                <div class="text-xs font-black uppercase" style="color: #000000; word-spacing: 1px;" x-text="item.name"></div>
                                 <div x-show="item.variant" class="text-[9px] font-bold mt-0.5" style="color: #000000;" x-text="item.variant ? item.variant.name : ''"></div>
                             </td>
                             <td class="py-4 text-center text-xs font-bold" style="color: #000000;" x-text="item.quantity"></td>
@@ -443,7 +443,7 @@
         </div>
 
         <div class="mt-8 flex justify-end">
-            <div class="w-48 space-y-2">
+            <div class="w-64 space-y-2">
                 <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #000000;" x-show="showIva">
                     <span>Subtotal</span>
                     <span x-text="'$' + subtotal.toLocaleString()"></span>
@@ -454,7 +454,7 @@
                 </div>
                 <div class="flex justify-between items-center py-3 mt-2" style="border-top: 2px solid #ec4899;">
                     <span class="text-xs font-black uppercase tracking-tight" style="color: #000000;">Total</span>
-                    <span class="text-xl font-black" style="color: #db2777;" x-text="'$' + total.toLocaleString()"></span>
+                    <span class="text-2xl font-black" style="color: #db2777; display: block;" x-text="'$' + total.toLocaleString()"></span>
                 </div>
             </div>
         </div>
