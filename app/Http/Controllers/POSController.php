@@ -25,11 +25,10 @@ class POSController extends Controller
      */
     public function index(Request $request): View
     {
-        // Obtener categorías con sus subcategorías
+        // Obtener categorías con sus subcategorías (incluyendo ocultas para POS)
         $categories = \App\Models\Category::whereNull('parent_id')
-            ->where('is_active', true)
             ->with(['children' => function($query) {
-                $query->where('is_active', true)->orderBy('name');
+                $query->orderBy('name');
             }])
             ->orderBy('name')
             ->get();
@@ -43,9 +42,8 @@ class POSController extends Controller
             $perPage = 30;
         }
         
-        // Cargar productos con sus variantes e imagenes para el grid inicial
-        $products = Product::where('is_active', true)
-            ->with(['variants', 'images', 'category'])
+        // Cargar productos con sus variantes e imagenes para el grid inicial (incluyendo inactivos para POS)
+        $products = Product::with(['variants', 'images', 'category'])
             ->latest()
             ->paginate($perPage);
             
@@ -88,8 +86,7 @@ class POSController extends Controller
         $subcategoryId = $request->get('subcategory_id');
         $perPage = $request->get('per_page', 30);
 
-        $products = Product::where('is_active', true)
-            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
+        $products = Product::when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->when($subcategoryId, fn($q) => $q->where('subcategory_id', $subcategoryId))
             ->where(function ($q) use ($query) {
                 $q->where('sku', 'like', "%$query%")
