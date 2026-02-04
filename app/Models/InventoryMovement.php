@@ -65,4 +65,31 @@ class InventoryMovement extends Model
 
         return null;
     }
+
+    public function getOrderReferenceIdAttribute(): ?int
+    {
+        if (!$this->reference_type || !$this->reference_id) {
+            return null;
+        }
+
+        if ($this->reference_type === 'Order') {
+            return (int) $this->reference_id;
+        }
+
+        if (str_starts_with($this->reference_type, 'OrderMovement:')) {
+            return (int) $this->reference_id;
+        }
+
+        if (str_starts_with($this->reference_type, 'OrderStatusHistory:')) {
+            $history = OrderStatusHistory::find($this->reference_id);
+            return $history?->order_id;
+        }
+
+        if ($this->reference_type === 'OrderItem') {
+            $item = \App\Models\OrderItem::find($this->reference_id);
+            return $item?->order_id;
+        }
+
+        return null;
+    }
 }

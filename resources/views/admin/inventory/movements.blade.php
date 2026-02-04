@@ -51,8 +51,8 @@
                                 {{ $mv->type === 'in' ? '+' : '-' }}{{ $mv->quantity }}
                             </td>
                             <td class="px-4 py-2 text-zinc-700 dark:text-zinc-300">
-                                @if($mv->reference_type === 'Order')
-                                    <a href="{{ route('dashboard.orders.show', $mv->reference_id) }}" class="text-pink-600 hover:text-pink-500 hover:underline">
+                                @if($mv->order_reference_id)
+                                    <a href="{{ route('dashboard.orders.show', $mv->order_reference_id) }}" class="text-pink-600 hover:text-pink-500 hover:underline">
                                         {{ ucfirst($mv->reason) }} <i class="fas fa-external-link-alt ml-1 text-xs"></i>
                                     </a>
                                 @else
