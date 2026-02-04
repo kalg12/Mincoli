@@ -9,6 +9,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -82,7 +83,7 @@ class OrderController extends Controller
                         $order,
                         'out',
                         'Venta confirmada por administrador #' . $order->order_number,
-                        auth()->id()
+                        Auth::id()
                     );
                 }
 
@@ -120,7 +121,7 @@ class OrderController extends Controller
                         $order,
                         'in',
                         $reason,
-                        auth()->id()
+                        Auth::id()
                     );
                 }
             }
@@ -134,7 +135,7 @@ class OrderController extends Controller
                     ($request->status === 'shipped'
                         ? 'Pedido enviado #' . $order->order_number
                         : 'Pedido entregado #' . $order->order_number),
-                    auth()->id()
+                    Auth::id()
                 );
             }
 

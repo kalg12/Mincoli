@@ -8,7 +8,10 @@
     <style>
         @media print {
             .no-print { display: none; }
-            body { -webkit-print-color-adjust: exact; }
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
