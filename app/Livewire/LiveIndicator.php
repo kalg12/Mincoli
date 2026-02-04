@@ -47,14 +47,10 @@ class LiveIndicator extends Component
         }
     }
 
-    #[\Livewire\Attributes\On('live-session-updated')]
-    public function onLiveSessionUpdated(): void
-    {
-        $this->loadActiveLive();
-    }
-
     public function render()
     {
+        // Recargar el live activo en cada render para mantenerlo actualizado
+        $this->loadActiveLive();
         return view('livewire.live-indicator');
     }
 }

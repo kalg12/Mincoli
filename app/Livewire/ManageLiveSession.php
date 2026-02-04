@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\LiveSession;
-use App\Models\Product;
 use Livewire\Component;
 use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
@@ -13,8 +12,6 @@ class ManageLiveSession extends Component
     use WithPagination;
 
     public $showForm = false;
-    public $showProducts = false;
-    public $selectedLive = null;
     public $editingLive = null;
 
     #[Validate('required|min:5|max:255')]
@@ -26,15 +23,12 @@ class ManageLiveSession extends Component
     #[Validate('nullable|url')]
     public $live_url = '';
 
-    public $selectedProducts = [];
-
     public function render()
     {
         $lives = LiveSession::orderBy('created_at', 'desc')->paginate(10);
 
         return view('livewire.manage-live-session', [
             'lives' => $lives,
-            'availableProducts' => Product::where('is_active', true)->get(),
         ]);
     }
 
@@ -65,7 +59,6 @@ class ManageLiveSession extends Component
         $this->title = '';
         $this->platform = 'instagram';
         $this->live_url = '';
-        $this->selectedProducts = [];
         $this->resetValidation();
     }
 
@@ -93,7 +86,6 @@ class ManageLiveSession extends Component
             $this->dispatch('notify', type: 'success', message: 'Transmisión creada correctamente');
         }
 
-        $this->dispatch('live-session-updated');
         $this->closeForm();
     }
 
@@ -124,41 +116,6 @@ class ManageLiveSession extends Component
         if ($live) {
             $live->delete();
             $this->dispatch('notify', type: 'success', message: 'Transmisión eliminada');
-        }
-    }
-
-    public function openProducts($liveId)
-    {
-        $this->selectedLive = LiveSession::find($liveId);
-        $this->showProducts = true;
-    }
-
-    public function closeProducts()
-    {
-        $this->showProducts = false;
-        $this->selectedLive = null;
-    }
-
-    public function addProductToLive($productId, $description = '')
-    {
-        if ($this->selectedLive) {
-            $position = $this->selectedLive->productHighlights()->count() + 1;
-
-            $this->selectedLive->productHighlights()->create([
-                'product_id' => $productId,
-                'description' => $description,
-                'position' => $position,
-            ]);
-
-            $this->dispatch('notify', type: 'success', message: 'Producto agregado a la transmisión');
-        }
-    }
-
-    public function removeProductFromLive($highlightId)
-    {
-        if ($this->selectedLive) {
-            $this->selectedLive->productHighlights()->find($highlightId)?->delete();
-            $this->dispatch('notify', type: 'success', message: 'Producto removido de la transmisión');
         }
     }
 }

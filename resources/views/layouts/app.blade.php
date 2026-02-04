@@ -17,6 +17,8 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    @livewireStyles
+
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-50">
@@ -41,6 +43,7 @@
     <!-- WhatsApp Floating Button -->
     @include('partials.whatsapp-button')
 
+    @livewireScripts
     @stack('scripts')
 </body>
 </html>

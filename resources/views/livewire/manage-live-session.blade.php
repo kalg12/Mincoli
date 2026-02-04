@@ -101,87 +101,6 @@
         </div>
     @endif
 
-    <!-- Products Modal -->
-    @if ($showProducts && $selectedLive)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" wire:click="closeProducts">
-            <div
-                class="rounded-lg bg-white shadow-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto dark:bg-zinc-900"
-                @click.stop
-            >
-                <div class="flex items-center justify-between mb-6 sticky top-0 bg-white dark:bg-zinc-900">
-                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white">
-                        Productos Destacados en Vivo
-                    </h3>
-                    <button wire:click="closeProducts" class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-
-                <!-- Productos Actuales -->
-                <div class="mb-6">
-                    <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">Productos en Esta Transmisión</h4>
-                    @if ($selectedLive->productHighlights->count() > 0)
-                        <div class="space-y-2">
-                            @foreach ($selectedLive->productHighlights as $highlight)
-                                <div class="flex items-center justify-between p-3 rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
-                                    <div>
-                                        <p class="font-semibold text-zinc-900 dark:text-white">{{ $highlight->product->name }}</p>
-                                        @if ($highlight->description)
-                                            <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $highlight->description }}</p>
-                                        @endif
-                                    </div>
-                                    <button
-                                        wire:click="removeProductFromLive({{ $highlight->id }})"
-                                        class="text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400 transition"
-                                    >
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Sin productos agregados aún</p>
-                    @endif
-                </div>
-
-                <!-- Agregar Productos -->
-                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-6">
-                    <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">Agregar Productos</h4>
-                    <div class="space-y-2 max-h-64 overflow-y-auto">
-                        @foreach ($availableProducts as $product)
-                            @if (!$selectedLive->productHighlights->pluck('product_id')->contains($product->id))
-                                <button
-                                    wire:click="addProductToLive({{ $product->id }})"
-                                    class="w-full text-left p-3 rounded-lg border border-zinc-200 hover:border-pink-500 hover:bg-pink-50 dark:border-zinc-700 dark:hover:border-pink-500 dark:hover:bg-zinc-800 transition"
-                                >
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <p class="font-semibold text-zinc-900 dark:text-white">{{ $product->name }}</p>
-                                            <p class="text-sm font-bold text-pink-600 dark:text-pink-400">
-                                                ${{ number_format($product->sale_price ?? $product->price, 2, '.', ',') }}
-                                            </p>
-                                        </div>
-                                        <i class="fas fa-plus text-pink-500"></i>
-                                    </div>
-                                </button>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Close Button -->
-                <div class="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-                    <button
-                        wire:click="closeProducts"
-                        class="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-600 dark:text-white dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900 transition-colors"
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
-
     <!-- Lives Table -->
     <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
         <div class="overflow-x-auto">
@@ -253,10 +172,10 @@
                                     <!-- Editar -->
                                     <button
                                         wire:click="openForm({{ $live->id }})"
-                                        title="Editar"
-                                        class="rounded p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition"
+                                        class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/20 transition"
                                     >
                                         <i class="fas fa-edit"></i>
+                                        Editar
                                     </button>
 
                                     <!-- Eliminar -->

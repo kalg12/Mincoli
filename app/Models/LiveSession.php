@@ -40,6 +40,7 @@ class LiveSession extends Model
         $this->update([
             'is_live' => true,
             'starts_at' => now(),
+            'ends_at' => null,
             'live_url' => $liveUrl ?? $this->live_url,
         ]);
     }
