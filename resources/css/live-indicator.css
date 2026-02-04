@@ -1,0 +1,110 @@
+/* Live Indicator Animations */
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+/* Animación de latido para el botón */
+.live-indicator-pulse {
+    animation: pulse-glow 2s infinite;
+}
+
+/* Mejora del indicador visual */
+.live-indicator-dot {
+    position: relative;
+}
+
+.live-indicator-dot::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(239, 68, 68, 0.8) 0%,
+        transparent 70%
+    );
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Animación de escala suave */
+@keyframes scale-pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.live-indicator-scale {
+    animation: scale-pulse 2s ease-in-out infinite;
+}
+
+/* Efecto de brillo */
+@keyframes shimmer {
+    0% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.5;
+    }
+}
+
+.live-indicator-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Modal mejorado */
+.live-preview-modal {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+    .live-indicator-text {
+        font-size: 0.75rem;
+    }
+
+    .live-preview-modal {
+        max-height: 85vh;
+    }
+}
+
+/* Efecto hover mejorado */
+.live-indicator-button:hover {
+    filter: brightness(1.1);
+    transform: scale(1.05);
+}
+
+.live-indicator-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

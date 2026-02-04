@@ -14,6 +14,7 @@ class LiveProductHighlight extends Model
         'live_session_id',
         'product_id',
         'variant_id',
+        'description',
         'position',
     ];
 

@@ -17,6 +17,7 @@
                     <flux:navlist.item icon="shopping-bag" :href="route('dashboard.products.index')" :current="request()->routeIs('dashboard.products.*')" wire:navigate>Productos</flux:navlist.item>
                     <flux:navlist.item icon="folder" :href="route('dashboard.categories.index')" :current="request()->routeIs('dashboard.categories.*')" wire:navigate>Categorías</flux:navlist.item>
                     <flux:navlist.item icon="photo" :href="route('dashboard.banners.index')" :current="request()->routeIs('dashboard.banners.*')" wire:navigate>Banners</flux:navlist.item>
+                    <flux:navlist.item icon="signal" :href="route('dashboard.live-sessions.index')" :current="request()->routeIs('dashboard.live-sessions.*')" wire:navigate>Transmisiones en Vivo</flux:navlist.item>
                 </flux:navlist.group>
 
                     <flux:navlist.group :heading="__('Blog')" class="grid">

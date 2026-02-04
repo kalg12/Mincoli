@@ -38,10 +38,14 @@
 <header class="bg-white/90 backdrop-blur sticky top-0 z-40 border-b border-gray-200">
     <div class="container mx-auto px-4">
         <div class="flex items-center justify-between py-3">
-            <!-- Logo -->
-            <a href="{{ route('home') }}" class="flex items-center">
-                <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="w-16 h-auto">
-            </a>
+            <!-- Logo and Live Indicator -->
+            <div class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="flex items-center">
+                    <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="w-16 h-auto">
+                </a>
+                <!-- Live Indicator Component -->
+                <livewire:live-indicator />
+            </div>
 
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex items-center space-x-6">
@@ -62,10 +66,10 @@
                 <!-- Search (Desktop) -->
                 <div class="hidden lg:block">
                     <form action="{{ route('shop.search') }}" method="GET" class="relative">
-                        <input 
-                            type="text" 
-                            name="q" 
-                            placeholder="Buscar..." 
+                        <input
+                            type="text"
+                            name="q"
+                            placeholder="Buscar..."
                             class="w-48 pl-4 pr-10 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
                             value="{{ request('q') }}"
                         >
@@ -83,7 +87,7 @@
                 <!-- Cart -->
                 <button onclick="window.openCartDrawer()" class="relative text-gray-700 hover:text-pink-600 transition">
                     <i class="fas fa-shopping-cart text-lg"></i>
-                    <span id="header-cart-count" class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">
+                    <span id="header-cart-count" class="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full h-5 w-5 items-center justify-center hidden" style="display: none;">
                         0
                     </span>
                 </button>
@@ -98,10 +102,10 @@
         <!-- Mobile Search Bar -->
         <div id="mobile-search-bar" class="hidden lg:hidden pb-3">
             <form action="{{ route('shop.search') }}" method="GET" class="relative">
-                <input 
-                    type="text" 
-                    name="q" 
-                    placeholder="Buscar productos por nombre, SKU o código de barras..." 
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Buscar productos por nombre, SKU o código de barras..."
                     class="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
                     value="{{ request('q') }}"
                     autofocus
@@ -141,7 +145,7 @@
     function toggleMobileSearch() {
         const searchBar = document.getElementById('mobile-search-bar');
         const menu = document.getElementById('mobile-menu');
-        
+
         // Close menu when opening search
         if (!searchBar.classList.contains('hidden')) {
             searchBar.classList.add('hidden');
@@ -158,7 +162,7 @@
         const searchBar = document.getElementById('mobile-search-bar');
         const searchButton = e.target.closest('[onclick="toggleMobileSearch()"]');
         const searchInput = e.target.closest('#mobile-search-bar input');
-        
+
         if (!searchBar.contains(e.target) && !searchButton && !searchInput) {
             searchBar.classList.add('hidden');
         }

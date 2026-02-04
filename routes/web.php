@@ -226,6 +226,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
 
     // Tutorials
     Volt::route('tutorials', 'admin.tutorials.index')->name('tutorials.index');
+
+    // Live Sessions
+    Route::get('/live-sessions', function() {
+        return view('admin.live-sessions');
+    })->name('live-sessions.index');
 });
 
 Route::middleware(['auth'])->group(function () {
