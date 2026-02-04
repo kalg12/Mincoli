@@ -77,27 +77,22 @@ class OrderController extends Controller
 
             $movementGroups = $this->buildMovementGroups($order);
 
-            // ACTION 1: DEDUCT STOCK MOVEMENT (Pending -> Paid)
-            // Stock was ALREADY decremented during reservation. Just record the AUDIT trail.
-            if ($request->status === 'paid' && $oldStatus === 'pending') {
-                if (!$this->orderMovementExistsForOrder($order, $movementGroups, 'out')) {
-                    $this->recordOrderMovementForOrder(
-                        $order,
-                        $movementGroups,
-                        'out',
-                        'Venta confirmada por administrador #' . $order->order_number,
-                        Auth::id()
-                    );
-                }
-
-                foreach($order->payments as $payment) {
-                    if ($payment->status !== 'paid') {
-                        $payment->status = 'paid';
-                        $payment->paid_at = now();
-                        $payment->save();
-                    }
-                }
-            }
+             // ACTION 1: DEDUCT STOCK MOVEMENT (Pending -> Paid)
+             // Stock was ALREADY decremented during reservation. Just record the AUDIT trail.
+             // NOTE: Changed to NOT record inventory movements when marking as paid
+             if ($request->status === 'paid' && $oldStatus === 'pending') {
+                 // No longer record inventory movements when just changing status to paid
+                 // This prevents creating movements in /dashboard/inventory/movements
+                 // when only the payment status is updated
+                 
+                 foreach($order->payments as $payment) {
+                     if ($payment->status !== 'paid') {
+                         $payment->status = 'paid';
+                         $payment->paid_at = now();
+                         $payment->save();
+                     }
+                 }
+             }
 
             // ACTION 2: RESTORE STOCK + RECORD ENTRY (Cancel/Refund)
             // For pending, stock was reserved. For paid/shipped/delivered, stock was already out.
@@ -146,12 +141,12 @@ class OrderController extends Controller
                 );
             }
 
-            $message = 'Estado del pedido actualizado correctamente.';
-            if ($request->status === 'paid' && $oldStatus !== 'paid') {
-                $message = 'Pedido marcado como pagado e inventario descontado.';
-            } elseif ($request->status === 'cancelled' && $oldStatus === 'paid' && $request->has('restore_stock')) {
-                $message = 'Pedido cancelado e inventario devuelto.';
-            }
+             $message = 'Estado del pedido actualizado correctamente.';
+             if ($request->status === 'paid' && $oldStatus !== 'paid') {
+                 $message = 'Pedido marcado como pagado.';
+             } elseif ($request->status === 'cancelled' && $oldStatus === 'paid' && $request->has('restore_stock')) {
+                 $message = 'Pedido cancelado e inventario devuelto.';
+             }
 
             return back()->with('success', $message);
         });
