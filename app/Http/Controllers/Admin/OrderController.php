@@ -68,19 +68,22 @@ class OrderController extends Controller
             $order->status = $request->status;
             $order->save();
 
-            OrderStatusHistory::create([
+            $statusHistory = OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => $oldStatus,
                 'to_status' => $request->status,
                 'note' => 'Actualizado por administrador',
             ]);
 
+            $movementGroups = $this->buildMovementGroups($order);
+
             // ACTION 1: DEDUCT STOCK MOVEMENT (Pending -> Paid)
             // Stock was ALREADY decremented during reservation. Just record the AUDIT trail.
             if ($request->status === 'paid' && $oldStatus === 'pending') {
-                if (!$this->orderMovementExists($order, 'out')) {
-                    $this->recordOrderMovement(
+                if (!$this->orderMovementExistsForOrder($order, $movementGroups, 'out')) {
+                    $this->recordOrderMovementForOrder(
                         $order,
+                        $movementGroups,
                         'out',
                         'Venta confirmada por administrador #' . $order->order_number,
                         Auth::id()
@@ -108,7 +111,7 @@ class OrderController extends Controller
                     }
                 }
 
-                if (!$this->orderMovementExists($order, 'in')) {
+                if (!$this->orderMovementExistsForStatus($statusHistory->id, $movementGroups, 'in')) {
                     $reason = match ($oldStatus) {
                         'pending' => 'Cancelación de pedido pendiente #' . $order->order_number,
                         'paid', 'partially_paid' => 'Restauración por cancelación de pedido pagado #' . $order->order_number,
@@ -117,25 +120,29 @@ class OrderController extends Controller
                         default => 'Restauración de inventario por cancelación #' . $order->order_number,
                     };
 
-                    $this->recordOrderMovement(
+                    $this->recordOrderMovementForStatus(
                         $order,
+                        $movementGroups,
                         'in',
                         $reason,
-                        Auth::id()
+                        Auth::id(),
+                        $statusHistory->id
                     );
                 }
             }
 
             // ACTION 1B: RECORD MOVEMENT WHEN SHIPPING/DELIVERING (if not already recorded)
             // Some orders go directly to shipped/delivered without passing through paid.
-            if (in_array($request->status, ['shipped', 'delivered']) && !$this->orderMovementExists($order, 'out')) {
-                $this->recordOrderMovement(
+            if (in_array($request->status, ['shipped', 'delivered']) && !$this->orderMovementExistsForStatus($statusHistory->id, $movementGroups, 'out')) {
+                $this->recordOrderMovementForStatus(
                     $order,
+                    $movementGroups,
                     'out',
                     ($request->status === 'shipped'
                         ? 'Pedido enviado #' . $order->order_number
                         : 'Pedido entregado #' . $order->order_number),
-                    Auth::id()
+                    Auth::id(),
+                    $statusHistory->id
                 );
             }
 
@@ -150,36 +157,84 @@ class OrderController extends Controller
         });
     }
 
-    private function orderMovementExists(Order $order, string $type): bool
+    private function buildMovementGroups(Order $order): array
     {
-        $itemIds = $order->items->pluck('id');
+        $groups = [];
+
+        foreach ($order->items as $item) {
+            $variantId = $item->variant_id ?? 0;
+            $key = $item->product_id . '|' . $variantId;
+
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'product_id' => $item->product_id,
+                    'variant_id' => $item->variant_id,
+                    'quantity' => 0,
+                ];
+            }
+
+            $groups[$key]['quantity'] += $item->quantity;
+        }
+
+        return array_values($groups);
+    }
+
+    private function orderMovementExistsForOrder(Order $order, array $movementGroups, string $type): bool
+    {
+        $referenceTypes = collect($movementGroups)
+            ->map(fn ($group) => 'OrderMovement:' . $order->id . ':product:' . $group['product_id'] . ':variant:' . ($group['variant_id'] ?? 0))
+            ->all();
 
         return InventoryMovement::where('type', $type)
-            ->where(function ($query) use ($order, $itemIds) {
-                $query->where(function ($q) use ($order) {
-                    $q->where('reference_type', 'Order')
-                        ->where('reference_id', $order->id);
-                })
-                ->orWhere(function ($q) use ($itemIds) {
-                    $q->where('reference_type', 'OrderItem')
-                        ->whereIn('reference_id', $itemIds);
-                });
-            })
+            ->where('reference_id', $order->id)
+            ->whereIn('reference_type', $referenceTypes)
             ->exists();
     }
 
-    private function recordOrderMovement(Order $order, string $type, string $reason, ?int $userId): void
+    private function orderMovementExistsForStatus(int $statusHistoryId, array $movementGroups, string $type): bool
     {
-        foreach ($order->items as $item) {
+        $referenceTypes = collect($movementGroups)
+            ->map(fn ($group) => 'OrderStatusHistory:' . $statusHistoryId . ':product:' . $group['product_id'] . ':variant:' . ($group['variant_id'] ?? 0))
+            ->all();
+
+        return InventoryMovement::where('type', $type)
+            ->where('reference_id', $statusHistoryId)
+            ->whereIn('reference_type', $referenceTypes)
+            ->exists();
+    }
+
+    private function recordOrderMovementForOrder(Order $order, array $movementGroups, string $type, string $reason, ?int $userId): void
+    {
+        foreach ($movementGroups as $group) {
             try {
                 InventoryMovement::create([
-                    'product_id' => $item->product_id,
-                    'variant_id' => $item->variant_id,
+                    'product_id' => $group['product_id'],
+                    'variant_id' => $group['variant_id'],
                     'type' => $type,
-                    'quantity' => $item->quantity,
+                    'quantity' => $group['quantity'],
                     'reason' => $reason,
-                    'reference_type' => 'OrderItem',
-                    'reference_id' => $item->id,
+                    'reference_type' => 'OrderMovement:' . $order->id . ':product:' . $group['product_id'] . ':variant:' . ($group['variant_id'] ?? 0),
+                    'reference_id' => $order->id,
+                    'created_by' => $userId,
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) throw $e;
+            }
+        }
+    }
+
+    private function recordOrderMovementForStatus(Order $order, array $movementGroups, string $type, string $reason, ?int $userId, int $statusHistoryId): void
+    {
+        foreach ($movementGroups as $group) {
+            try {
+                InventoryMovement::create([
+                    'product_id' => $group['product_id'],
+                    'variant_id' => $group['variant_id'],
+                    'type' => $type,
+                    'quantity' => $group['quantity'],
+                    'reason' => $reason,
+                    'reference_type' => 'OrderStatusHistory:' . $statusHistoryId . ':product:' . $group['product_id'] . ':variant:' . ($group['variant_id'] ?? 0),
+                    'reference_id' => $statusHistoryId,
                     'created_by' => $userId,
                 ]);
             } catch (\Illuminate\Database\QueryException $e) {
