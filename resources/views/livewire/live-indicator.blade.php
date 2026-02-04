@@ -25,7 +25,7 @@
                 wire:click="closePreview"
             >
                 <div
-                    class="live-preview-modal bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+                    class="live-preview-modal bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col mx-auto"
                     @click.stop
                 >
                     <!-- Header -->
@@ -84,7 +84,7 @@
                                 @if ($activeLive->starts_at)
                                     <p class="text-gray-700 flex items-center gap-2">
                                         <i class="fas fa-clock text-pink-600"></i>
-                                        Iniciado hace {{ $activeLive->starts_at->diffForHumans() }}
+                                        Iniciado {{ $activeLive->starts_at->diffForHumans() }}
                                     </p>
                                 @endif
                             </div>
