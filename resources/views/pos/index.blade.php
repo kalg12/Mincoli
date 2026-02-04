@@ -393,36 +393,36 @@
 
         <div class="mt-8 grid grid-cols-2 gap-8">
             <div>
-                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #a1a1aa;">Cliente</h3>
-                <p class="text-sm font-black uppercase" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
-                <p class="text-xs font-bold" style="color: #71717a;" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
+                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #000000;">Cliente</h3>
+                <p class="text-sm font-black uppercase" style="color: #000000;" x-text="(linkedCustomer ? linkedCustomer.name : (manualCustomer.name ? manualCustomer.name : 'Público General'))"></p>
+                <p class="text-xs font-bold" style="color: #000000;" x-text="(linkedCustomer ? linkedCustomer.phone : (manualCustomer.phone ? manualCustomer.phone : '-'))"></p>
             </div>
             <div class="text-right">
-                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #a1a1aa;">Métodos de Pago</h3>
-                <p class="text-[9px] font-bold leading-relaxed">Depósitos OXXO: 2242 1701 8074 1927</p>
-                <p class="text-[9px] font-bold leading-relaxed">CLABE AZTECA: 1271 8001 3158 064 597</p>
+                <h3 class="text-[10px] font-black uppercase mb-2 tracking-widest" style="color: #000000;">Métodos de Pago</h3>
+                <p class="text-[9px] font-bold leading-relaxed" style="color: #000000;">Depósitos OXXO: 2242 1701 8074 1927</p>
+                <p class="text-[9px] font-bold leading-relaxed" style="color: #000000;">CLABE AZTECA: 1271 8001 3158 064 597</p>
             </div>
         </div>
 
         <div class="mt-10">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr style="border-bottom: 1px solid #e4e4e7;">
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest" style="color: #a1a1aa;">Producto</th>
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-center" style="color: #a1a1aa;">Cant.</th>
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #a1a1aa;">Precio</th>
-                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #a1a1aa;">Total</th>
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest" style="color: #000000;">Producto</th>
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-center" style="color: #000000;">Cant.</th>
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #000000;">Precio</th>
+                        <th class="py-3 text-[10px] font-black uppercase tracking-widest text-right" style="color: #000000;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-for="item in cart" :key="item.id + (item.variant ? '-' + item.variant.id : '')">
-                        <tr style="border-bottom: 1px solid #f4f4f5;">
+                        <tr style="border-bottom: 1px solid #e4e4e7;">
                             <td class="py-4">
-                                <div class="text-xs font-black uppercase" x-text="item.name"></div>
-                                <div x-show="item.variant" class="text-[9px] font-bold mt-0.5" style="color: #71717a;" x-text="item.variant ? item.variant.name : ''"></div>
+                                <div class="text-xs font-black uppercase" style="color: #000000;" x-text="item.name"></div>
+                                <div x-show="item.variant" class="text-[9px] font-bold mt-0.5" style="color: #000000;" x-text="item.variant ? item.variant.name : ''"></div>
                             </td>
-                            <td class="py-4 text-center text-xs font-bold" x-text="item.quantity"></td>
-                            <td class="py-4 text-right text-xs font-bold" x-text="'$' + parseFloat(item.price).toLocaleString()"></td>
+                            <td class="py-4 text-center text-xs font-bold" style="color: #000000;" x-text="item.quantity"></td>
+                            <td class="py-4 text-right text-xs font-bold" style="color: #000000;" x-text="'$' + parseFloat(item.price).toLocaleString()"></td>
                             <td class="py-4 text-right text-xs font-black" style="color: #db2777;" x-text="'$' + (item.price * item.quantity).toLocaleString()"></td>
                         </tr>
                     </template>
@@ -432,16 +432,16 @@
 
         <div class="mt-8 flex justify-end">
             <div class="w-48 space-y-2">
-                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #71717a;" x-show="showIva">
+                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #000000;" x-show="showIva">
                     <span>Subtotal</span>
                     <span x-text="'$' + subtotal.toLocaleString()"></span>
                 </div>
-                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #71717a;" x-show="showIva">
+                <div class="flex justify-between text-[10px] font-bold uppercase" style="color: #000000;" x-show="showIva">
                     <span>IVA (16%)</span>
                     <span x-text="'$' + (total - subtotal).toLocaleString()"></span>
                 </div>
                 <div class="flex justify-between items-center py-3 mt-2" style="border-top: 2px solid #ec4899;">
-                    <span class="text-xs font-black uppercase tracking-tight">Total</span>
+                    <span class="text-xs font-black uppercase tracking-tight" style="color: #000000;">Total</span>
                     <span class="text-xl font-black" style="color: #db2777;" x-text="'$' + total.toLocaleString()"></span>
                 </div>
             </div>
