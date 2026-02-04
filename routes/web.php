@@ -99,6 +99,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
 
         // Tickets
         Route::get('/transaction/{transaction}/ticket', [POSController::class, 'printTicket'])->name('ticket.print');
+        Route::get('/orders/{order}/ticket', [POSController::class, 'printOrderTicket'])->name('order.ticket'); // New route for Order model tickets
 
         // Items pendientes por enviar
         Route::get('/pending-shipments', [POSController::class, 'pendingShipments'])->name('pending-shipments.index');

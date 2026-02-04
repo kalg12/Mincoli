@@ -300,6 +300,18 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 pt-2 border-t border-zinc-800/50">
+                        <div class="flex gap-2">
+                             <button @click="paymentStatus = 'paid'" 
+                                     :class="{'bg-pink-600 text-white shadow-pink-900/40': paymentStatus === 'paid', 'bg-zinc-800 text-zinc-500 hover:text-white': paymentStatus !== 'paid'}"
+                                     class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg">
+                                 <i class="fas fa-check-circle"></i> Pagado
+                             </button>
+                             <button @click="paymentStatus = 'pending'"
+                                     :class="{'bg-yellow-600 text-white shadow-yellow-900/40': paymentStatus === 'pending', 'bg-zinc-800 text-zinc-500 hover:text-white': paymentStatus !== 'pending'}"
+                                     class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg">
+                                 <i class="fas fa-clock"></i> Pendiente
+                             </button>
+                        </div>
                         <button @click="proceedToOrder()" :disabled="cart.length === 0"
                             class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-black uppercase tracking-widest transition-all disabled:opacity-20 disabled:cursor-not-allowed text-sm shadow-xl shadow-emerald-900/20 active:scale-95">
                             Procesar Orden
@@ -493,6 +505,7 @@
                  linkedCustomer: null,
                  manualCustomerMode: false,
                  manualCustomer: { name: '', phone: '' },
+                 paymentStatus: 'paid',
 
                  // Initialize customer data from localStorage
                  init() {
@@ -893,7 +906,8 @@
                                 items: this.cart,
                                 customer_id: this.linkedCustomer ? this.linkedCustomer.id : null,
                                 customer_name: this.manualCustomerMode ? this.manualCustomer.name : null,
-                                customer_phone: this.manualCustomerMode ? this.manualCustomer.phone : null
+                                customer_phone: this.manualCustomerMode ? this.manualCustomer.phone : null,
+                                payment_status: this.paymentStatus
                             })
                         });
 

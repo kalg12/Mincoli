@@ -354,6 +354,7 @@ class POSController extends Controller
             'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:255',
+            'payment_status' => 'nullable|in:paid,pending',
         ]);
 
         try {
@@ -384,6 +385,8 @@ class POSController extends Controller
             $iva = $showIva ? ($total * 0.16 / 1.16) : 0;
             $calculatedSubtotal = $showIva ? ($subtotal / 1.16) : $subtotal;
 
+            $status = $request->payment_status ?? 'paid';
+
             $order = Order::create([
                 'customer_id' => $request->customer_id,
                 'customer_name' => $request->customer_name,
@@ -392,9 +395,9 @@ class POSController extends Controller
                 'iva_total' => $iva,
                 'total' => $total,
                 'channel' => 'pos',
-                'status' => 'paid',
+                'status' => $status,
                 'placed_at' => now(),
-                'notes' => 'Pedido generado desde el POS.',
+                'notes' => 'Pedido generado desde el POS. Estado: ' . ($status == 'paid' ? 'Pagado' : 'Pendiente'),
             ]);
 
             foreach ($items as $item) {
@@ -421,7 +424,7 @@ class POSController extends Controller
                         'variant_id' => $item['variant']['id'],
                         'type' => 'out',
                         'quantity' => $item['quantity'],
-                        'reason' => "Venta POS - Orden #{$order->order_number}",
+                        'reason' => "Venta POS - Orden #{$order->order_number} ({$status})",
                         'reference_type' => 'Order',
                         'reference_id' => $order->id,
                         'created_by' => Auth::id(),
@@ -435,7 +438,7 @@ class POSController extends Controller
                         'variant_id' => null,
                         'type' => 'out',
                         'quantity' => $item['quantity'],
-                        'reason' => "Venta POS - Orden #{$order->order_number}",
+                        'reason' => "Venta POS - Orden #{$order->order_number} ({$status})",
                         'reference_type' => 'Order',
                         'reference_id' => $order->id,
                         'created_by' => Auth::id(),
@@ -476,5 +479,15 @@ class POSController extends Controller
     public function success(Order $order): View
     {
         return view('pos.success', compact('order'));
+    }
+
+    public function printOrderTicket(Order $order)
+    {
+        $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
+        
+        return view('pos.ticket_order', [
+            'order' => $order->load(['items.product', 'items.variant']),
+            'showIva' => $showIva,
+        ]);
     }
 }

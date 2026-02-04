@@ -36,7 +36,7 @@
                         <i class="fas fa-plus-circle text-lg"></i> Nueva Venta
                     </a>
                     <div class="grid grid-cols-2 gap-4">
-                        <a href="{{ route('dashboard.pos.ticket.print', $order->id) }}" target="_blank" class="bg-zinc-800 text-white px-6 py-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all border border-zinc-700 transform active:scale-95">
+                        <a href="{{ route('dashboard.pos.order.ticket', $order->id) }}" target="_blank" class="bg-zinc-800 text-white px-6 py-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all border border-zinc-700 transform active:scale-95">
                             <i class="fas fa-print"></i> Ticket
                         </a>
                         <a href="{{ route('dashboard.orders.show', $order->id) }}" class="bg-zinc-800 text-white px-6 py-4 rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-zinc-700 transition-all border border-zinc-700 transform active:scale-95">
