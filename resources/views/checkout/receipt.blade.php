@@ -8,9 +8,20 @@
     <style>
         @media print {
             .no-print { display: none; }
-            body {
+            body { 
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+            /* Evitar líneas verticales en impresión */
+            table {
+                border-collapse: collapse;
+            }
+            td, th {
+                border: none !important;
+            }
+            /* Mejorar visibilidad del footer en impresión */
+            .footer-print {
+                color: #6b7280 !important;
             }
         }
     </style>
@@ -29,12 +40,12 @@
 
          <div class="mb-8">
              <div class="grid grid-cols-2 gap-4 text-sm">
-                 <div>
-                     <h3 class="font-bold text-pink-600 uppercase mb-2">Cliente</h3>
-                     <p class="text-gray-700">{{ $order->customer_name }}</p>
-                     <p class="text-gray-600">{{ $order->customer_email }}</p>
-                     <p class="text-gray-600">{{ $order->customer_phone }}</p>
-                 </div>
+                  <div>
+                      <h3 class="font-bold text-pink-600 uppercase mb-2">Cliente</h3>
+                      <p class="text-gray-900 font-medium">{{ $order->customer_name }}</p>
+                      <p class="text-gray-800">{{ $order->customer_email }}</p>
+                      <p class="text-gray-800">{{ $order->customer_phone }}</p>
+                  </div>
                  <div class="text-right">
                      <h3 class="font-bold text-pink-600 uppercase mb-2">Fecha</h3>
                      <p class="text-gray-700">{{ $order->created_at->format('d/m/Y') }}</p>
@@ -50,35 +61,35 @@
              </div>
          </div>
 
-         <table class="w-full mb-8 text-sm">
-             <thead>
-                 <tr class="border-b-2 border-pink-500 text-left">
-                     <th class="py-3 font-bold text-pink-600">Producto</th>
-                     <th class="py-3 text-right font-bold text-pink-600">Cant</th>
-                     <th class="py-3 text-right font-bold text-pink-600">Total</th>
-                 </tr>
-             </thead>
-             <tbody class="divide-y divide-gray-200">
-                 @foreach($order->items as $item)
-                 <tr>
-                     <td class="py-3">
-                         <div class="font-medium text-gray-900">{{ $item->product->name }}</div>
-                         @if($item->variant)
-                         <div class="text-gray-500 text-xs">{{ $item->variant->name }}</div>
-                         @endif
-                     </td>
-                     <td class="py-3 text-right text-gray-700">{{ $item->quantity }}</td>
-                     <td class="py-3 text-right font-medium text-gray-900">${{ number_format($item->total, 2) }}</td>
-                 </tr>
-                 @endforeach
-             </tbody>
-             <tfoot class="border-t-2 border-pink-500">
-                 <tr>
-                     <td colspan="2" class="py-4 text-right font-bold text-pink-600 text-lg">Total</td>
-                     <td class="py-4 text-right font-bold text-2xl bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-transparent">${{ number_format($order->total, 2) }}</td>
-                 </tr>
-             </tfoot>
-         </table>
+          <table class="w-full mb-8 text-sm border-collapse">
+              <thead>
+                  <tr class="border-b-2 border-pink-500 text-left">
+                      <th class="py-3 font-bold text-pink-600">Producto</th>
+                      <th class="py-3 text-right font-bold text-pink-600">Cant</th>
+                      <th class="py-3 text-right font-bold text-pink-600">Total</th>
+                  </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                  @foreach($order->items as $item)
+                  <tr>
+                      <td class="py-3">
+                          <div class="font-medium text-gray-900">{{ $item->product->name }}</div>
+                          @if($item->variant)
+                          <div class="text-gray-500 text-xs">{{ $item->variant->name }}</div>
+                          @endif
+                      </td>
+                      <td class="py-3 text-right text-gray-700">{{ $item->quantity }}</td>
+                      <td class="py-3 text-right font-medium text-gray-900">${{ number_format($item->total, 2) }}</td>
+                  </tr>
+                  @endforeach
+              </tbody>
+              <tfoot class="border-t-2 border-pink-500">
+                  <tr>
+                      <td colspan="2" class="py-4 text-right font-bold text-pink-600 text-lg">Total</td>
+                      <td class="py-4 text-right font-bold text-2xl bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-transparent">${{ number_format($order->total, 2) }}</td>
+                  </tr>
+              </tfoot>
+          </table>
 
          @if($order->status == 'pending' && $order->payments->first())
          <div class="bg-gradient-to-r from-pink-50 to-pink-100 border-2 border-pink-200 p-4 rounded-lg text-sm mb-8">
@@ -90,10 +101,14 @@
          </div>
          @endif
 
-         <div class="text-center text-xs text-gray-400 mt-12 pt-8 border-t border-pink-200">
-             <p class="mb-1">Gracias por tu compra en Mincoli 💕</p>
-             <p>{{ config('app.url') }}</p>
-         </div>
+          <div class="text-center text-sm mt-12 pt-8 border-t border-pink-200 space-y-2 footer-print">
+              <p class="font-medium text-pink-600 mb-2">Gracias por tu compra en Mincoli 💕</p>
+              <p class="flex items-center justify-center gap-2 text-gray-700 font-medium">
+                  <i class="fas fa-phone text-pink-500"></i>
+                  Teléfono: 56-1170-1166
+              </p>
+              <p class="text-gray-700 font-medium">{{ config('app.url') }}</p>
+          </div>
 
          <div class="mt-8 text-center no-print space-y-3">
              <button onclick="window.print()" class="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl font-bold transition-all duration-300 transform hover:scale-105">
