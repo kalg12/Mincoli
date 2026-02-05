@@ -818,9 +818,11 @@
                             return;
                         }
 
-                        // Validar que hay cliente
-                        if (!this.linkedCustomer && (!this.manualCustomerMode || !this.manualCustomer.name || !this.manualCustomer.phone)) {
-                            alert('Necesitas seleccionar o ingresar un cliente para compartir la cotización.');
+                        // Validar que hay cliente: debe tener linkedCustomer O estar en modo manual con nombre y teléfono completo
+                        const hasClient = this.linkedCustomer || (this.manualCustomerMode && this.manualCustomer.name && this.manualCustomer.name.trim() && this.manualCustomer.phone && this.manualCustomer.phone.trim());
+
+                        if (!hasClient) {
+                            alert('Necesitas seleccionar o ingresar un cliente (nombre y teléfono) para compartir la cotización.');
                             return;
                         }
 
@@ -913,6 +915,20 @@
                 },
 
                 async exportQuotation(type) {
+                    // Validar que hay productos en el carrito
+                    if (!this.cart || this.cart.length === 0) {
+                        alert('El carrito está vacío. Agrega productos para generar la cotización.');
+                        return;
+                    }
+
+                    // Validar que hay cliente: debe tener linkedCustomer O estar en modo manual con nombre y teléfono completo
+                    const hasClient = this.linkedCustomer || (this.manualCustomerMode && this.manualCustomer.name && this.manualCustomer.name.trim() && this.manualCustomer.phone && this.manualCustomer.phone.trim());
+
+                    if (!hasClient) {
+                        alert('Necesitas seleccionar o ingresar un cliente (nombre y teléfono) para generar la cotización.');
+                        return;
+                    }
+
                     this.isExporting = true;
                     this.isLoading = true;
 
@@ -1102,9 +1118,11 @@
                 async proceedToOrder() {
                     if (this.cart.length === 0) return;
 
-                    // Validar que hay cliente
-                    if (!this.linkedCustomer && (!this.manualCustomerMode || !this.manualCustomer.name || !this.manualCustomer.phone)) {
-                        alert('Necesitas seleccionar o ingresar un cliente para proceder con la venta.');
+                    // Validar que hay cliente: debe tener linkedCustomer O estar en modo manual con nombre y teléfono completo
+                    const hasClient = this.linkedCustomer || (this.manualCustomerMode && this.manualCustomer.name && this.manualCustomer.name.trim() && this.manualCustomer.phone && this.manualCustomer.phone.trim());
+
+                    if (!hasClient) {
+                        alert('Necesitas seleccionar o ingresar un cliente (nombre y teléfono) para proceder con la venta.');
                         return;
                     }
 
