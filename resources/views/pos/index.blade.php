@@ -1068,24 +1068,10 @@
                             </div>
 
                             <!-- Total -->
-                            <div style="text-align: right; margin-bottom: 24px;">
-                                <div style="background-color: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 8px; padding: 24px; display: inline-block; min-width: 280px;">
-                                    ${this.showIva ? `
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #374151;">
-                                        <span>SUBTOTAL</span>
-                                        <span>$${Number(subtotalValue || 0).toFixed(2)}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #374151;">
-                                        <span>IVA (16%)</span>
-                                        <span>$${Number(totalValue - subtotalValue).toFixed(2)}</span>
-                                    </div>
-                                    ` : ''}
-                                    <div style="border-top: 2px solid #f9a8d4; padding-top: 12px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="font-size: 18px; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL A PAGAR</span>
-                                            <span style="font-size: 30px; font-weight: 900; color: #db2777;">$${Number(totalValue || 0).toFixed(2)}</span>
-                                        </div>
-                                    </div>
+                            <div style="text-align: right; margin-bottom: 24px; margin-top: 32px;">
+                                <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 16px;">
+                                    <span style="font-size: 16px; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL A PAGAR:</span>
+                                    <span style="font-size: 32px; font-weight: 900; color: #db2777;">$${Number(totalValue || 0).toFixed(2)}</span>
                                 </div>
                             </div>
 
