@@ -434,7 +434,7 @@
                     MÉTODOS DE PAGO
                 </h3>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <template x-for="method in paymentMethods" :key="method.id">
+                    <template x-for="method in paymentMethods.filter(m => !m.name.toLowerCase().includes('mercado'))" :key="method.id">
                         <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
                             <p style="font-size: 12px; font-weight: 900; color: #374151;" x-text="method.name"></p>
                             <p style="font-size: 14px; font-weight: 700; color: #111827;" x-text="method.supports_card_number && method.card_number ? method.card_number : (method.code || 'N/A')"></p>
@@ -827,8 +827,8 @@
                     message += `\n--------------------------\n`;
                     message += `DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
 
-                    // Agregar dinámicamente los métodos de pago activos
-                    this.paymentMethods.forEach(method => {
+                    // Agregar dinámicamente los métodos de pago activos (excluyendo Mercadopago)
+                    this.paymentMethods.filter(method => !method.name.toLowerCase().includes('mercado')).forEach(method => {
                         message += `*${method.name}*\n`;
                         if (method.supports_card_number && method.card_number) {
                             message += `Número: ${method.card_number}\n`;
@@ -986,8 +986,8 @@
                                 </div>
                                 <div style="flex: 1; background-color: #f9fafb; border-radius: 8px; padding: 16px;">
                                     <h3 style="font-size: 14px; font-weight: 900; color: #374151; margin: 0 0 12px 0; text-transform: uppercase;">MÉTODOS DE PAGO</h3>
-                                    ${this.paymentMethods.map((method, index) => `
-                                        <div style="margin-bottom: ${index === this.paymentMethods.length - 1 ? '0' : '8px'}; background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                                    ${this.paymentMethods.filter(m => !m.name.toLowerCase().includes('mercado')).map((method, index) => `
+                                        <div style="margin-bottom: ${index === this.paymentMethods.filter(m => !m.name.toLowerCase().includes('mercado')).length - 1 ? '0' : '8px'}; background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
                                             <p style="font-size: 12px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">${method.name}</p>
                                             <p style="font-size: 14px; font-weight: 700; color: #111827; margin: 0;">${method.supports_card_number && method.card_number ? method.card_number : (method.code || 'N/A')}</p>
                                             ${method.card_holder_name ? `<p style="font-size: 12px; color: #4b5563; margin: 2px 0 0 0;">Titular: ${method.card_holder_name}</p>` : ''}
