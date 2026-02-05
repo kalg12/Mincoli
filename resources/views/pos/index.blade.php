@@ -175,7 +175,7 @@
 
                     <!-- Customer Linking Section -->
                     <div class="bg-zinc-950 p-2 rounded-xl border border-zinc-800">
-                        <div x-show="!linkedCustomer && !manualCustomerMode">
+                        <div x-show="!manualCustomerMode">
                             <div class="flex items-center justify-between px-2 py-1 mb-1">
                                 <label class="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Cliente</label>
                                 <button @click="manualCustomerMode = true" class="text-[10px] font-black uppercase text-pink-400 hover:text-pink-300 transition-colors underline decoration-pink-900/50 underline-offset-4">Manual</button>
