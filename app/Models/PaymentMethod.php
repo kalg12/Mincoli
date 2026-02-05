@@ -14,10 +14,16 @@ class PaymentMethod extends Model
         'is_active',
         'settings',
         'instructions',
+        'supports_card_number',
+        'card_number',
+        'card_type',
+        'card_holder_name',
+        'bank_name',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'supports_card_number' => 'boolean',
         'settings' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

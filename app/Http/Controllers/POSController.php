@@ -32,24 +32,24 @@ class POSController extends Controller
             }])
             ->orderBy('name')
             ->get();
-        
+
         // Obtener el número de productos por página desde la solicitud, default 30
         $perPage = $request->get('per_page', 30);
-        
+
         // Validar que el per_page sea un valor permitido
         $allowedPerPage = [10, 20, 30, 50, 100];
         if (!in_array($perPage, $allowedPerPage)) {
             $perPage = 30;
         }
-        
+
         // Cargar productos con sus variantes e imagenes para el grid inicial (incluyendo inactivos para POS)
         $products = Product::with(['variants', 'images', 'category'])
             ->latest()
             ->paginate($perPage);
-            
+
         // Transformar los productos para incluir image_url
         $products->getCollection()->transform(function ($product) {
-            $product->image_url = $product->images->first()?->url 
+            $product->image_url = $product->images->first()?->url
                 ?? 'https://ui-avatars.com/api/?name=' . urlencode($product->name) . '&background=27272a&color=a1a1aa&size=256';
             return $product;
         });
@@ -95,7 +95,7 @@ class POSController extends Controller
             })
             ->with(['variants', 'images'])
             ->paginate($perPage);
-            
+
         // Append image_url accessor
         $products->getCollection()->each(function($product) {
             $product->append('image_url');
@@ -202,10 +202,20 @@ class POSController extends Controller
             'status' => 'nullable|in:pending,completed',
             'reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'card_number' => 'nullable|digits:16',
+            'card_type' => 'nullable|in:credit,debit',
+            'card_holder_name' => 'nullable|string|max:255',
         ]);
 
         $validated['status'] = $validated['status'] ?? 'completed';
         $validated['paid_at'] = $validated['status'] === 'completed' ? now() : null;
+
+        // Only add card data if all three fields are provided
+        if (!empty($validated['card_number']) && !empty($validated['card_type']) && !empty($validated['card_holder_name'])) {
+            // Card data is already in $validated
+        } else {
+            unset($validated['card_number'], $validated['card_type'], $validated['card_holder_name']);
+        }
 
         $transaction->payments()->create($validated);
 
@@ -377,7 +387,7 @@ class POSController extends Controller
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
-            $total = $subtotal; 
+            $total = $subtotal;
             $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
             $iva = $showIva ? ($total * 0.16 / 1.16) : 0;
             $calculatedSubtotal = $showIva ? ($subtotal / 1.16) : $subtotal;
@@ -415,7 +425,7 @@ class POSController extends Controller
                 if ($item['variant']) {
                     $variant = ProductVariant::find($item['variant']['id']);
                     $variant->decrement('stock', $item['quantity']);
-                    
+
                     InventoryMovement::create([
                         'product_id' => $item['id'],
                         'variant_id' => $item['variant']['id'],
@@ -481,7 +491,7 @@ class POSController extends Controller
     public function printOrderTicket(Order $order)
     {
         $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
-        
+
         return view('pos.ticket_order', [
             'order' => $order->load(['items.product', 'items.variant']),
             'showIva' => $showIva,

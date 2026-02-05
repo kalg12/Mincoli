@@ -238,6 +238,17 @@
                                 @if($payment->reference)
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">Ref: {{ $payment->reference }}</div>
                                 @endif
+
+                                @if($payment->card_number)
+                                    <div class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 p-1 rounded border border-blue-200 dark:border-blue-800">
+                                        <i class="fas fa-credit-card mr-1"></i>
+                                        {{ substr($payment->card_number, 0, 4) }} **** **** {{ substr($payment->card_number, -4) }}
+                                        ({{ $payment->card_type === 'credit' ? 'Crédito' : 'Débito' }})
+                                        @if($payment->card_holder_name)
+                                            - {{ $payment->card_holder_name }}
+                                        @endif
+                                    </div>
+                                @endif
                             @endforeach
 
                             <div class="border-t border-zinc-200 dark:border-zinc-700 pt-2 flex justify-between font-semibold text-zinc-900 dark:text-zinc-100">
@@ -323,6 +334,35 @@
                                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                                        dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
                             ></textarea>
+                        </div>
+
+                        <!-- Card Details Section (optional) -->
+                        <div class="border-t border-zinc-200 dark:border-zinc-700 pt-3 mt-3">
+                            <label class="flex items-center gap-2 text-sm font-semibold mb-3 text-zinc-800 dark:text-zinc-200 cursor-pointer">
+                                <input type="checkbox" id="useCardToggle" class="w-4 h-4 rounded">
+                                Agregar datos de tarjeta
+                            </label>
+
+                            <div id="cardDetailsSection" class="hidden space-y-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 text-zinc-800 dark:text-zinc-200">Número de Tarjeta (16 dígitos)</label>
+                                    <input type="text" name="card_number" placeholder="1234 5678 9012 3456" maxlength="16" inputmode="numeric" class="w-full px-3 py-2 rounded border border-zinc-300 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1 text-zinc-800 dark:text-zinc-200">Tipo</label>
+                                        <select name="card_type" class="w-full px-3 py-2 rounded border border-zinc-300 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Selecciona...</option>
+                                            <option value="credit">Crédito</option>
+                                            <option value="debit">Débito</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1 text-zinc-800 dark:text-zinc-200">Titular</label>
+                                        <input type="text" name="card_holder_name" placeholder="Nombre completo" class="w-full px-3 py-2 rounded border border-zinc-300 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <button
@@ -546,6 +586,27 @@ document.getElementById('paymentForm').addEventListener('submit', async (e) => {
         return;
     }
 
+    // Validate card data if present
+    const cardNumberInput = document.querySelector('input[name="card_number"]');
+    const cardTypeSelect = document.querySelector('select[name="card_type"]');
+    const cardHolderInput = document.querySelector('input[name="card_holder_name"]');
+    const useCardToggle = document.getElementById('useCardToggle');
+
+    if (useCardToggle.checked) {
+        if (!cardNumberInput.value || cardNumberInput.value.length !== 16) {
+            alert('Por favor ingresa un número de tarjeta válido (16 dígitos)');
+            return;
+        }
+        if (!cardTypeSelect.value) {
+            alert('Por favor selecciona el tipo de tarjeta');
+            return;
+        }
+        if (!cardHolderInput.value.trim()) {
+            alert('Por favor ingresa el nombre del titular');
+            return;
+        }
+    }
+
     const formData = new FormData(e.target);
     const response = await fetch(paymentUrl, {
         method: 'POST',
@@ -557,6 +618,18 @@ document.getElementById('paymentForm').addEventListener('submit', async (e) => {
         location.reload();
     }
 });
+
+// Card details toggle
+document.getElementById('useCardToggle').addEventListener('change', function() {
+    const cardDetailsSection = document.getElementById('cardDetailsSection');
+    cardDetailsSection.classList.toggle('hidden', !this.checked);
+});
+
+// Format card number input
+document.querySelector('input[name="card_number"]').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 16);
+});
+
 </script>
 
 </x-layouts.app>

@@ -8,7 +8,7 @@
     <style>
         @media print {
             .no-print { display: none; }
-            body { 
+            body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -92,12 +92,38 @@
           </table>
 
          @if($order->status == 'pending' && $order->payments->first())
-         <div class="bg-gradient-to-r from-pink-50 to-pink-100 border-2 border-pink-200 p-4 rounded-lg text-sm mb-8">
-             <h3 class="font-bold text-pink-700 mb-3 flex items-center gap-2">
-                 <i class="fas fa-credit-card"></i>
-                 Instrucciones de Pago ({{ $order->payments->first()->method->name }})
-             </h3>
+         <div class="border border-gray-300 p-4 rounded text-sm mb-6">
+             <h3 class="font-bold text-gray-900 mb-2">Instrucciones de Pago ({{ $order->payments->first()->method->name }})</h3>
              <p class="whitespace-pre-line text-gray-700 leading-relaxed">{{ $order->payments->first()->method->instructions }}</p>
+             <p class="mt-3 text-gray-700">Este tipo de pago se verificara y puede comprobarse en 24 hrs.</p>
+         </div>
+         @endif
+
+         @if($order->payments->first() && $order->payments->first()->card_number)
+         <div class="border border-gray-300 p-4 rounded text-sm mb-8">
+             <h3 class="font-bold text-gray-900 mb-2">Datos de la Tarjeta</h3>
+             <div class="space-y-2 text-gray-800">
+                 <div class="flex justify-between">
+                     <span>Numero:</span>
+                     <span class="font-mono font-bold">{{ $order->payments->first()->card_number }}</span>
+                 </div>
+                 <div class="flex justify-between">
+                     <span>Tipo:</span>
+                     <span class="font-semibold">{{ ucfirst($order->payments->first()->card_type === 'credit' ? 'Crédito' : 'Débito') }}</span>
+                 </div>
+                 @if($order->payments->first()->method && $order->payments->first()->method->bank_name)
+                 <div class="flex justify-between">
+                     <span>Banco:</span>
+                     <span>{{ $order->payments->first()->method->bank_name }}</span>
+                 </div>
+                 @endif
+                 @if($order->payments->first()->card_holder_name)
+                 <div class="flex justify-between">
+                     <span>Titular:</span>
+                     <span>{{ $order->payments->first()->card_holder_name }}</span>
+                 </div>
+                 @endif
+             </div>
          </div>
          @endif
 

@@ -8,9 +8,11 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\MercadoPagoConfig;
 
@@ -81,6 +83,16 @@ class CheckoutController extends Controller
 
         $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
 
+        // Use admin-configured card details for receipts/instructions
+        $cardData = null;
+        if ($paymentMethod->supports_card_number && $paymentMethod->card_number) {
+            $cardData = [
+                'card_number' => $paymentMethod->card_number,
+                'card_type' => $paymentMethod->card_type,
+                'card_holder_name' => $paymentMethod->card_holder_name,
+            ];
+        }
+
         try {
             DB::beginTransaction();
 
@@ -88,12 +100,12 @@ class CheckoutController extends Controller
             $order = new Order();
             $order->order_number = 'ORD-' . strtoupper(Str::random(10));
             $order->status = 'pending'; // or draft/pending
-            $order->customer_id = auth()->id(); // If logged in
+            $order->customer_id = Auth::id(); // If logged in
             $order->customer_name = $request->customer_name;
             $order->customer_email = $request->customer_email;
             $order->customer_phone = $request->customer_phone;
 
-            
+
             // Calculate totals again for security
              $subtotal = 0;
              // Logic to calculate subtotal similar to index...
@@ -126,7 +138,7 @@ class CheckoutController extends Controller
                 $product = Product::find($itemData['product_id']);
                 $price = $product->sale_price ?? $product->price;
                 $variant = null;
-                
+
                 if(!empty($itemData['variant_id'])) {
                     $variant = ProductVariant::find($itemData['variant_id']);
                     if($variant) $price = $variant->sale_price ?? ($variant->price ?? $price);
@@ -170,6 +182,14 @@ class CheckoutController extends Controller
             $payment->method_id = $paymentMethod->id;
             $payment->amount = $total;
             $payment->status = 'pending';
+
+            // Add card details if available
+            if (!empty($cardData)) {
+                $payment->card_number = $cardData['card_number'];
+                $payment->card_type = $cardData['card_type'];
+                $payment->card_holder_name = $cardData['card_holder_name'];
+            }
+
             $payment->save();
 
             // COMMIT TRANSACTION HERE to prevent Database Locking (SQLite) during external API calls
@@ -213,7 +233,7 @@ class CheckoutController extends Controller
             return back()->with('error', 'Error al procesar el pedido: ' . $errorMessage);
         }
     }
-    
+
     /**
      * Creates Mercado Pago preference and returns view data.
      * Throws exception on failure.
@@ -221,7 +241,7 @@ class CheckoutController extends Controller
     private function createMercadoPagoPreference($order, $paymentMethod)
     {
         $settings = $paymentMethod->settings;
-        
+
         // Hybrid Credential Logic: DB Settings > .env Config
         $accessToken = !empty($settings['access_token']) ? $settings['access_token'] : config('services.mercadopago.access_token');
         $publicKey = !empty($settings['public_key']) ? $settings['public_key'] : config('services.mercadopago.public_key');
@@ -234,9 +254,9 @@ class CheckoutController extends Controller
 
         // Initialize SDK with specific config class
         \MercadoPago\MercadoPagoConfig::setAccessToken($accessToken);
-        
+
         $client = new \MercadoPago\Client\Preference\PreferenceClient();
-        
+
         $items = [];
         foreach ($order->items as $orderItem) {
             $items[] = [
@@ -258,7 +278,7 @@ class CheckoutController extends Controller
                 "currency_id" => "MXN"
             ];
         }
-        
+
         $nameParts = explode(' ', $order->customer_name, 2);
         $name = $nameParts[0];
         $surname = $nameParts[1] ?? 'Guest'; // Ensure surname is not empty if possible
@@ -269,7 +289,7 @@ class CheckoutController extends Controller
             "email" => $order->customer_email,
              // Phone removed to prevent format validation errors in guest checkout
         ];
-        
+
         try {
             // Note: secure_url forces https, which breaks on local http://mincoli.test
             // standard route() uses the current scheme (http/https) correctly.
@@ -277,7 +297,7 @@ class CheckoutController extends Controller
             // We use secure_url() to force HTTPS. Ensure your local environment supports it (e.g., 'herd secure').
             $backUrls = [
                 "success" => secure_url(route('checkout.success', $order, false)),
-                "failure" => secure_url(route('checkout.failure', ['order_id' => $order->id], false)), 
+                "failure" => secure_url(route('checkout.failure', ['order_id' => $order->id], false)),
                 "pending" => secure_url(route('checkout.success', $order, false))
             ];
 
@@ -302,7 +322,7 @@ class CheckoutController extends Controller
             if ($preference && $preference->id) {
                 // Select correct point based on environment
                 $initPoint = $isSandbox ? $preference->sandbox_init_point : $preference->init_point;
-                
+
                 Log::info('Mercado Pago Preference Created', [
                     'id' => $preference->id,
                     'sandbox' => $isSandbox,
@@ -324,7 +344,7 @@ class CheckoutController extends Controller
                 'content' => $content,
                 'message' => $e->getMessage()
             ]);
-            
+
             $friendlyMessage = 'Error de API Mercado Pago';
             if ($response && $contentArr = $response->getContent()) {
                 if (isset($contentArr['message'])) $friendlyMessage .= ': ' . $contentArr['message'];
@@ -346,7 +366,7 @@ class CheckoutController extends Controller
     {
         // Security Check
         $allowed = false;
-        if (auth()->check() && $order->customer_id === auth()->id()) $allowed = true;
+        if (Auth::check() && $order->customer_id === Auth::id()) $allowed = true;
         elseif (session()->has('last_order_id') && session('last_order_id') == $order->id) $allowed = true;
 
         if (!$allowed) abort(403, 'No tienes permiso para ver este pedido.');
@@ -448,7 +468,7 @@ class CheckoutController extends Controller
     {
         // Security check
         $allowed = false;
-        if (auth()->check()) $allowed = true; // Allow any logged in user (Admins/Customers)
+        if (Auth::check()) $allowed = true; // Allow any logged in user (Admins/Customers)
         elseif (session()->has('last_order_id') && session('last_order_id') == $order->id) $allowed = true;
 
         if (!$allowed) abort(403);
@@ -458,7 +478,7 @@ class CheckoutController extends Controller
     public function failure(Request $request)
     {
         $orderId = $request->get('order_id') ?? $request->get('external_reference');
-        
+
         if (!$orderId) {
             return redirect()->route('cart')->with('error', 'No se pudo identificar el pedido cancelado.');
         }
@@ -467,7 +487,7 @@ class CheckoutController extends Controller
 
         // Security: Ensure order belongs to user or session
         $allowed = false;
-        if (auth()->check() && $order && $order->customer_id === auth()->id()) $allowed = true;
+        if (Auth::check() && $order && $order->customer_id === Auth::id()) $allowed = true;
         elseif (session()->has('last_order_id') && session('last_order_id') == $orderId) $allowed = true;
 
         if (!$allowed || !$order) {

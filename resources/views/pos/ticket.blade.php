@@ -266,6 +266,18 @@
                             <span>{{ $payment->paymentMethod?->name ?? 'Pago' }}</span>
                             <span>{{ currency($payment->amount) }}</span>
                         </div>
+
+                        @if($payment->card_number)
+                            <div style="font-size: 8px; padding: 2px 0; margin: 2px 0; border: 1px solid #000; padding-left: 3px;">
+                                <strong>Tarjeta:</strong> {{ substr($payment->card_number, 0, 4) }} **** **** {{ substr($payment->card_number, -4) }}
+                                @if($payment->card_type)
+                                    <br/><strong>Tipo:</strong> {{ $payment->card_type === 'credit' ? 'Crédito' : 'Débito' }}
+                                @endif
+                                @if($payment->card_holder_name)
+                                    <br/><strong>Titular:</strong> {{ $payment->card_holder_name }}
+                                @endif
+                            </div>
+                        @endif
                     @endforeach
                     <div class="payment-item" style="border-bottom: 1px solid #000; margin-top: 3px;">
                         <strong>Pagado Total:</strong>

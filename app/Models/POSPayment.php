@@ -17,6 +17,9 @@ class POSPayment extends Model
         'status',
         'notes',
         'paid_at',
+        'card_number',
+        'card_type',
+        'card_holder_name',
     ];
 
     protected $casts = [

@@ -199,8 +199,11 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     // Payment Methods
     // Payment Methods
     Route::get('/payment-methods', [App\Http\Controllers\Admin\PaymentMethodController::class, 'index'])->name('payment-methods.index');
+    Route::get('/payment-methods/create', [App\Http\Controllers\Admin\PaymentMethodController::class, 'create'])->name('payment-methods.create');
+    Route::post('/payment-methods', [App\Http\Controllers\Admin\PaymentMethodController::class, 'store'])->name('payment-methods.store');
     Route::get('/payment-methods/{id}/edit', [App\Http\Controllers\Admin\PaymentMethodController::class, 'edit'])->name('payment-methods.edit');
     Route::put('/payment-methods/{id}', [App\Http\Controllers\Admin\PaymentMethodController::class, 'update'])->name('payment-methods.update');
+    Route::delete('/payment-methods/{id}', [App\Http\Controllers\Admin\PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
 
     // Shipping
     Route::get('/shipping', fn() => view('admin.shipping.index'))->name('shipping.index');
