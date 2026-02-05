@@ -434,14 +434,17 @@
                     MÉTODOS DE PAGO
                 </h3>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
-                        <p style="font-size: 12px; font-weight: 900; color: #374151;">DEPÓSITOS OXXO</p>
-                        <p style="font-size: 14px; font-weight: 700; color: #111827;">2242 1701 8074 1927</p>
-                    </div>
-                    <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
-                        <p style="font-size: 12px; font-weight: 900; color: #374151;">CLABE AZTECA</p>
-                        <p style="font-size: 14px; font-weight: 700; color: #111827;">1271 8001 3158 064 597</p>
-                    </div>
+                    <template x-for="method in paymentMethods" :key="method.id">
+                        <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                            <p style="font-size: 12px; font-weight: 900; color: #374151;" x-text="method.name"></p>
+                            <p style="font-size: 14px; font-weight: 700; color: #111827;" x-text="method.supports_card_number && method.card_number ? method.card_number : (method.code || 'N/A')"></p>
+                        </div>
+                    </template>
+                    <template x-if="paymentMethods.length === 0">
+                        <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                            <p style="font-size: 12px; font-weight: 900; color: #374151;">Sin métodos de pago activos</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -549,6 +552,7 @@
                  currentPage: {{ $products->currentPage() }},
                  lastPage: {{ $products->lastPage() }},
                  totalProducts: {{ $products->total() }},
+                 paymentMethods: @json($paymentMethods),
 
                  // Customer logic
                  customerSearch: '',
@@ -815,15 +819,34 @@
                     this.cart.forEach(item => {
                         const variantStr = item.variant ? ` (${item.variant.name})` : '';
                         const totalItem = parseFloat(item.price) * item.quantity;
-                        message += `▪️ *${item.quantity}x* ${item.name}${variantStr}\n   Precio unitario: $${parseFloat(item.price).toLocaleString('es-MX', {minimumFractionDigits: 2})} | Total: $${totalItem.toLocaleString('es-MX', {minimumFractionDigits: 2})}\n`;
+                        message += `• *${item.quantity}x* ${item.name}${variantStr}\n   Precio unitario: $${parseFloat(item.price).toLocaleString('es-MX', {minimumFractionDigits: 2})} | Total: $${totalItem.toLocaleString('es-MX', {minimumFractionDigits: 2})}\n`;
                     });
                     
                     message += `\n*TOTAL A PAGAR: $${this.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}*\n`;
                     
                     message += `\n--------------------------\n`;
-                    message += `🏦 DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
-                    message += `*DEPÓSITOS OXXO:*\nCÓDIGO DE DEPÓSITO EN CAJA\n2242 1701 8074 1927\nNOMBRE: KEVIN VALENTIN JIMENEZ MARTINEZ\n\n`;
-                    message += `*TRANSFERENCIA BANCO AZTECA:*\nCLABE: 1271 8001 3158 064 597\nNO. DE TARJETA: 4027 6600 0780 3556\nNOMBRE: JAZMÍN REYES`;
+                    message += `DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
+                    
+                    // Agregar dinámicamente los métodos de pago activos
+                    this.paymentMethods.forEach(method => {
+                        message += `*${method.name}*\n`;
+                        if (method.supports_card_number && method.card_number) {
+                            message += `Número: ${method.card_number}\n`;
+                        }
+                        if (method.card_holder_name) {
+                            message += `Titular: ${method.card_holder_name}\n`;
+                        }
+                        if (method.bank_name) {
+                            message += `Banco: ${method.bank_name}\n`;
+                        }
+                        if (method.card_type) {
+                            message += `Tipo: ${method.card_type}\n`;
+                        }
+                        if (method.code) {
+                            message += `Código: ${method.code}\n`;
+                        }
+                        message += `\n`;
+                    });
                     
                     const encoded = encodeURIComponent(message);
                     let phone = '';
@@ -963,14 +986,13 @@
                                 </div>
                                 <div style="flex: 1; background-color: #f9fafb; border-radius: 8px; padding: 16px;">
                                     <h3 style="font-size: 14px; font-weight: 900; color: #374151; margin: 0 0 12px 0; text-transform: uppercase;">MÉTODOS DE PAGO</h3>
-                                    <div style="margin-bottom: 8px; background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
-                                        <p style="font-size: 12px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">DEPÓSITOS OXXO</p>
-                                        <p style="font-size: 14px; font-weight: 700; color: #111827; margin: 0;">2242 1701 8074 1927</p>
-                                    </div>
-                                    <div style="background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
-                                        <p style="font-size: 12px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">CLABE AZTECA</p>
-                                        <p style="font-size: 14px; font-weight: 700; color: #111827; margin: 0;">1271 8001 3158 064 597</p>
-                                    </div>
+                                    ${this.paymentMethods.map((method, index) => `
+                                        <div style="margin-bottom: ${index === this.paymentMethods.length - 1 ? '0' : '8px'}; background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                                            <p style="font-size: 12px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">${method.name}</p>
+                                            <p style="font-size: 14px; font-weight: 700; color: #111827; margin: 0;">${method.supports_card_number && method.card_number ? method.card_number : (method.code || 'N/A')}</p>
+                                            ${method.card_holder_name ? `<p style="font-size: 12px; color: #4b5563; margin: 2px 0 0 0;">Titular: ${method.card_holder_name}</p>` : ''}
+                                        </div>
+                                    `).join('')}
                                 </div>
                             </div>
 

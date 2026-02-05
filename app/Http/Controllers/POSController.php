@@ -65,12 +65,18 @@ class POSController extends Controller
 
         $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
 
+        // Obtener métodos de pago activos
+        $paymentMethods = PaymentMethod::where('is_active', true)
+            ->select('id', 'name', 'code', 'supports_card_number', 'card_number', 'card_type', 'card_holder_name', 'bank_name')
+            ->get();
+
         return view('pos.index', [
             'categories' => $categories,
             'products' => $products,
             'stats' => $stats,
             'showIva' => $showIva,
             'perPage' => $perPage,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
