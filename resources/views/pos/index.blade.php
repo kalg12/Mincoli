@@ -811,50 +811,99 @@
                 },
 
                 shareWhatsApp() {
-                    let clientName = '';
-                    if (this.linkedCustomer) clientName = this.linkedCustomer.name;
-                    else if (this.manualCustomer.name) clientName = this.manualCustomer.name;
-
-                    let message = `Hola${clientName ? ' ' + clientName : ''}! te comparto tu cotización de Mincoli:\n\n`;
-                    this.cart.forEach(item => {
-                        const variantStr = item.variant ? ` (${item.variant.name})` : '';
-                        const totalItem = parseFloat(item.price) * item.quantity;
-                        message += `• *${item.quantity}x* ${item.name}${variantStr}\n   Precio unitario: $${parseFloat(item.price).toLocaleString('es-MX', {minimumFractionDigits: 2})} | Total: $${totalItem.toLocaleString('es-MX', {minimumFractionDigits: 2})}\n`;
-                    });
-
-                    message += `\n*TOTAL A PAGAR: $${this.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}*\n`;
-
-                    message += `\n--------------------------\n`;
-                    message += `DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
-
-                    // Agregar dinámicamente los métodos de pago activos (excluyendo Mercadopago)
-                    this.paymentMethods.filter(method => !method.name.toLowerCase().includes('mercado')).forEach(method => {
-                        message += `*${method.name}*\n`;
-                        if (method.supports_card_number && method.card_number) {
-                            message += `Número: ${method.card_number}\n`;
+                    try {
+                        // Validar que hay productos en el carrito
+                        if (!this.cart || this.cart.length === 0) {
+                            alert('⚠️ El carrito está vacío. Agrega productos para generar la cotización.');
+                            return;
                         }
-                        if (method.card_holder_name) {
-                            message += `Titular: ${method.card_holder_name}\n`;
-                        }
-                        if (method.bank_name) {
-                            message += `Banco: ${method.bank_name}\n`;
-                        }
-                        if (method.card_type) {
-                            message += `Tipo: ${method.card_type}\n`;
-                        }
-                        if (method.code) {
-                            message += `Código: ${method.code}\n`;
-                        }
-                        message += `\n`;
-                    });
 
-                    const encoded = encodeURIComponent(message);
-                    let phone = '';
-                    if (this.linkedCustomer) phone = this.linkedCustomer.phone;
-                    else if (this.manualCustomer.phone) phone = this.manualCustomer.phone;
+                        let clientName = '';
+                        if (this.linkedCustomer) clientName = this.linkedCustomer.name;
+                        else if (this.manualCustomer.name) clientName = this.manualCustomer.name;
 
-                    phone = phone.replace(/\D/g, '');
-                    window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+                        const subtotalValue = this.cart.reduce((sum, item) => {
+                            return sum + (Number(item.price || 0) * item.quantity);
+                        }, 0);
+                        const totalValue = this.showIva ? subtotalValue * 1.16 : subtotalValue;
+
+                        let message = `Hola${clientName ? ' ' + clientName : ''}! te comparto tu cotización de Mincoli:\n\n`;
+                        this.cart.forEach(item => {
+                            const variantStr = item.variant ? ` (${item.variant.name})` : '';
+                            const priceValue = Number(item.price || 0);
+                            const totalItem = priceValue * item.quantity;
+                            message += `• *${item.quantity}x* ${item.name}${variantStr}\n   Precio unitario: $${priceValue.toLocaleString('es-MX', {minimumFractionDigits: 2})} | Total: $${totalItem.toLocaleString('es-MX', {minimumFractionDigits: 2})}\n`;
+                        });
+                        message += `\n*TOTAL A PAGAR: $${totalValue.toLocaleString('es-MX', {minimumFractionDigits: 2})}*\n`;
+
+                        message += `\n--------------------------\n`;
+                        message += `DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
+
+                        // Agregar dinámicamente los métodos de pago activos (excluyendo Mercadopago)
+                        this.paymentMethods.filter(method => !method.name.toLowerCase().includes('mercado')).forEach(method => {
+                            message += `*${method.name}*\n`;
+                            if (method.supports_card_number && method.card_number) {
+                                message += `Número: ${method.card_number}\n`;
+                            }
+                            if (method.card_holder_name) {
+                                message += `Titular: ${method.card_holder_name}\n`;
+                            }
+                            if (method.bank_name) {
+                                message += `Banco: ${method.bank_name}\n`;
+                            }
+                            if (method.card_type) {
+                                message += `Tipo: ${method.card_type}\n`;
+                            }
+                            if (method.code) {
+                                message += `Código: ${method.code}\n`;
+                            }
+                            message += `\n`;
+                        });
+
+                        // Método de copia más compatible y robusto
+                        const copyToClipboard = (text) => {
+                            // Método 1: Usar navigator.clipboard si está disponible
+                            if (navigator.clipboard && window.isSecureContext) {
+                                return navigator.clipboard.writeText(text);
+                            }
+
+                            // Método 2: Fallback con textarea
+                            return new Promise((resolve, reject) => {
+                                const textarea = document.createElement('textarea');
+                                textarea.value = text;
+                                textarea.style.position = 'fixed';
+                                textarea.style.left = '-9999px';
+                                textarea.style.top = '0';
+                                document.body.appendChild(textarea);
+
+                                try {
+                                    textarea.focus();
+                                    textarea.select();
+                                    const successful = document.execCommand('copy');
+                                    document.body.removeChild(textarea);
+
+                                    if (successful) {
+                                        resolve();
+                                    } else {
+                                        reject(new Error('execCommand failed'));
+                                    }
+                                } catch (err) {
+                                    document.body.removeChild(textarea);
+                                    reject(err);
+                                }
+                            });
+                        };
+
+                        copyToClipboard(message).then(() => {
+                            alert('✅ ¡Cotización copiada!\n\nAhora puedes pegarla en WhatsApp.');
+                        }).catch(err => {
+                            console.error('Error al copiar:', err);
+                            alert('❌ No se pudo copiar automáticamente.\n\nPor favor, intenta con la opción de imagen o PDF.');
+                        });
+                    } catch (error) {
+                        console.error('Error en shareWhatsApp:', error);
+                        alert('❌ Error al generar la cotización: ' + error.message);
+                    }
                 },
 
                 async exportQuotation(type) {
@@ -938,6 +987,8 @@
                     const dateStr = now.toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
                     const customerName = this.linkedCustomer ? this.linkedCustomer.name : (this.manualCustomer.name ? this.manualCustomer.name : 'Público General');
                     const customerPhone = this.linkedCustomer ? this.linkedCustomer.phone : (this.manualCustomer.phone ? this.manualCustomer.phone : 'Sin teléfono');
+                    const subtotalValue = this.cart.reduce((sum, item) => sum + (Number(item.price || 0) * item.quantity), 0);
+                    const totalValue = this.showIva ? subtotalValue * 1.16 : subtotalValue;
 
                     let itemsHTML = '';
                     if (this.cart.length > 0) {
@@ -1022,17 +1073,17 @@
                                     ${this.showIva ? `
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #374151;">
                                         <span>SUBTOTAL</span>
-                                        <span>$${Number(this.subtotal || 0).toFixed(2)}</span>
+                                        <span>$${Number(subtotalValue || 0).toFixed(2)}</span>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #374151;">
                                         <span>IVA (16%)</span>
-                                        <span>$${Number((this.total || 0) - (this.subtotal || 0)).toFixed(2)}</span>
+                                        <span>$${Number(totalValue - subtotalValue).toFixed(2)}</span>
                                     </div>
                                     ` : ''}
                                     <div style="border-top: 2px solid #f9a8d4; padding-top: 12px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center;">
                                             <span style="font-size: 18px; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL A PAGAR</span>
-                                            <span style="font-size: 30px; font-weight: 900; color: #db2777;">$${Number(this.total || 0).toFixed(2)}</span>
+                                            <span style="font-size: 30px; font-weight: 900; color: #db2777;">$${Number(totalValue || 0).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
