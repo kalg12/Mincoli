@@ -16,11 +16,11 @@
                                 <i class="fas fa-search text-zinc-400 text-sm"></i>
                             </div>
                         </div>
-                        
+
                         <!-- Products per page selector -->
                         <div class="flex items-center gap-2">
                             <label class="text-xs font-bold uppercase text-zinc-500 tracking-widest">Mostrar</label>
-                            <select x-model="perPage" @change="updatePerPage()" 
+                            <select x-model="perPage" @change="updatePerPage()"
                                     class="rounded-lg bg-zinc-950 border-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all">
                                 <option value="10">10</option>
                                 <option value="20">20</option>
@@ -38,7 +38,7 @@
                     <!-- Parent Categories (Tabs) -->
                     <div class="px-3 overflow-x-auto no-scrollbar border-b border-zinc-800/50">
                         <div class="flex gap-4">
-                            <button @click="setCategory(null)" 
+                            <button @click="setCategory(null)"
                                 :class="activeCategoryId === null ? 'text-pink-500 border-pink-500' : 'text-zinc-400 border-transparent hover:text-zinc-200'"
                                 class="py-3 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border-b-2">
                                 Todo
@@ -52,7 +52,7 @@
                             @endforeach
                         </div>
                     </div>
-                    
+
                     <!-- Subcategories (Pills) -->
                     <div class="px-3 py-2 overflow-x-auto no-scrollbar bg-zinc-950/30" x-show="activeCategoryId !== null && getSubcategories().length > 0">
                         <div class="flex gap-2">
@@ -76,11 +76,11 @@
                 <div class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-zinc-950">
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                         <template x-for="product in filteredProducts" :key="product.id">
-                            <div @click="handleProductClick(product)" 
+                            <div @click="handleProductClick(product)"
                                 class="group bg-zinc-900 rounded-xl overflow-hidden hover:ring-2 hover:ring-pink-500 transition-all flex flex-col border border-zinc-800 shadow-lg cursor-pointer h-full">
                                  <!-- Product Image -->
                                  <div class="aspect-[4/3] bg-white relative overflow-hidden flex items-center justify-center">
-                                      <img :src="product.image_url" class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500" :alt="product.name" 
+                                      <img :src="product.image_url" class="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500" :alt="product.name"
                                            loading="lazy">
                                       <div x-show="product.variants && product.variants.length > 0" class="absolute top-2 right-2 bg-zinc-950/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase text-zinc-400 border border-zinc-800 shadow-sm">
                                          <span x-text="product.variants.length"></span> Opcs
@@ -98,7 +98,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button @click.stop="handleProductClick(product)" 
+                                    <button @click.stop="handleProductClick(product)"
                                         :disabled="(product.variants.length === 0 && product.stock <= 0) || (product.variants.length > 0 && product.variants.every(v => v.stock <= 0))"
                                         :class="((product.variants.length === 0 && product.stock <= 0) || (product.variants.length > 0 && product.variants.every(v => v.stock <= 0))) ? 'opacity-50 grayscale cursor-not-allowed bg-zinc-800' : 'bg-pink-600 hover:bg-pink-700 active:scale-95 shadow-md'"
                                         class="w-full mt-3 text-white rounded-lg py-2 text-xs font-black uppercase tracking-widest transition-all">
@@ -108,7 +108,7 @@
                             </div>
                         </template>
                     </div>
-                    
+
                     <div x-show="isLoading" class="flex flex-col items-center justify-center h-64 text-zinc-700">
                         <i class="fas fa-spinner fa-spin text-5xl mb-4 opacity-20"></i>
                          <p class="text-xs font-black uppercase tracking-[0.2em] opacity-40">Buscando productos...</p>
@@ -130,7 +130,7 @@
                                         class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-bold uppercase">
                                     <i class="fas fa-chevron-left"></i>
                                 </button>
-                                
+
                                 <div class="flex items-center gap-1">
                                     <template x-for="page in Math.min(lastPage, 5)" :key="page">
                                         <button @click="goToPage(page)"
@@ -139,9 +139,9 @@
                                             <span x-text="page"></span>
                                         </button>
                                     </template>
-                                    
+
                                     <span x-show="lastPage > 5" class="text-zinc-500 text-xs px-2">...</span>
-                                    
+
                                     <template x-for="page in Math.max(0, lastPage - 2)" :key="'last-' + page">
                                         <button @click="goToPage(page)"
                                                 :class="currentPage === page ? 'bg-pink-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-white'"
@@ -150,7 +150,7 @@
                                         </button>
                                     </template>
                                 </div>
-                                
+
                                 <button @click="nextPage()" :disabled="currentPage >= lastPage"
                                         class="px-3 py-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs font-bold uppercase">
                                     <i class="fas fa-chevron-right"></i>
@@ -167,7 +167,7 @@
                 <div class="p-4 border-b border-zinc-800 space-y-4">
                     <div class="flex justify-between items-center">
                         <h2 class="text-base font-black uppercase tracking-tight flex items-center gap-2 text-white">
-                            <i class="fas fa-shopping-basket text-pink-500"></i> 
+                            <i class="fas fa-shopping-basket text-pink-500"></i>
                             Carrito
                         </h2>
                         <span class="bg-pink-600 text-white px-3 py-1 rounded-full text-xs font-black" x-text="cart.length"></span>
@@ -185,7 +185,7 @@
                                     <input type="text" x-model="customerSearch" @input.debounce.300ms="searchCustomers()"
                                         placeholder="Buscar por nombre o cel..."
                                         class="w-full bg-zinc-900 border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:ring-1 focus:ring-pink-600 focus:border-pink-600 transition-all">
-                                    
+
                                     <!-- Customer Results -->
                                     <div x-show="customerSearch.length > 0" class="absolute z-50 left-0 right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden shadow-2xl max-h-60 overflow-y-auto" x-cloak>
                                         <ul class="divide-y divide-zinc-800">
@@ -250,10 +250,10 @@
                                     <p class="font-black text-pink-500 text-sm" x-text="'$' + (item.price * item.quantity).toLocaleString()"></p>
                                 </div>
                             </div>
-                            
+
                             <!-- Internal Note -->
                             <div class="mt-2 bg-zinc-900/50 rounded-lg px-2.5 py-1.5 border border-zinc-800/50">
-                                <input type="text" x-model="item.note" placeholder="Agregar nota al producto..." 
+                                <input type="text" x-model="item.note" placeholder="Agregar nota al producto..."
                                     class="w-full bg-transparent border-none p-0 text-xs text-zinc-400 placeholder-zinc-700 focus:ring-0">
                             </div>
 
@@ -301,7 +301,7 @@
 
                     <div class="grid grid-cols-1 gap-3 pt-2 border-t border-zinc-800/50">
                         <div class="flex gap-2">
-                             <button @click="paymentStatus = 'paid'" 
+                             <button @click="paymentStatus = 'paid'"
                                      :class="{'bg-pink-600 text-white shadow-pink-900/40': paymentStatus === 'paid', 'bg-zinc-800 text-zinc-500 hover:text-white': paymentStatus !== 'paid'}"
                                      class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg">
                                  <i class="fas fa-check-circle"></i> Pagado
@@ -322,7 +322,7 @@
                                     class="w-full border border-zinc-700 text-zinc-400 py-2.5 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-20 flex items-center justify-center gap-2 text-[10px]">
                                     <i class="fas fa-share-alt text-pink-500"></i> COTIZACIÓN
                                 </button>
-                                
+
                                 <div x-show="open" x-cloak
                                     class="absolute bottom-full left-0 w-full mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[100]">
                                     <button @click="shareWhatsApp(); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 flex items-center gap-3 transition-colors">
@@ -350,28 +350,28 @@
         </div>
 
         <!-- Variants Modal -->
-        <div x-show="variantModal" 
-            x-transition:enter="transition ease-out duration-300" 
-            x-transition:enter-start="opacity-0 scale-95" 
+        <div x-show="variantModal"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95"
             x-transition:enter-end="opacity-100 scale-100"
             class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-sm" x-cloak>
-            
+
             <div class="bg-zinc-900 w-full max-w-sm rounded-[2rem] border border-zinc-800 shadow-2xl overflow-hidden" @click.away="variantModal = false">
                 <div class="p-6 border-b border-zinc-800 text-center">
                     <h2 class="text-lg font-black text-white" x-text="selectingProduct?.name"></h2>
                     <p class="text-xs text-zinc-500 uppercase tracking-widest mt-1">Selecciona una variante</p>
                 </div>
-                
+
                 <div class="p-6 space-y-3">
                     <div class="grid grid-cols-1 gap-2">
                         <template x-for="v in selectingProduct?.variants" :key="v.id">
-                            <button @click="addVariantToCart(v)" 
+                            <button @click="addVariantToCart(v)"
                                 :disabled="v.stock <= 0"
                                 :class="v.stock <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-pink-500 hover:bg-zinc-800 active:scale-95'"
                                 class="flex justify-between items-center p-4 rounded-2xl bg-zinc-950 border border-zinc-800 transition-all group shadow-sm">
                                 <div class="flex flex-col text-left">
                                     <span class="text-sm font-bold text-zinc-400 group-hover:text-white transition-colors" x-text="v.name"></span>
-                                    <span class="text-[10px] font-black uppercase tracking-tighter" :class="v.stock > 0 ? 'text-emerald-500' : 'text-red-500'" 
+                                    <span class="text-[10px] font-black uppercase tracking-tighter" :class="v.stock > 0 ? 'text-emerald-500' : 'text-red-500'"
                                           x-text="v.stock > 0 ? v.stock + ' disponibles' : 'Sin stock'"></span>
                                 </div>
                                 <span class="text-base font-black text-pink-500" x-text="'$' + parseFloat(v.price).toLocaleString()"></span>
@@ -379,7 +379,7 @@
                         </template>
                     </div>
                 </div>
-                
+
                 <div class="p-6 pt-0">
                     <button @click="variantModal = false" class="w-full py-3 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
                         Cancelar
@@ -388,16 +388,16 @@
             </div>
         </div>
     <!-- Hidden Quotation Template for Export -->
-    <div id="quotation-template" 
+    <div id="quotation-template"
          style="position: fixed; background-color: #ffffff; padding: 32px; width: 650px; line-height: 1.5; pointer-events: none; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111827; left: -9999px; top: -9999px; letter-spacing: -0.01em; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
          :style="'opacity: ' + (isExporting ? '1' : '0') + '; z-index: ' + (isExporting ? '-1' : '-999') + '; left: ' + (isExporting ? '0' : '-9999px') + '; top: ' + (isExporting ? '0' : '-9999px') + ';'">
-         
+
          <!-- Header con logo mejorado -->
          <div class="flex justify-between items-start pb-8 mb-6" style="border-bottom: 3px solid #ec4899; background-color: #fef2f2; margin: -32px -32px 24px -32px; padding: 32px;">
              <div class="flex items-center gap-4">
                  <!-- Logo fallback mejorado -->
                  <div class="w-20 h-20 rounded-xl flex items-center justify-center shadow-lg" style="min-width: 80px; min-height: 80px; background-color: #ec4899;">
-                     <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="w-16 h-16 object-contain" 
+                     <img src="{{ asset('mincoli_logo.png') }}" alt="Mincoli" class="w-16 h-16 object-contain"
                           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="max-width: 100%; max-height: 100%;">
                      <span class="text-white font-black text-2xl" style="display: none;">M</span>
                  </div>
@@ -521,11 +521,11 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        
+
         body { font-family: 'Inter', sans-serif; background-color: #020617; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
@@ -569,19 +569,19 @@
                          const savedCustomer = localStorage.getItem('posLinkedCustomer');
                          const savedManualCustomer = localStorage.getItem('posManualCustomer');
                          const savedManualMode = localStorage.getItem('posManualCustomerMode');
-                         
+
                          if (savedCustomer) {
                              this.linkedCustomer = JSON.parse(savedCustomer);
                          }
-                         
+
                          if (savedManualCustomer) {
                              this.manualCustomer = JSON.parse(savedManualCustomer);
                          }
-                         
+
                          if (savedManualMode === 'true') {
                              this.manualCustomerMode = true;
                          }
-                         
+
                          // Watch for changes and save to localStorage
                          this.$watch('linkedCustomer', (value) => {
                              if (value) {
@@ -590,11 +590,11 @@
                                  localStorage.removeItem('posLinkedCustomer');
                              }
                          });
-                         
+
                          this.$watch('manualCustomer', (value) => {
                              localStorage.setItem('posManualCustomer', JSON.stringify(value));
                          });
-                         
+
                          this.$watch('manualCustomerMode', (value) => {
                              localStorage.setItem('posManualCustomerMode', value);
                          });
@@ -658,7 +658,7 @@
                         });
                         const resp = await fetch(`{{ route('dashboard.pos.searchProduct') }}?${params.toString()}`);
                         const result = await resp.json();
-                        
+
                         if (result.data) {
                             this.products = result.data;
                             this.currentPage = result.current_page;
@@ -757,8 +757,8 @@
                     const item = this.cart[index];
                     if (delta > 0) {
                         const product = this.products.find(p => p.id === item.id);
-                        const maxStock = item.variant 
-                            ? product.variants.find(v => v.id === item.variant.id).stock 
+                        const maxStock = item.variant
+                            ? product.variants.find(v => v.id === item.variant.id).stock
                             : product.stock;
 
                         if (item.quantity + delta > maxStock) {
@@ -814,19 +814,19 @@
                     let clientName = '';
                     if (this.linkedCustomer) clientName = this.linkedCustomer.name;
                     else if (this.manualCustomer.name) clientName = this.manualCustomer.name;
-                    
+
                     let message = `Hola${clientName ? ' ' + clientName : ''}! te comparto tu cotización de Mincoli:\n\n`;
                     this.cart.forEach(item => {
                         const variantStr = item.variant ? ` (${item.variant.name})` : '';
                         const totalItem = parseFloat(item.price) * item.quantity;
                         message += `• *${item.quantity}x* ${item.name}${variantStr}\n   Precio unitario: $${parseFloat(item.price).toLocaleString('es-MX', {minimumFractionDigits: 2})} | Total: $${totalItem.toLocaleString('es-MX', {minimumFractionDigits: 2})}\n`;
                     });
-                    
+
                     message += `\n*TOTAL A PAGAR: $${this.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}*\n`;
-                    
+
                     message += `\n--------------------------\n`;
                     message += `DATOS PARA DEPÓSITO/TRANSFERENCIA:\n\n`;
-                    
+
                     // Agregar dinámicamente los métodos de pago activos
                     this.paymentMethods.forEach(method => {
                         message += `*${method.name}*\n`;
@@ -847,12 +847,12 @@
                         }
                         message += `\n`;
                     });
-                    
+
                     const encoded = encodeURIComponent(message);
                     let phone = '';
                     if (this.linkedCustomer) phone = this.linkedCustomer.phone;
                     else if (this.manualCustomer.phone) phone = this.manualCustomer.phone;
-                    
+
                     phone = phone.replace(/\D/g, '');
                     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
                 },
@@ -860,11 +860,11 @@
                 async exportQuotation(type) {
                     this.isExporting = true;
                     this.isLoading = true;
-                    
+
                     try {
                         // Crear HTML completamente aislado y simple
                         const quotationHTML = this.createSimpleQuotationHTML();
-                        
+
                         // Crear elemento temporal para html2canvas
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = quotationHTML;
@@ -874,7 +874,7 @@
                         tempDiv.style.width = '650px';
                         tempDiv.style.backgroundColor = '#ffffff';
                         document.body.appendChild(tempDiv);
-                        
+
                         const canvas = await html2canvas(tempDiv, {
                             scale: 2,
                             backgroundColor: '#ffffff',
@@ -885,10 +885,10 @@
                             windowWidth: 650,
                             windowHeight: 800
                         });
-                        
+
                         // Limpiar elemento temporal
                         document.body.removeChild(tempDiv);
-                        
+
                         if (type === 'pdf') {
                             const imgData = canvas.toDataURL('image/jpeg', 0.95);
                             const pdf = new window.jspdf.jsPDF({
@@ -896,17 +896,17 @@
                                 unit: 'mm',
                                 format: 'a4'
                             });
-                            
+
                             const pdfWidth = pdf.internal.pageSize.getWidth();
                             const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-                            
+
                             pdf.addImage(imgData, 'JPEG', 10, 10, pdfWidth - 20, imgHeight);
                             pdf.save(`Cotizacion_Mincoli_${new Date().getTime()}.pdf`);
                         } else if (type === 'copy') {
                             canvas.toBlob(async (blob) => {
                                 try {
                                     if (!blob) throw new Error('Blob creation failed');
-                                    
+
                                     if (navigator.clipboard && navigator.clipboard.write) {
                                         const data = [new ClipboardItem({ [blob.type]: blob })];
                                         await navigator.clipboard.write(data);
@@ -938,7 +938,7 @@
                     const dateStr = now.toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
                     const customerName = this.linkedCustomer ? this.linkedCustomer.name : (this.manualCustomer.name ? this.manualCustomer.name : 'Público General');
                     const customerPhone = this.linkedCustomer ? this.linkedCustomer.phone : (this.manualCustomer.phone ? this.manualCustomer.phone : 'Sin teléfono');
-                    
+
                     let itemsHTML = '';
                     if (this.cart.length > 0) {
                         itemsHTML = this.cart.map((item, index) => `
@@ -1058,7 +1058,7 @@
 
                 async proceedToOrder() {
                     if (this.cart.length === 0) return;
-                    
+
                     try {
                         const response = await fetch("{{ route('dashboard.pos.store-ajax') }}", {
                             method: "POST",
