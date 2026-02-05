@@ -814,7 +814,13 @@
                     try {
                         // Validar que hay productos en el carrito
                         if (!this.cart || this.cart.length === 0) {
-                            alert('⚠️ El carrito está vacío. Agrega productos para generar la cotización.');
+                            alert('El carrito está vacío. Agrega productos para generar la cotización.');
+                            return;
+                        }
+
+                        // Validar que hay cliente
+                        if (!this.linkedCustomer && (!this.manualCustomerMode || !this.manualCustomer.name || !this.manualCustomer.phone)) {
+                            alert('Necesitas seleccionar o ingresar un cliente para compartir la cotización.');
                             return;
                         }
 
@@ -1095,6 +1101,12 @@
 
                 async proceedToOrder() {
                     if (this.cart.length === 0) return;
+
+                    // Validar que hay cliente
+                    if (!this.linkedCustomer && (!this.manualCustomerMode || !this.manualCustomer.name || !this.manualCustomer.phone)) {
+                        alert('Necesitas seleccionar o ingresar un cliente para proceder con la venta.');
+                        return;
+                    }
 
                     try {
                         const response = await fetch("{{ route('dashboard.pos.store-ajax') }}", {
