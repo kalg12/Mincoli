@@ -591,7 +591,7 @@
                 },
 
                 // Cargar cotización existente
-                async loadQuotation(id) {
+                async loadQuotation(id, isDuplicate = false) {
                     this.isLoading = true;
                     try {
                         const response = await fetch(`/dashboard/pos/quotations/${id}`);
@@ -614,6 +614,10 @@
                                 this.manualCustomerMode = true;
                                 this.manualCustomer = { name: data.customer_name, phone: data.customer_phone };
                             }
+
+                            if (!isDuplicate) {
+                                this.quotationId = data.id;
+                            }
                         }
                     } catch (e) {
                         console.error('Error al cargar cotización:', e);
@@ -627,9 +631,12 @@
                 init() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const qId = urlParams.get('quotation_id');
+                    const dId = urlParams.get('duplicate_id');
+                    
                     if (qId) {
-                        this.quotationId = qId;
                         this.loadQuotation(qId);
+                    } else if (dId) {
+                        this.loadQuotation(dId, true);
                     }
 
                     try {

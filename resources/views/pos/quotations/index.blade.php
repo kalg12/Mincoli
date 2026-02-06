@@ -163,9 +163,11 @@
                                         </a>
                                         @endif
 
-                                        <button class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" title="Duplicar">
+                                        <a href="{{ route('dashboard.pos.index', ['duplicate_id' => $quotation->id]) }}" 
+                                           class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" 
+                                           title="Duplicar (Nueva Cotización con mismos productos)">
                                             <i class="fas fa-copy text-sm"></i>
-                                        </button>
+                                        </a>
                                         
                                         <form action="{{ route('dashboard.pos.quotations.destroy', $quotation->id) }}" method="POST" onsubmit="return confirm('¿Eliminar cotización?');">
                                             @csrf
@@ -198,8 +200,8 @@
     </div>
 
     <!-- Detail Modal -->
-    <div x-data="{ open: false, data: null, loading: false }" 
-         @open-quotation-modal.window="open = true; loading = true; fetch('/dashboard/pos/quotations/' + $event.detail.id).then(r => r.json()).then(d => { data = d; loading = false; })"
+    <div x-data="quotationDetailModal()" 
+         @open-quotation-modal.window="openModal($event.detail.id)"
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm" 
          x-show="open" 
          x-cloak>
@@ -296,10 +298,36 @@
                         <i class="fas fa-shopping-cart mr-2"></i> Convertir en Venta
                     </a>
                 </div>
-                <button @click="open = false" class="px-5 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors ml-auto">
+                <button @click="closeModal()" class="px-5 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors ml-auto">
                     Cerrar
                 </button>
             </div>
         </div>
     </div>
+
+    <script>
+        function quotationDetailModal() {
+            return {
+                open: false,
+                data: null,
+                loading: false,
+                async openModal(id) {
+                    this.open = true;
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/dashboard/pos/quotations/${id}`);
+                        this.data = await response.json();
+                    } catch (e) {
+                        console.error('Error fetching quotation details:', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                closeModal() {
+                    this.open = false;
+                    this.data = null;
+                }
+            }
+        }
+    </script>
 </x-layouts.app>
