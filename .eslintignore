@@ -1,0 +1,13 @@
+# Ignora archivos Blade que contienen sintaxis Laravel
+*.blade.php
+
+# Ignora directorios comunes
+node_modules/
+dist/
+build/
+vendor/
+
+# Ignora archivos de configuración
+webpack.mix.js
+vite.config.js
+tailwind.config.js

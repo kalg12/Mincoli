@@ -40,7 +40,8 @@
                 </flux:navlist.group>
 
                 <flux:navlist.group :heading="__('POS')" class="grid">
-                    <flux:navlist.item icon="building-storefront" :href="route('dashboard.pos.index')" :current="request()->routeIs('dashboard.pos.*')" wire:navigate>Dashboard POS</flux:navlist.item>
+                    <flux:navlist.item icon="building-storefront" :href="route('dashboard.pos.index')" :current="request()->routeIs('dashboard.pos.index*')" wire:navigate>Dashboard POS</flux:navlist.item>
+                    <flux:navlist.item icon="clipboard-document" :href="route('dashboard.pos.quotations.index')" :current="request()->routeIs('dashboard.pos.quotations.*')" wire:navigate>Cotizaciones</flux:navlist.item>
                 </flux:navlist.group>
 
                 <flux:navlist.group :heading="__('Administración')" class="grid">

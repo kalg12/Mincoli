@@ -105,6 +105,15 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         Route::get('/pending-shipments', [POSController::class, 'pendingShipments'])->name('pending-shipments.index');
         Route::patch('/item/{item}/shipped', [POSController::class, 'markAsShipped'])->name('item.shipped');
         Route::patch('/item/{item}/completed', [POSController::class, 'markAsCompleted'])->name('item.completed');
+
+        // Cotizaciones
+        Route::prefix('quotations')->name('quotations.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\QuotationController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\QuotationController::class, 'store'])->name('store');
+            Route::get('/{quotation}', [\App\Http\Controllers\QuotationController::class, 'show'])->name('show');
+            Route::patch('/{quotation}/status', [\App\Http\Controllers\QuotationController::class, 'updateStatus'])->name('update-status');
+            Route::delete('/{quotation}', [\App\Http\Controllers\QuotationController::class, 'destroy'])->name('destroy');
+        });
     });
 
     // Settings

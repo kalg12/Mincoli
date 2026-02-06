@@ -368,6 +368,7 @@ class POSController extends Controller
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:255',
             'payment_status' => 'nullable|in:paid,pending',
+            'quotation_id' => 'nullable|exists:quotations,id',
         ]);
 
         try {
@@ -410,8 +411,17 @@ class POSController extends Controller
                 'channel' => 'pos',
                 'status' => $status,
                 'placed_at' => now(),
-                'notes' => 'Pedido generado desde el POS. Estado: ' . ($status == 'paid' ? 'Pagado' : 'Pendiente'),
+                'notes' => 'Pedido generado desde el POS.' . ($request->quotation_id ? " Basado en cotización #{$request->quotation_id}." : "") . ' Estado: ' . ($status == 'paid' ? 'Pagado' : 'Pendiente'),
             ]);
+
+            if ($request->quotation_id) {
+                $quotation = \App\Models\Quotation::find($request->quotation_id);
+                $quotation->update([
+                    'status' => 'converted',
+                    'order_id' => $order->id,
+                    'converted_at' => now(),
+                ]);
+            }
 
             foreach ($items as $item) {
                 $itemTotal = $item['price'] * $item['quantity'];

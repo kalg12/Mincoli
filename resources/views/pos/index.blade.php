@@ -559,12 +559,80 @@
                  customerResults: [],
                  linkedCustomer: null,
                  manualCustomerMode: false,
-                 manualCustomer: { name: '', phone: '' },
-                 paymentStatus: 'paid',
+                  manualCustomer: { name: '', phone: '' },
+                  paymentStatus: 'paid',
+                  quotationId: null,
 
-                 // Initialize customer data from localStorage
-                 init() {
-                     try {
+                 // Persistir cotización en el servidor
+                async saveQuotationToServer(shareType) {
+                    try {
+                        const response = await fetch("{{ route('dashboard.pos.quotations.store') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                items: this.cart,
+                                customer_id: this.linkedCustomer ? this.linkedCustomer.id : null,
+                                customer_name: this.manualCustomerMode ? this.manualCustomer.name : (this.linkedCustomer ? this.linkedCustomer.name : 'Público General'),
+                                customer_phone: this.manualCustomerMode ? this.manualCustomer.phone : (this.linkedCustomer ? this.linkedCustomer.phone : null),
+                                share_type: shareType,
+                                notes: ''
+                            })
+                        });
+                        const result = await response.json();
+                        if (!result.success) {
+                            console.warn('No se pudo persistir la cotización:', result.message);
+                        }
+                    } catch (e) {
+                        console.error('Error al persistir cotización:', e);
+                    }
+                },
+
+                // Cargar cotización existente
+                async loadQuotation(id) {
+                    this.isLoading = true;
+                    try {
+                        const response = await fetch(`/dashboard/pos/quotations/${id}`);
+                        const data = await response.json();
+                        
+                        if (data) {
+                            this.cart = data.items.map(item => ({
+                                id: item.product_id,
+                                name: item.product ? item.product.name : 'Producto',
+                                price: parseFloat(item.unit_price),
+                                quantity: item.quantity,
+                                variant: item.variant ? { id: item.variant_id, name: item.variant.name } : null,
+                                note: ''
+                            }));
+
+                            if (data.customer_id) {
+                                this.linkedCustomer = data.customer;
+                                this.manualCustomerMode = false;
+                            } else if (data.customer_name) {
+                                this.manualCustomerMode = true;
+                                this.manualCustomer = { name: data.customer_name, phone: data.customer_phone };
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error al cargar cotización:', e);
+                        alert('No se pudo cargar la cotización.');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                // Initialize customer data from localStorage
+                init() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const qId = urlParams.get('quotation_id');
+                    if (qId) {
+                        this.quotationId = qId;
+                        this.loadQuotation(qId);
+                    }
+
+                    try {
                          // Load persisted customer data
                          const savedCustomer = localStorage.getItem('posLinkedCustomer');
                          const savedManualCustomer = localStorage.getItem('posManualCustomer');
@@ -835,6 +903,9 @@
                         }, 0);
                         const totalValue = this.showIva ? subtotalValue * 1.16 : subtotalValue;
 
+                        // Persistir en servidor
+                        this.saveQuotationToServer('whatsapp');
+
                         let message = `Hola${clientName ? ' ' + clientName : ''}! te comparto tu cotización de Mincoli:\n\n`;
                         this.cart.forEach(item => {
                             const variantStr = item.variant ? ` (${item.variant.name})` : '';
@@ -929,8 +1000,11 @@
                         return;
                     }
 
-                    this.isExporting = true;
+                     this.isExporting = true;
                     this.isLoading = true;
+
+                    // Persistir en servidor
+                    this.saveQuotationToServer(type === 'pdf' ? 'pdf' : (type === 'copy' ? 'image' : 'image'));
 
                     try {
                         // Crear HTML completamente aislado y simple
@@ -1138,7 +1212,8 @@
                                 customer_id: this.linkedCustomer ? this.linkedCustomer.id : null,
                                 customer_name: this.manualCustomerMode ? this.manualCustomer.name : null,
                                 customer_phone: this.manualCustomerMode ? this.manualCustomer.phone : null,
-                                payment_status: this.paymentStatus
+                                payment_status: this.paymentStatus,
+                                quotation_id: this.quotationId
                             })
                         });
 
@@ -1153,9 +1228,10 @@
                                 alert(`Orden ${result.order_number} generada correctamente.`);
                                 this.cart = [];
                                 this.linkedCustomer = null;
-                                this.manualCustomer = { name: '', phone: '' };
+                                 this.manualCustomer = { name: '', phone: '' };
                                 this.manualCustomerMode = false;
                                 this.customerSearch = '';
+                                this.quotationId = null;
                                 // Clear localStorage
                                 localStorage.removeItem('posLinkedCustomer');
                                 localStorage.removeItem('posManualCustomer');
