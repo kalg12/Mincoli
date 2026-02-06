@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Customer;
 use App\Models\SiteSetting;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +21,7 @@ class QuotationController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Quotation::with(['customer', 'user'])
+        $query = Quotation::with(['customer', 'user', 'items.product', 'items.variant'])
             ->latest();
 
         // Filtros
@@ -80,7 +81,8 @@ class QuotationController extends Controller
                 : 0,
         ];
 
-        return view('pos.quotations.index', compact('quotations', 'stats'));
+        $paymentMethods = PaymentMethod::where('is_active', true)->get();
+        return view('pos.quotations.index', compact('quotations', 'stats', 'paymentMethods'));
     }
 
     /**

@@ -1,5 +1,7 @@
 <x-layouts.app :title="__('Cotizaciones')">
-    <div class="flex-1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <div class="flex-1" x-data="quotationManager()">
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900">
             <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Cotizaciones</h1>
             <p class="text-sm text-zinc-600 dark:text-zinc-400">Historial operativo y comercial de cotizaciones POS</p>
@@ -149,12 +151,35 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-2 transition-opacity">
-                                        <button @click="$dispatch('open-quotation-modal', { id: {{ $quotation->id }} })" 
+                                    <div class="flex justify-end gap-1.5 transition-opacity">
+                                        <button @click="openModal({{ $quotation->id }})" 
                                             class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" title="Ver Detalle">
                                             <i class="fas fa-eye text-sm"></i>
                                         </button>
                                         
+                                        <!-- Share Dropdown -->
+                                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                                            <button @click="open = !open" 
+                                                class="w-full border border-zinc-700 text-zinc-400 p-2 rounded-lg font-black uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-20 flex items-center justify-center gap-2 text-[10px]" title="Compartir">
+                                                <i class="fas fa-share-alt text-pink-500"></i>
+                                            </button>
+                                            <div x-show="open" x-cloak
+                                                class="absolute right-0 bottom-full mb-2 w-52 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[110]">
+                                                <button @click="shareWhatsApp({{ json_encode($quotation) }}); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 flex items-center gap-3 transition-colors">
+                                                    <i class="fab fa-whatsapp text-emerald-500 text-sm"></i> ENVIAR TEXTO WHATSAPP
+                                                </button>
+                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'copy'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
+                                                    <i class="fas fa-copy text-pink-400 text-sm"></i> COPIAR IMAGEN (PARA PEGAR)
+                                                </button>
+                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'image'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
+                                                    <i class="fas fa-image text-blue-400 text-sm"></i> DESCARGAR IMAGEN (JPG)
+                                                </button>
+                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'pdf'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
+                                                    <i class="fas fa-file-pdf text-red-500 text-sm"></i> DESCARGAR PDF
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         @if($quotation->status !== 'converted' && $quotation->status !== 'expired')
                                         <a href="{{ route('dashboard.pos.index', ['quotation_id' => $quotation->id]) }}" 
                                             class="p-2 text-zinc-400 hover:text-emerald-500 dark:text-zinc-500 dark:hover:text-emerald-400" 
@@ -165,7 +190,7 @@
 
                                         <a href="{{ route('dashboard.pos.index', ['duplicate_id' => $quotation->id]) }}" 
                                            class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" 
-                                           title="Duplicar (Nueva Cotización con mismos productos)">
+                                           title="Duplicar">
                                             <i class="fas fa-copy text-sm"></i>
                                         </a>
                                         
@@ -200,19 +225,17 @@
     </div>
 
     <!-- Detail Modal -->
-    <div x-data="quotationDetailModal()" 
-         @open-quotation-modal.window="openModal($event.detail.id)"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm" 
-         x-show="open" 
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm" 
+         x-show="modalOpen" 
          x-cloak>
         
-        <div class="bg-zinc-900 w-full max-w-2xl rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden" @click.away="open = false">
+        <div class="bg-zinc-900 w-full max-w-2xl rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden" @click.away="modalOpen = false">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/50">
-                <div x-show="data">
-                    <h2 class="text-lg font-black text-white" x-text="'Detalle de Cotización: ' + data.folio"></h2>
-                    <p class="text-xs text-zinc-500 uppercase tracking-widest mt-1" x-text="new Date(data.created_at).toLocaleString()"></p>
+                <div x-show="modalData">
+                    <h2 class="text-lg font-black text-white" x-text="'Detalle de Cotización: ' + modalData.folio"></h2>
+                    <p class="text-xs text-zinc-500 uppercase tracking-widest mt-1" x-text="new Date(modalData.created_at).toLocaleString()"></p>
                 </div>
-                <button @click="open = false" class="text-zinc-500 hover:text-white transition-colors">
+                <button @click="modalOpen = false" class="text-zinc-500 hover:text-white transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -292,13 +315,20 @@
             </div>
 
             <div class="p-6 bg-zinc-950/50 border-t border-zinc-800 flex justify-between gap-3">
-                <div class="flex gap-2" x-show="data && data.status !== 'converted' && data.status !== 'expired'">
-                    <a :href="'{{ route('dashboard.pos.index') }}?quotation_id=' + data.id" 
-                       class="inline-flex items-center rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20 active:scale-95 text-center">
-                        <i class="fas fa-shopping-cart mr-2"></i> Convertir en Venta
                     </a>
                 </div>
-                <button @click="closeModal()" class="px-5 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors ml-auto">
+                <div class="flex gap-2" x-show="modalData">
+                    <button @click="shareWhatsApp(modalData)" class="p-2.5 rounded-xl bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white transition-all">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button @click="exportQuotation(modalData, 'copy')" class="p-2.5 rounded-xl bg-pink-600/10 text-pink-500 border border-pink-500/20 hover:bg-pink-600 hover:text-white transition-all">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button @click="exportQuotation(modalData, 'pdf')" class="p-2.5 rounded-xl bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white transition-all">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                </div>
+                <button @click="modalOpen = false" class="px-5 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors ml-auto">
                     Cerrar
                 </button>
             </div>
@@ -306,26 +336,216 @@
     </div>
 
     <script>
-        function quotationDetailModal() {
+        function quotationManager() {
             return {
-                open: false,
-                data: null,
-                loading: false,
+                modalOpen: false,
+                modalData: null,
+                isLoadingModal: false,
+                isExporting: false,
+                paymentMethods: @json($paymentMethods),
+
                 async openModal(id) {
-                    this.open = true;
-                    this.loading = true;
+                    this.modalOpen = true;
+                    this.isLoadingModal = true;
+                    this.modalData = null;
                     try {
-                        const response = await fetch(`/dashboard/pos/quotations/${id}`);
-                        this.data = await response.json();
+                        const resp = await fetch(`/dashboard/pos/quotations/${id}`);
+                        this.modalData = await resp.json();
                     } catch (e) {
-                        console.error('Error fetching quotation details:', e);
+                        console.error('Error:', e);
                     } finally {
-                        this.loading = false;
+                        this.isLoadingModal = false;
                     }
                 },
-                closeModal() {
-                    this.open = false;
-                    this.data = null;
+
+                shareWhatsApp(q) {
+                    let text = `*COTIZACIÓN MINCOLI*\n`;
+                    text += `Folio: *${q.folio}*\n`;
+                    text += `Cliente: ${q.customer_name}\n`;
+                    text += `Fecha: ${new Date(q.created_at).toLocaleDateString()}\n`;
+                    text += `--------------------------\n`;
+                    
+                    if (q.items && q.items.length > 0) {
+                        q.items.forEach(item => {
+                            const name = item.product ? item.product.name : 'Producto';
+                            const variant = item.variant ? ` (${item.variant.name})` : '';
+                            text += `• ${item.quantity}x ${name}${variant} - $${parseFloat(item.total).toLocaleString()}\n`;
+                        });
+                    }
+                    
+                    text += `--------------------------\n`;
+                    text += `*TOTAL: $${parseFloat(q.total).toLocaleString()}*\n\n`;
+                    text += `Lo atendió: ${q.user ? q.user.name : 'Vendedor'}\n`;
+                    text += `¡Gracias por tu preferencia!`;
+                    
+                    const encodedText = encodeURIComponent(text);
+                    const phone = q.customer_phone ? q.customer_phone.replace(/\D/g, '') : '';
+                    if (phone && phone.length >= 10) {
+                        window.open(`https://wa.me/52${phone}?text=${encodedText}`, '_blank');
+                    } else {
+                        window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+                    }
+                },
+
+                async exportQuotation(q, type) {
+                    this.isExporting = true;
+                    try {
+                        // Reproduce exactly the same logic as pos/index.blade.php
+                        const html = this.generateHTML(q);
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        tempDiv.style.position = 'absolute';
+                        tempDiv.style.left = '-9999px';
+                        tempDiv.style.top = '-9999px';
+                        tempDiv.style.width = '650px';
+                        tempDiv.style.backgroundColor = '#ffffff';
+                        document.body.appendChild(tempDiv);
+
+                        const canvas = await html2canvas(tempDiv, {
+                            scale: 2,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            useCORS: true,
+                            width: 650,
+                            windowWidth: 650
+                        });
+                        document.body.removeChild(tempDiv);
+
+                        if (type === 'pdf') {
+                            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                            const { jsPDF } = window.jspdf;
+                            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                            const pdfWidth = pdf.internal.pageSize.getWidth();
+                            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+                            pdf.addImage(imgData, 'JPEG', 10, 10, pdfWidth - 20, imgHeight);
+                            pdf.save(`Cotizacion_${q.folio}.pdf`);
+                        } else if (type === 'copy' || type === 'image') {
+                             if (type === 'copy') {
+                                canvas.toBlob(async (blob) => {
+                                    if (navigator.clipboard && navigator.clipboard.write) {
+                                        const data = [new ClipboardItem({ [blob.type]: blob })];
+                                        await navigator.clipboard.write(data);
+                                        alert('¡Imagen de Cotización copiada al portapapeles!');
+                                    } else {
+                                        // Fallback to download
+                                        const link = document.createElement('a');
+                                        link.download = `Cotizacion_${q.folio}.jpg`;
+                                        link.href = canvas.toDataURL('image/jpeg', 0.95);
+                                        link.click();
+                                    }
+                                }, 'image/png');
+                             } else {
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                                const link = document.createElement('a');
+                                link.download = `Cotizacion_${q.folio}.jpg`;
+                                link.href = dataUrl;
+                                link.click();
+                             }
+                        }
+                    } catch (e) {
+                        console.error('Export error', e);
+                        alert('Error al generar archivo');
+                    } finally {
+                        this.isExporting = false;
+                    }
+                },
+
+                generateHTML(q) {
+                    const dateStr = new Date(q.created_at).toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
+                    const itemsHTML = q.items.map((item, index) => `
+                        <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+                            <td style="padding: 16px; border: 1px solid #e5e7eb; font-weight: 700; color: #111827;">
+                                ${item.product ? item.product.name : 'Producto'}
+                                ${item.variant ? `<br><small style="color: #6b7280;">Variante: ${item.variant.name}</small>` : ''}
+                            </td>
+                            <td style="padding: 16px; border: 1px solid #e5e7eb; text-align: center; font-weight: 700; color: #111827;">${item.quantity}</td>
+                            <td style="padding: 16px; border: 1px solid #e5e7eb; text-align: right; font-weight: 700; color: #111827;">$${parseFloat(item.unit_price).toFixed(2)}</td>
+                            <td style="padding: 16px; border: 1px solid #e5e7eb; text-align: right; font-weight: 900; color: #db2777;">$${parseFloat(item.total).toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+
+                    return `
+                        <div style="width: 650px; padding: 32px; background-color: #ffffff; font-family: 'Inter', Arial, sans-serif;">
+                            <!-- Header -->
+                            <div style="border-bottom: 3px solid #ec4899; background-color: #fef2f2; margin: -32px -32px 24px -32px; padding: 32px; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div style="width: 80px; height: 80px; background-color: #ec4899; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <span style="color: #ffffff; font-weight: 900; font-size: 24px;">M</span>
+                                    </div>
+                                    <div>
+                                        <h1 style="font-size: 24px; font-weight: 900; color: #111827; margin: 0 0 4px 0;">MINCOLI</h1>
+                                        <p style="font-size: 14px; color: #4b5563; margin: 0;">Tienda Online • Moda y Accesorios</p>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="background-color: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 8px; padding: 8px 16px; margin-bottom: 8px;">
+                                        <h2 style="font-size: 18px; font-weight: 900; color: #db2777; margin: 0;">COTIZACIÓN</h2>
+                                    </div>
+                                    <p style="font-size: 12px; color: #6b7280; margin: 0;">${dateStr}</p>
+                                    <p style="font-size: 10px; color: #9ca3af; margin: 4px 0 0 0;">FOLIO: ${q.folio}</p>
+                                </div>
+                            </div>
+
+                            <!-- Customer Info -->
+                            <div style="display: flex; gap: 32px; margin-bottom: 24px;">
+                                <div style="flex: 1; background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+                                    <h3 style="font-size: 14px; font-weight: 900; color: #374151; margin: 0 0 12px 0; text-transform: uppercase;">CLIENTE</h3>
+                                    <p style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">${q.customer_name}</p>
+                                    <p style="font-size: 14px; color: #4b5563; margin: 0;">${q.customer_phone || 'Sin teléfono'}</p>
+                                </div>
+                                <div style="flex: 1; background-color: #f9fafb; border-radius: 8px; padding: 16px;">
+                                    <h3 style="font-size: 14px; font-weight: 900; color: #374151; margin: 0 0 12px 0; text-transform: uppercase;">MÉTODOS DE PAGO</h3>
+                                    ${this.paymentMethods.filter(m => !m.name.toLowerCase().includes('mercado')).map((method, index) => `
+                                        <div style="margin-bottom: ${index === this.paymentMethods.filter(m => !m.name.toLowerCase().includes('mercado')).length - 1 ? '0' : '8px'}; background-color: #ffffff; border-radius: 4px; padding: 8px; border: 1px solid #e5e7eb;">
+                                            <p style="font-size: 11px; font-weight: 900; color: #374151; margin: 0 0 2px 0;">${method.name}</p>
+                                            <p style="font-size: 13px; font-weight: 700; color: #111827; margin: 0;">${method.supports_card_number && method.card_number ? method.card_number : (method.code || 'N/A')}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Products Table -->
+                            <div style="margin-bottom: 24px;">
+                                <div style="background-color: #111827; color: #ffffff; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                                    <h3 style="font-size: 14px; font-weight: 900; margin: 0; text-transform: uppercase;">DETALLE DE PRODUCTOS</h3>
+                                </div>
+                                <table style="width: 100%; border: 2px solid #d1d5db; border-collapse: collapse; border-top: none;">
+                                    <thead>
+                                        <tr style="background-color: #f3f4f6;">
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: left; font-size: 12px; font-weight: 900; color: #374151;">PRODUCTO</th>
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: center; font-size: 12px; font-weight: 900; color: #374151;">CANT.</th>
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: right; font-size: 12px; font-weight: 900; color: #374151;">PRECIO</th>
+                                            <th style="padding: 12px 16px; border: 1px solid #d1d5db; text-align: right; font-size: 12px; font-weight: 900; color: #374151;">TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${itemsHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Total -->
+                            <div style="text-align: right; margin-bottom: 24px; margin-top: 32px;">
+                                <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 16px;">
+                                    <span style="font-size: 16px; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL A PAGAR:</span>
+                                    <span style="font-size: 32px; font-weight: 900; color: #db2777;">$${parseFloat(q.total).toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="text-align: center; padding-top: 24px; border-top: 2px solid #d1d5db;">
+                                <div style="margin-bottom: 16px;">
+                                    <p style="font-size: 18px; font-weight: 900; color: #111827; margin: 0 0 8px 0;">¡Gracias por tu preferencia!</p>
+                                    <p style="font-size: 14px; color: #4b5563; margin: 0 0 8px 0;">Te esperamos pronto en</p>
+                                    <p style="font-size: 20px; font-weight: 900; color: #db2777; margin: 0;">mincoli.com</p>
+                                </div>
+                                <div style="font-size: 12px; color: #6b7280;">
+                                    <p style="margin: 0 0 4px 0;">📱 WhatsApp para pedidos: +52 56 1170 11660</p>
+                                    <p style="margin: 0;">📍 Envíos a toda la República Mexicana</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
             }
         }
