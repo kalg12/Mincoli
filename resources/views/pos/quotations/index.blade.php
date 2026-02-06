@@ -149,7 +149,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div class="flex justify-end gap-2 transition-opacity">
                                         <button @click="$dispatch('open-quotation-modal', { id: {{ $quotation->id }} })" 
                                             class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" title="Ver Detalle">
                                             <i class="fas fa-eye text-sm"></i>
