@@ -167,7 +167,9 @@ class QuotationController extends Controller
      */
     public function show(Quotation $quotation)
     {
-        return response()->json($quotation->load(['items.product', 'items.variant', 'customer', 'user']));
+        $quotation->load(['items.product', 'items.variant', 'customer', 'user']);
+        $paymentMethods = PaymentMethod::where('is_active', true)->get();
+        return view('pos.quotations.show', compact('quotation', 'paymentMethods'));
     }
 
     /**

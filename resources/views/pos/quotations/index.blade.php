@@ -106,7 +106,7 @@
             </div>
 
             <!-- Table -->
-            <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
                         <thead class="bg-zinc-50 text-xs uppercase text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
@@ -117,7 +117,7 @@
                                 <th class="px-6 py-3 whitespace-nowrap">Total Estimado</th>
                                 <th class="px-6 py-3 whitespace-nowrap">Expira</th>
                                 <th class="px-6 py-3 whitespace-nowrap">Estado</th>
-                                <th class="px-6 py-3 text-right whitespace-nowrap">Acciones</th>
+                                <th class="px-6 py-3 text-right whitespace-nowrap" style="min-width: 320px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -150,55 +150,100 @@
                                         {{ $quotation->status_label }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-1.5 transition-opacity">
-                                        <button @click="openModal({{ $quotation->id }})" 
-                                            class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" title="Ver Detalle">
-                                            <i class="fas fa-eye text-sm"></i>
-                                        </button>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-end gap-2 flex-wrap">
+                                        <!-- Ver Detalle -->
+                                        <a href="{{ route('dashboard.pos.quotations.show', $quotation->id) }}" 
+                                            class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-sm hover:shadow-md"
+                                            title="Ver Detalle">
+                                            <i class="fas fa-eye"></i>
+                                            <span class="hidden sm:inline">Ver</span>
+                                        </a>
                                         
-                                        <!-- Share Dropdown -->
+                                        <!-- Compartir Dropdown -->
                                         <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                                            <button @click="open = !open" 
-                                                class="w-full border border-zinc-700 text-zinc-400 p-2 rounded-lg font-black uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-20 flex items-center justify-center gap-2 text-[10px]" title="Compartir">
-                                                <i class="fas fa-share-alt text-pink-500"></i>
+                                            <button @click.stop="open = !open" 
+                                                x-ref="trigger"
+                                                class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-all shadow-sm hover:shadow-md"
+                                                title="Compartir">
+                                                <i class="fas fa-share-alt"></i>
+                                                <span class="hidden sm:inline">Compartir</span>
                                             </button>
-                                            <div x-show="open" x-cloak
-                                                class="absolute right-0 bottom-full mb-2 w-52 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-[110]">
-                                                <button @click="shareWhatsApp({{ json_encode($quotation) }}); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 flex items-center gap-3 transition-colors">
-                                                    <i class="fab fa-whatsapp text-emerald-500 text-sm"></i> ENVIAR TEXTO WHATSAPP
+                                            <div x-show="open" 
+                                                x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                x-cloak
+                                                class="absolute right-0 bottom-full mb-2 w-56 bg-zinc-900 border-2 border-zinc-700 rounded-xl shadow-2xl overflow-hidden"
+                                                style="z-index: 9999;"
+                                                x-init="$watch('open', value => {
+                                                    if (value && $refs.trigger) {
+                                                        const rect = $refs.trigger.getBoundingClientRect();
+                                                        const dropdown = $el;
+                                                        const viewportHeight = window.innerHeight;
+                                                        
+                                                        // Si no cabe arriba, mostrar abajo
+                                                        if (rect.top - dropdown.offsetHeight - 8 < 0) {
+                                                            dropdown.classList.remove('bottom-full', 'mb-2');
+                                                            dropdown.classList.add('top-full', 'mt-2');
+                                                        } else {
+                                                            dropdown.classList.remove('top-full', 'mt-2');
+                                                            dropdown.classList.add('bottom-full', 'mb-2');
+                                                        }
+                                                        
+                                                        // Ajustar horizontalmente si no cabe
+                                                        if (rect.right - dropdown.offsetWidth < 0) {
+                                                            dropdown.style.left = '0';
+                                                            dropdown.style.right = 'auto';
+                                                        } else {
+                                                            dropdown.style.right = '0';
+                                                            dropdown.style.left = 'auto';
+                                                        }
+                                                    }
+                                                })">
+                                                <button @click="shareWhatsApp({{ json_encode($quotation) }}); open = false" 
+                                                    class="w-full text-left px-4 py-3 text-xs font-bold text-zinc-200 hover:bg-zinc-800 hover:text-white flex items-center gap-3 transition-colors border-b border-zinc-800/50">
+                                                    <i class="fab fa-whatsapp text-emerald-400 text-base"></i> 
+                                                    <span>Enviar por WhatsApp</span>
                                                 </button>
-                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'copy'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
-                                                    <i class="fas fa-copy text-pink-400 text-sm"></i> COPIAR IMAGEN (PARA PEGAR)
+                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'copy'); open = false" 
+                                                    class="w-full text-left px-4 py-3 text-xs font-bold text-zinc-200 hover:bg-zinc-800 hover:text-white flex items-center gap-3 transition-colors border-b border-zinc-800/50">
+                                                    <i class="fas fa-copy text-pink-400 text-base"></i> 
+                                                    <span>Copiar Imagen</span>
                                                 </button>
-                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'image'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
-                                                    <i class="fas fa-image text-blue-400 text-sm"></i> DESCARGAR IMAGEN (JPG)
+                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'image'); open = false" 
+                                                    class="w-full text-left px-4 py-3 text-xs font-bold text-zinc-200 hover:bg-zinc-800 hover:text-white flex items-center gap-3 transition-colors border-b border-zinc-800/50">
+                                                    <i class="fas fa-image text-blue-400 text-base"></i> 
+                                                    <span>Descargar Imagen (JPG)</span>
                                                 </button>
-                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'pdf'); open = false" class="w-full text-left px-4 py-3 text-[10px] font-bold text-zinc-300 hover:bg-zinc-800 border-t border-zinc-800/50 flex items-center gap-3 transition-colors">
-                                                    <i class="fas fa-file-pdf text-red-500 text-sm"></i> DESCARGAR PDF
+                                                <button @click="exportQuotation({{ json_encode($quotation) }}, 'pdf'); open = false" 
+                                                    class="w-full text-left px-4 py-3 text-xs font-bold text-zinc-200 hover:bg-zinc-800 hover:text-white flex items-center gap-3 transition-colors">
+                                                    <i class="fas fa-file-pdf text-red-400 text-base"></i> 
+                                                    <span>Descargar PDF</span>
                                                 </button>
                                             </div>
                                         </div>
 
                                         @if($quotation->status !== 'converted' && $quotation->status !== 'expired')
                                         <a href="{{ route('dashboard.pos.index', ['quotation_id' => $quotation->id]) }}" 
-                                            class="p-2 text-zinc-400 hover:text-emerald-500 dark:text-zinc-500 dark:hover:text-emerald-400" 
+                                            class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all shadow-sm hover:shadow-md"
                                             title="Convertir en Venta">
-                                            <i class="fas fa-shopping-cart text-sm"></i>
+                                            <i class="fas fa-shopping-cart"></i>
+                                            <span class="hidden sm:inline">Venta</span>
                                         </a>
                                         @endif
-
-                                        <a href="{{ route('dashboard.pos.index', ['duplicate_id' => $quotation->id]) }}" 
-                                           class="p-2 text-zinc-400 hover:text-pink-600 dark:text-zinc-500 dark:hover:text-pink-400" 
-                                           title="Duplicar">
-                                            <i class="fas fa-copy text-sm"></i>
-                                        </a>
                                         
-                                        <form action="{{ route('dashboard.pos.quotations.destroy', $quotation->id) }}" method="POST" onsubmit="return confirm('¿Eliminar cotización?');">
+                                        <form action="{{ route('dashboard.pos.quotations.destroy', $quotation->id) }}" method="POST" onsubmit="return confirm('¿Eliminar cotización?');" class="inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="p-2 text-zinc-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400">
-                                                <i class="fas fa-trash text-sm"></i>
+                                            <button type="submit" 
+                                                class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-sm hover:shadow-md"
+                                                title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                                <span class="hidden sm:inline">Eliminar</span>
                                             </button>
                                         </form>
                                     </div>
@@ -241,28 +286,28 @@
             </div>
 
             <div class="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <div x-show="loading" class="flex flex-col items-center justify-center py-12">
+                <div x-show="isLoadingModal" class="flex flex-col items-center justify-center py-12">
                     <i class="fas fa-circle-notch fa-spin text-3xl text-pink-500 mb-2"></i>
                     <p class="text-xs font-bold uppercase tracking-widest text-zinc-500">Cargando datos...</p>
                 </div>
 
-                <div x-show="data && !loading" class="space-y-6">
+                <div x-show="modalData && !isLoadingModal" class="space-y-6">
                     <!-- Customer and General Info -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
                             <h3 class="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-2">Cliente</h3>
-                            <p class="text-sm font-bold text-white" x-text="data.customer_name"></p>
-                            <p class="text-xs text-zinc-500" x-text="data.customer_phone || 'Sin teléfono'"></p>
+                            <p class="text-sm font-bold text-white" x-text="modalData.customer_name"></p>
+                            <p class="text-xs text-zinc-500" x-text="modalData.customer_phone || 'Sin teléfono'"></p>
                         </div>
                         <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800">
                             <h3 class="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-2">Información Operativa</h3>
                             <div class="flex justify-between items-center mb-1">
                                 <span class="text-[10px] text-zinc-500">Vendedor:</span>
-                                <span class="text-xs font-bold text-zinc-300" x-text="data.user ? data.user.name : '-'"></span>
+                                <span class="text-xs font-bold text-zinc-300" x-text="modalData.user ? modalData.user.name : '-'"></span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-[10px] text-zinc-500">Medio:</span>
-                                <span class="text-xs font-bold text-zinc-300 uppercase" x-text="data.share_type"></span>
+                                <span class="text-xs font-bold text-zinc-300 uppercase" x-text="modalData.share_type"></span>
                             </div>
                         </div>
                     </div>
@@ -279,7 +324,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-zinc-900 text-zinc-300">
-                                <template x-for="item in data.items" :key="item.id">
+                                <template x-for="item in modalData.items" :key="item.id">
                                     <tr>
                                         <td class="px-4 py-3">
                                             <div class="font-bold text-zinc-200" x-text="item.product ? item.product.name : 'Producto'"></div>
@@ -299,15 +344,15 @@
                         <div class="w-48 space-y-2">
                             <div class="flex justify-between text-xs">
                                 <span class="text-zinc-500 font-bold uppercase">Subtotal:</span>
-                                <span class="text-zinc-300" x-text="'$' + parseFloat(data.subtotal).toLocaleString()"></span>
+                                <span class="text-zinc-300" x-text="'$' + parseFloat(modalData.subtotal).toLocaleString()"></span>
                             </div>
                             <div class="flex justify-between text-xs">
                                 <span class="text-zinc-500 font-bold uppercase">IVA (16%):</span>
-                                <span class="text-zinc-300" x-text="'$' + parseFloat(data.iva_total).toLocaleString()"></span>
+                                <span class="text-zinc-300" x-text="'$' + parseFloat(modalData.iva_total).toLocaleString()"></span>
                             </div>
                             <div class="flex justify-between text-lg pt-2 border-t border-zinc-900">
                                 <span class="font-black text-white uppercase tracking-tighter">Total:</span>
-                                <span class="font-black text-pink-500" x-text="'$' + parseFloat(data.total).toLocaleString()"></span>
+                                <span class="font-black text-pink-500" x-text="'$' + parseFloat(modalData.total).toLocaleString()"></span>
                             </div>
                         </div>
                     </div>
@@ -315,8 +360,6 @@
             </div>
 
             <div class="p-6 bg-zinc-950/50 border-t border-zinc-800 flex justify-between gap-3">
-                    </a>
-                </div>
                 <div class="flex gap-2" x-show="modalData">
                     <button @click="shareWhatsApp(modalData)" class="p-2.5 rounded-xl bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-600 hover:text-white transition-all">
                         <i class="fab fa-whatsapp"></i>
