@@ -51,11 +51,23 @@
                      <p class="text-gray-700">{{ $order->created_at->format('d/m/Y') }}</p>
                      <p class="text-gray-700">{{ $order->created_at->format('H:i') }}</p>
                      <h3 class="font-bold text-pink-600 uppercase mt-4 mb-2">Estado</h3>
+                     @php
+                         $statusLabels = [
+                             'paid' => 'PAGADO',
+                             'pending' => 'PENDIENTE',
+                             'partially_paid' => 'PAGO PARCIAL',
+                             'cancelled' => 'CANCELADO',
+                             'refunded' => 'REEMBOLSADO',
+                             'shipped' => 'ENVIADO',
+                             'delivered' => 'ENTREGADO'
+                         ];
+                         $statusText = $statusLabels[$order->status] ?? strtoupper($order->status);
+                     @endphp
                      <span class="inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-full
                          {{ $order->status === 'paid' ? 'bg-green-100 text-green-800' : '' }}
                          {{ $order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
                          {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
-                         {{ __($order->status) }}
+                         {{ $statusText }}
                      </span>
                  </div>
              </div>
@@ -133,7 +145,7 @@
                   <i class="fas fa-phone text-pink-500"></i>
                   Teléfono: 56-1170-1166
               </p>
-              <p class="text-gray-700 font-medium">{{ config('app.url') }}</p>
+              <p class="text-gray-700 font-medium">mincoli.com</p>
           </div>
 
          <div class="mt-8 text-center no-print space-y-3">

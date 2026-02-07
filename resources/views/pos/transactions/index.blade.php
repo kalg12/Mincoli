@@ -66,6 +66,16 @@
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $txn->customer?->phone }}</div>
                             </td>
                             <td class="py-3 px-3">
+                                @php
+                                    $statusLabels = [
+                                        'pending' => 'Pendiente',
+                                        'reserved' => 'Reservado',
+                                        'completed' => 'Completado',
+                                        'cancelled' => 'Cancelado',
+                                        'refunded' => 'Reembolsado'
+                                    ];
+                                    $statusText = $statusLabels[$txn->status] ?? ucfirst($txn->status);
+                                @endphp
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold
                                     @class([
                                         'bg-yellow-100 text-yellow-800' => $txn->status === 'pending',
@@ -74,10 +84,20 @@
                                         'bg-red-100 text-red-800' => $txn->status === 'cancelled',
                                     ])
                                     dark:bg-opacity-40">
-                                    {{ ucfirst($txn->status) }}
+                                    {{ $statusText }}
                                 </span>
                             </td>
                             <td class="py-3 px-3">
+                                @php
+                                    $paymentStatusLabels = [
+                                        'pending' => 'Pendiente',
+                                        'partial' => 'Pago Parcial',
+                                        'completed' => 'Completado',
+                                        'paid' => 'Pagado',
+                                        'cancelled' => 'Cancelado'
+                                    ];
+                                    $paymentStatusText = $paymentStatusLabels[$txn->payment_status] ?? ucfirst($txn->payment_status);
+                                @endphp
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold
                                     @class([
                                         'bg-yellow-100 text-yellow-800' => $txn->payment_status === 'pending',
@@ -85,7 +105,7 @@
                                         'bg-green-100 text-green-800' => $txn->payment_status === 'completed',
                                     ])
                                     dark:bg-opacity-40">
-                                    {{ ucfirst($txn->payment_status) }}
+                                    {{ $paymentStatusText }}
                                 </span>
                             </td>
                             <td class="py-3 px-3 text-right">

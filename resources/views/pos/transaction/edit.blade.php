@@ -6,8 +6,24 @@
             <div class="flex items-start justify-between">
                 <h1 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ $transaction->transaction_number }}</h1>
                 <div class="text-sm text-zinc-600 dark:text-zinc-300">
-                    Pago: <strong>{{ ucfirst($transaction->payment_status) }}</strong> |
-                    Estado: <strong>{{ ucfirst($transaction->status) }}</strong>
+                    @php
+                        $paymentStatusLabels = [
+                            'completed' => 'Completado',
+                            'pending' => 'Pendiente',
+                            'partial' => 'Pago Parcial',
+                            'cancelled' => 'Cancelado'
+                        ];
+                        $statusLabels = [
+                            'completed' => 'Completado',
+                            'pending' => 'Pendiente',
+                            'cancelled' => 'Cancelado',
+                            'refunded' => 'Reembolsado'
+                        ];
+                        $paymentStatusText = $paymentStatusLabels[$transaction->payment_status] ?? ucfirst($transaction->payment_status);
+                        $statusText = $statusLabels[$transaction->status] ?? ucfirst($transaction->status);
+                    @endphp
+                    Pago: <strong>{{ $paymentStatusText }}</strong> |
+                    Estado: <strong>{{ $statusText }}</strong>
                 </div>
             </div>
 
@@ -231,7 +247,17 @@
                                     dark:border-zinc-700 dark:bg-zinc-800">
                             @foreach($transaction->payments as $payment)
                                 <div class="flex justify-between text-sm text-zinc-800 dark:text-zinc-200">
-                                    <span>{{ $payment->paymentMethod?->name ?? 'Sin metodo' }} ({{ $payment->status }})</span>
+                                    @php
+                                        $paymentStatusLabels = [
+                                            'completed' => 'Completado',
+                                            'pending' => 'Pendiente',
+                                            'paid' => 'Pagado',
+                                            'failed' => 'Fallido',
+                                            'refunded' => 'Reembolsado'
+                                        ];
+                                        $paymentStatusText = $paymentStatusLabels[$payment->status] ?? ucfirst($payment->status);
+                                    @endphp
+                                    <span>{{ $payment->paymentMethod?->name ?? 'Sin metodo' }} ({{ $paymentStatusText }})</span>
                                     <span class="font-semibold">{{ currency($payment->amount) }}</span>
                                 </div>
 

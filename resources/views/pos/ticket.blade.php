@@ -295,7 +295,18 @@
 
         <!-- Estado -->
         <div style="text-align: center; margin: 10px 0; font-size: 9px;">
-            <div class="status-badge">Estado: {{ strtoupper(str_replace('_', ' ', $transaction->status)) }}</div>
+            @php
+                $statusLabels = [
+                    'completed' => 'COMPLETADO',
+                    'pending' => 'PENDIENTE',
+                    'cancelled' => 'CANCELADO',
+                    'refunded' => 'REEMBOLSADO',
+                    'paid' => 'PAGADO',
+                    'partial' => 'PAGO PARCIAL'
+                ];
+                $statusText = $statusLabels[$transaction->status] ?? strtoupper(str_replace('_', ' ', $transaction->status));
+            @endphp
+            <div class="status-badge">Estado: {{ $statusText }}</div>
         </div>
 
         <!-- Footer -->
