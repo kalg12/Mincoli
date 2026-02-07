@@ -109,9 +109,14 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         // Cotizaciones
         Route::prefix('quotations')->name('quotations.')->group(function () {
             Route::get('/', [\App\Http\Controllers\QuotationController::class, 'index'])->name('index');
+            Route::get('/trash', [\App\Http\Controllers\QuotationController::class, 'trash'])->name('trash');
             Route::post('/', [\App\Http\Controllers\QuotationController::class, 'store'])->name('store');
+            Route::get('/{quotation}/edit', [\App\Http\Controllers\QuotationController::class, 'edit'])->name('edit');
+            Route::put('/{quotation}', [\App\Http\Controllers\QuotationController::class, 'update'])->name('update');
             Route::get('/{quotation}', [\App\Http\Controllers\QuotationController::class, 'show'])->name('show');
             Route::patch('/{quotation}/status', [\App\Http\Controllers\QuotationController::class, 'updateStatus'])->name('update-status');
+            Route::post('/{id}/restore', [\App\Http\Controllers\QuotationController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force', [\App\Http\Controllers\QuotationController::class, 'forceDelete'])->name('force-delete');
             Route::delete('/{quotation}', [\App\Http\Controllers\QuotationController::class, 'destroy'])->name('destroy');
         });
     });

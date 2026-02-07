@@ -22,6 +22,7 @@ class QuotationController extends Controller
     public function index(Request $request): View
     {
         $query = Quotation::with(['customer', 'user', 'items.product', 'items.variant'])
+            ->whereNull('deleted_at')
             ->latest();
 
         // Filtros
@@ -71,13 +72,13 @@ class QuotationController extends Controller
         $perPage = $request->get('per_page', 10);
         $quotations = $query->paginate($perPage)->withQueryString();
 
-        // Métricas
+        // Métricas (excluyendo eliminadas)
         $stats = [
-            'total_day' => Quotation::whereDate('created_at', today())->count(),
-            'converted_day' => Quotation::whereDate('created_at', today())->where('status', 'converted')->count(),
-            'potential_amount' => Quotation::where('status', 'sent')->sum('total'),
-            'conversion_rate' => Quotation::count() > 0 
-                ? round((Quotation::where('status', 'converted')->count() / Quotation::count()) * 100, 2)
+            'total_day' => Quotation::whereNull('deleted_at')->whereDate('created_at', today())->count(),
+            'converted_day' => Quotation::whereNull('deleted_at')->whereDate('created_at', today())->where('status', 'converted')->count(),
+            'potential_amount' => Quotation::whereNull('deleted_at')->where('status', 'sent')->sum('total'),
+            'conversion_rate' => Quotation::whereNull('deleted_at')->count() > 0 
+                ? round((Quotation::whereNull('deleted_at')->where('status', 'converted')->count() / Quotation::whereNull('deleted_at')->count()) * 100, 2)
                 : 0,
         ];
 
@@ -188,11 +189,186 @@ class QuotationController extends Controller
     }
 
     /**
-     * Eliminar cotización
+     * Eliminar cotización (soft delete)
      */
     public function destroy(Quotation $quotation)
     {
         $quotation->delete();
-        return back()->with('success', 'Cotización eliminada correctamente');
+        return back()->with('success', 'Cotización movida a la papelera');
+    }
+
+    /**
+     * Restaurar cotización
+     */
+    public function restore($id)
+    {
+        $quotation = Quotation::withTrashed()->findOrFail($id);
+        $quotation->restore();
+        return back()->with('success', 'Cotización restaurada correctamente');
+    }
+
+    /**
+     * Eliminar permanentemente
+     */
+    public function forceDelete($id)
+    {
+        $quotation = Quotation::withTrashed()->findOrFail($id);
+        $quotation->forceDelete();
+        return back()->with('success', 'Cotización eliminada permanentemente');
+    }
+
+    /**
+     * Ver papelera (cotizaciones eliminadas)
+     */
+    public function trash(Request $request): View
+    {
+        $query = Quotation::with(['customer', 'user', 'items.product', 'items.variant'])
+            ->onlyTrashed()
+            ->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('folio', 'like', "%$search%")
+                  ->orWhere('customer_name', 'like', "%$search%");
+            });
+        }
+
+        $perPage = $request->get('per_page', 10);
+        $quotations = $query->paginate($perPage)->withQueryString();
+
+        return view('pos.quotations.trash', compact('quotations'));
+    }
+
+    /**
+     * Editar cotización
+     */
+    public function edit(Quotation $quotation)
+    {
+        $quotation->load(['items.product', 'items.variant', 'customer', 'user']);
+        $paymentMethods = PaymentMethod::where('is_active', true)->get();
+        
+        // Cargar categorías para la búsqueda de productos
+        $categories = \App\Models\Category::whereNull('parent_id')
+            ->with(['children' => function($query) {
+                $query->orderBy('name');
+            }])
+            ->orderBy('name')
+            ->get();
+        
+        // Cargar productos activos con variantes e imágenes
+        $products = Product::with(['variants', 'images', 'category'])
+            ->where('is_active', true)
+            ->latest()
+            ->get();
+        
+        $customers = Customer::orderBy('name')->get();
+        
+        // Preparar items para JavaScript
+        $cartItems = $quotation->items->map(function($item) {
+            $variant = null;
+            if ($item->variant) {
+                $variant = ['id' => $item->variant_id, 'name' => $item->variant->name];
+            }
+            return [
+                'id' => $item->product_id,
+                'name' => $item->product ? $item->product->name : 'Producto',
+                'price' => (float) $item->unit_price,
+                'quantity' => (int) $item->quantity,
+                'variant' => $variant
+            ];
+        })->values()->all();
+        
+        return view('pos.quotations.edit', compact('quotation', 'paymentMethods', 'products', 'customers', 'categories', 'cartItems'));
+    }
+
+    /**
+     * Actualizar cotización
+     */
+    public function update(Request $request, Quotation $quotation)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'nullable|exists:customers,id',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:255',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $subtotal = 0;
+            $ivaTotal = 0;
+            $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
+
+            foreach ($validated['items'] as $item) {
+                $subtotal += $item['unit_price'] * $item['quantity'];
+            }
+
+            if ($showIva) {
+                $ivaTotal = $subtotal * 0.16 / 1.16;
+                $actualSubtotal = $subtotal - $ivaTotal;
+            } else {
+                $actualSubtotal = $subtotal;
+            }
+
+            // Actualizar información del cliente
+            if ($validated['customer_id']) {
+                $customer = Customer::find($validated['customer_id']);
+                $quotation->update([
+                    'customer_id' => $validated['customer_id'],
+                    'customer_name' => $customer->name,
+                    'customer_phone' => $customer->phone,
+                    'subtotal' => $actualSubtotal,
+                    'iva_total' => $ivaTotal,
+                    'total' => $subtotal,
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+            } else {
+                $quotation->update([
+                    'customer_id' => null,
+                    'customer_name' => $validated['customer_name'] ?? 'Público General',
+                    'customer_phone' => $validated['customer_phone'] ?? null,
+                    'subtotal' => $actualSubtotal,
+                    'iva_total' => $ivaTotal,
+                    'total' => $subtotal,
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+            }
+
+            // Eliminar items existentes
+            $quotation->items()->delete();
+
+            // Crear nuevos items
+            foreach ($validated['items'] as $item) {
+                $itemTotal = $item['unit_price'] * $item['quantity'];
+                $itemIva = $showIva ? ($itemTotal * 0.16 / 1.16) : 0;
+
+                QuotationItem::create([
+                    'quotation_id' => $quotation->id,
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'iva_amount' => $itemIva,
+                    'total' => $itemTotal,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('dashboard.pos.quotations.index')
+                ->with('success', 'Cotización actualizada correctamente');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al actualizar la cotización: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 }

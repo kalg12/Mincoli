@@ -3,8 +3,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <div class="flex-1" x-data="quotationManager()">
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900">
-            <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Cotizaciones</h1>
-            <p class="text-sm text-zinc-600 dark:text-zinc-400">Historial operativo y comercial de cotizaciones POS</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Cotizaciones</h1>
+                    <p class="text-sm text-zinc-600 dark:text-zinc-400">Historial operativo y comercial de cotizaciones POS</p>
+                </div>
+                <a href="{{ route('dashboard.pos.quotations.trash') }}" 
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-600 hover:bg-zinc-700 text-white text-sm font-semibold transition-all">
+                    <i class="fas fa-trash"></i>
+                    <span>Papelera</span>
+                </a>
+            </div>
         </div>
 
         <div class="p-6">
@@ -158,6 +167,14 @@
                                             title="Ver Detalle">
                                             <i class="fas fa-eye"></i>
                                             <span class="hidden sm:inline">Ver</span>
+                                        </a>
+                                        
+                                        <!-- Editar -->
+                                        <a href="{{ route('dashboard.pos.quotations.edit', $quotation->id) }}" 
+                                            class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-all shadow-sm hover:shadow-md"
+                                            title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                            <span class="hidden sm:inline">Editar</span>
                                         </a>
                                         
                                         <!-- Compartir Modal -->
