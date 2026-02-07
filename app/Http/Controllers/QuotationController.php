@@ -287,6 +287,15 @@ class QuotationController extends Controller
      */
     public function update(Request $request, Quotation $quotation)
     {
+        // Preparar datos antes de validar
+        $items = $request->input('items', []);
+        foreach ($items as $key => $item) {
+            if (empty($item['variant_id']) || $item['variant_id'] === '') {
+                $items[$key]['variant_id'] = null;
+            }
+        }
+        $request->merge(['items' => $items]);
+
         $validated = $request->validate([
             'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'nullable|string|max:255',
@@ -362,11 +371,18 @@ class QuotationController extends Controller
 
             DB::commit();
 
-            return redirect()->route('dashboard.pos.quotations.index')
-                ->with('success', 'Cotización actualizada correctamente');
+            return redirect()->route('dashboard.pos.quotations.show', $quotation->id)
+                ->with('success', 'Cotización actualizada correctamente. Puedes compartirla ahora.');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error updating quotation: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             return back()->with('error', 'Error al actualizar la cotización: ' . $e->getMessage())
                 ->withInput();
         }

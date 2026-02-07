@@ -14,11 +14,46 @@
             </div>
         </div>
 
-        <form action="{{ route('dashboard.pos.quotations.update', $quotation->id) }}" method="POST" @submit.prevent="submitForm">
-            @csrf
-            @method('PUT')
+        <div class="p-6">
+            <!-- Success/Error Messages -->
+            @if(session('success'))
+            <div class="mb-6 rounded-lg bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 p-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400"></i>
+                    <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">{{ session('success') }}</p>
+                </div>
+            </div>
+            @endif
+            @if(session('error'))
+            <div class="mb-6 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800 p-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400"></i>
+                    <p class="text-sm font-semibold text-red-800 dark:text-red-200">{{ session('error') }}</p>
+                </div>
+            </div>
+            @endif
             
-            <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            @if($errors->any())
+            <div class="mb-6 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800 p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">Errores de validación:</p>
+                        <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-300 space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <form action="{{ route('dashboard.pos.quotations.update', $quotation->id) }}" method="POST" id="editQuotationForm" @submit="submitForm($event)">
+                @csrf
+                @method('PUT')
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Left Column: Products Search & List -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Search Products -->
@@ -178,21 +213,7 @@
                 </div>
             </div>
 
-            <!-- Hidden inputs for items -->
-            <template x-for="(item, index) in cart" :key="index">
-                <input type="hidden" 
-                       :name="'items[' + index + '][product_id]'" 
-                       :value="item.id">
-                <input type="hidden" 
-                       :name="'items[' + index + '][variant_id]'" 
-                       :value="item.variant ? item.variant.id : ''">
-                <input type="hidden" 
-                       :name="'items[' + index + '][quantity]'" 
-                       :value="item.quantity">
-                <input type="hidden" 
-                       :name="'items[' + index + '][unit_price]'" 
-                       :value="item.price">
-            </template>
+            <!-- Hidden inputs for items will be added dynamically -->
         </form>
     </div>
 
@@ -299,12 +320,57 @@
                     }
                 },
 
-                submitForm() {
+                submitForm(event) {
+                    event.preventDefault();
+                    
                     if (this.cart.length === 0) {
                         alert('Debe agregar al menos un producto a la cotización');
                         return false;
                     }
-                    this.$el.submit();
+                    
+                    // Crear inputs hidden dinámicamente
+                    const form = document.getElementById('editQuotationForm');
+                    
+                    // Eliminar inputs anteriores si existen
+                    const existingInputs = form.querySelectorAll('input[name^="items["]');
+                    existingInputs.forEach(input => input.remove());
+                    
+                    // Crear nuevos inputs para cada item
+                    this.cart.forEach((item, index) => {
+                        const productInput = document.createElement('input');
+                        productInput.type = 'hidden';
+                        productInput.name = `items[${index}][product_id]`;
+                        productInput.value = item.id;
+                        form.appendChild(productInput);
+                        
+                        const variantInput = document.createElement('input');
+                        variantInput.type = 'hidden';
+                        variantInput.name = `items[${index}][variant_id]`;
+                        variantInput.value = item.variant ? item.variant.id : '';
+                        form.appendChild(variantInput);
+                        
+                        const quantityInput = document.createElement('input');
+                        quantityInput.type = 'hidden';
+                        quantityInput.name = `items[${index}][quantity]`;
+                        quantityInput.value = item.quantity;
+                        form.appendChild(quantityInput);
+                        
+                        const priceInput = document.createElement('input');
+                        priceInput.type = 'hidden';
+                        priceInput.name = `items[${index}][unit_price]`;
+                        priceInput.value = item.price;
+                        form.appendChild(priceInput);
+                    });
+                    
+                    // Mostrar loading
+                    const submitBtn = document.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...';
+                    }
+                    
+                    // Enviar formulario
+                    form.submit();
                 }
             }
         }

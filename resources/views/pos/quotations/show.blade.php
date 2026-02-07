@@ -18,6 +18,24 @@
 
         <div class="p-6">
             <div class="max-w-4xl mx-auto">
+                <!-- Success/Error Messages -->
+                @if(session('success'))
+                <div class="mb-6 rounded-lg bg-emerald-50 border border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400"></i>
+                        <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">{{ session('success') }}</p>
+                    </div>
+                </div>
+                @endif
+                @if(session('error'))
+                <div class="mb-6 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800 p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400"></i>
+                        <p class="text-sm font-semibold text-red-800 dark:text-red-200">{{ session('error') }}</p>
+                    </div>
+                </div>
+                @endif
+                
                 <!-- Header Card -->
                 <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 mb-6">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
