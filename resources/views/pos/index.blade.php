@@ -594,30 +594,47 @@
                 async loadQuotation(id, isDuplicate = false) {
                     this.isLoading = true;
                     try {
-                        const response = await fetch(`/dashboard/pos/quotations/${id}`);
-                        const data = await response.json();
+                        const response = await fetch(`/dashboard/pos/quotations/${id}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
                         
-                        if (data) {
-                            this.cart = data.items.map(item => ({
-                                id: item.product_id,
-                                name: item.product ? item.product.name : 'Producto',
-                                price: parseFloat(item.unit_price),
-                                quantity: item.quantity,
-                                variant: item.variant ? { id: item.variant_id, name: item.variant.name } : null,
-                                note: ''
-                            }));
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await response.json();
+                            
+                            if (data && data.items) {
+                                this.cart = data.items.map(item => ({
+                                    id: item.product_id,
+                                    name: item.product ? item.product.name : 'Producto',
+                                    price: parseFloat(item.unit_price),
+                                    quantity: item.quantity,
+                                    variant: item.variant ? { id: item.variant_id, name: item.variant.name } : null,
+                                    note: ''
+                                }));
 
-                            if (data.customer_id) {
-                                this.linkedCustomer = data.customer;
-                                this.manualCustomerMode = false;
-                            } else if (data.customer_name) {
-                                this.manualCustomerMode = true;
-                                this.manualCustomer = { name: data.customer_name, phone: data.customer_phone };
-                            }
+                                if (data.customer_id) {
+                                    this.linkedCustomer = data.customer;
+                                    this.manualCustomerMode = false;
+                                } else if (data.customer_name) {
+                                    this.manualCustomerMode = true;
+                                    this.manualCustomer = { name: data.customer_name, phone: data.customer_phone };
+                                }
 
-                            if (!isDuplicate) {
-                                this.quotationId = data.id;
+                                if (!isDuplicate) {
+                                    this.quotationId = data.id;
+                                }
+                            } else {
+                                throw new Error('No se recibieron datos válidos de la cotización');
                             }
+                        } else {
+                            throw new Error('La respuesta no es JSON válido');
                         }
                     } catch (e) {
                         console.error('Error al cargar cotización:', e);

@@ -169,6 +169,43 @@ class QuotationController extends Controller
     public function show(Quotation $quotation)
     {
         $quotation->load(['items.product', 'items.variant', 'customer', 'user']);
+        
+        // Si es una petición AJAX o espera JSON, devolver JSON
+        $acceptHeader = request()->header('Accept', '');
+        $isJsonRequest = request()->expectsJson() 
+            || request()->ajax() 
+            || request()->wantsJson()
+            || str_contains($acceptHeader, 'application/json')
+            || request()->header('X-Requested-With') === 'XMLHttpRequest';
+        
+        if ($isJsonRequest) {
+            return response()->json([
+                'id' => $quotation->id,
+                'folio' => $quotation->folio,
+                'customer_id' => $quotation->customer_id,
+                'customer' => $quotation->customer,
+                'customer_name' => $quotation->customer_name,
+                'customer_phone' => $quotation->customer_phone,
+                'subtotal' => $quotation->subtotal,
+                'iva_total' => $quotation->iva_total,
+                'total' => $quotation->total,
+                'status' => $quotation->status,
+                'items' => $quotation->items->map(function($item) {
+                    return [
+                        'id' => $item->id,
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'total' => $item->total,
+                        'product' => $item->product,
+                        'variant' => $item->variant,
+                    ];
+                }),
+            ]);
+        }
+        
+        // Si no, devolver la vista
         $paymentMethods = PaymentMethod::where('is_active', true)->get();
         return view('pos.quotations.show', compact('quotation', 'paymentMethods'));
     }
