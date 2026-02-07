@@ -37,17 +37,17 @@
                         
                         <!-- Products Grid -->
                         <div class="mt-4 max-h-96 overflow-y-auto custom-scrollbar">
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                                 <template x-for="product in filteredProducts" :key="product.id">
                                     <div @click="addProduct(product)"
-                                         class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3 cursor-pointer hover:ring-2 hover:ring-pink-500 transition-all border border-zinc-200 dark:border-zinc-700">
-                                        <div class="aspect-square bg-white dark:bg-zinc-900 rounded mb-2 flex items-center justify-center overflow-hidden">
+                                         class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-2 cursor-pointer hover:ring-2 hover:ring-pink-500 transition-all border border-zinc-200 dark:border-zinc-700">
+                                        <div class="aspect-square bg-white dark:bg-zinc-900 rounded mb-1.5 flex items-center justify-center overflow-hidden">
                                             <img :src="product.image_url || '/images/placeholder.png'" 
                                                  :alt="product.name"
-                                                 class="w-full h-full object-contain p-2">
+                                                 class="w-full h-full object-contain p-1">
                                         </div>
-                                        <h3 class="text-xs font-bold text-zinc-900 dark:text-white line-clamp-2" x-text="product.name"></h3>
-                                        <p class="text-sm font-black text-pink-500 mt-1" x-text="'$' + parseFloat(product.price).toLocaleString()"></p>
+                                        <h3 class="text-[10px] font-bold text-zinc-900 dark:text-white line-clamp-2 leading-tight" x-text="product.name"></h3>
+                                        <p class="text-xs font-black text-pink-500 mt-0.5" x-text="'$' + parseFloat(product.price).toLocaleString()"></p>
                                     </div>
                                 </template>
                             </div>
