@@ -161,109 +161,13 @@
                                         </a>
                                         
                                         <!-- Compartir Modal -->
-                                        <div x-data="{ shareModalOpen: false }">
-                                            <button @click="shareModalOpen = true" 
+                                        <div>
+                                            <button @click="openShareModal(@js($quotation))" 
                                                 class="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold transition-all shadow-sm hover:shadow-md"
                                                 title="Compartir">
                                                 <i class="fas fa-share-alt"></i>
                                                 <span class="hidden sm:inline">Compartir</span>
                                             </button>
-                                            
-                                            <!-- Share Modal -->
-                                            <div x-show="shareModalOpen" 
-                                                x-cloak
-                                                class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-sm"
-                                                @click.away="shareModalOpen = false"
-                                                x-transition:enter="transition ease-out duration-200"
-                                                x-transition:enter-start="opacity-0"
-                                                x-transition:enter-end="opacity-100"
-                                                x-transition:leave="transition ease-in duration-150"
-                                                x-transition:leave-start="opacity-100"
-                                                x-transition:leave-end="opacity-0">
-                                                <div class="bg-zinc-900 w-full max-w-md rounded-2xl border-2 border-zinc-700 shadow-2xl overflow-hidden"
-                                                    @click.stop
-                                                    x-transition:enter="transition ease-out duration-200"
-                                                    x-transition:enter-start="opacity-0 scale-95"
-                                                    x-transition:enter-end="opacity-100 scale-100"
-                                                    x-transition:leave="transition ease-in duration-150"
-                                                    x-transition:leave-start="opacity-100 scale-100"
-                                                    x-transition:leave-end="opacity-0 scale-95">
-                                                    <!-- Header -->
-                                                    <div class="p-6 border-b border-zinc-800 bg-zinc-950/50">
-                                                        <div class="flex items-center justify-between">
-                                                            <div>
-                                                                <h3 class="text-lg font-black text-white">Compartir Cotización</h3>
-                                                                <p class="text-xs text-zinc-400 mt-1">Folio: {{ $quotation->folio }}</p>
-                                                            </div>
-                                                            <button @click="shareModalOpen = false" 
-                                                                class="text-zinc-400 hover:text-white transition-colors p-2">
-                                                                <i class="fas fa-times text-lg"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Options Grid -->
-                                                    <div class="p-6">
-                                                        <div class="grid grid-cols-2 gap-4">
-                                                            <!-- WhatsApp -->
-                                                            <button @click="$parent.shareWhatsApp({{ json_encode($quotation) }}); shareModalOpen = false" 
-                                                                class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-emerald-600/10 hover:bg-emerald-600 border-2 border-emerald-600/30 hover:border-emerald-500 transition-all transform hover:scale-105">
-                                                                <div class="w-14 h-14 rounded-full bg-emerald-600/20 group-hover:bg-emerald-600 flex items-center justify-center transition-colors">
-                                                                    <i class="fab fa-whatsapp text-2xl text-emerald-400 group-hover:text-white"></i>
-                                                                </div>
-                                                                <div class="text-center">
-                                                                    <p class="text-sm font-bold text-white">WhatsApp</p>
-                                                                    <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Enviar texto</p>
-                                                                </div>
-                                                            </button>
-                                                            
-                                                            <!-- Copiar Imagen -->
-                                                            <button @click="$parent.exportQuotation({{ json_encode($quotation) }}, 'copy'); shareModalOpen = false" 
-                                                                class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-pink-600/10 hover:bg-pink-600 border-2 border-pink-600/30 hover:border-pink-500 transition-all transform hover:scale-105">
-                                                                <div class="w-14 h-14 rounded-full bg-pink-600/20 group-hover:bg-pink-600 flex items-center justify-center transition-colors">
-                                                                    <i class="fas fa-copy text-2xl text-pink-400 group-hover:text-white"></i>
-                                                                </div>
-                                                                <div class="text-center">
-                                                                    <p class="text-sm font-bold text-white">Copiar</p>
-                                                                    <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Al portapapeles</p>
-                                                                </div>
-                                                            </button>
-                                                            
-                                                            <!-- Descargar Imagen -->
-                                                            <button @click="$parent.exportQuotation({{ json_encode($quotation) }}, 'image'); shareModalOpen = false" 
-                                                                class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-blue-600/10 hover:bg-blue-600 border-2 border-blue-600/30 hover:border-blue-500 transition-all transform hover:scale-105">
-                                                                <div class="w-14 h-14 rounded-full bg-blue-600/20 group-hover:bg-blue-600 flex items-center justify-center transition-colors">
-                                                                    <i class="fas fa-image text-2xl text-blue-400 group-hover:text-white"></i>
-                                                                </div>
-                                                                <div class="text-center">
-                                                                    <p class="text-sm font-bold text-white">Imagen</p>
-                                                                    <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Descargar JPG</p>
-                                                                </div>
-                                                            </button>
-                                                            
-                                                            <!-- Descargar PDF -->
-                                                            <button @click="$parent.exportQuotation({{ json_encode($quotation) }}, 'pdf'); shareModalOpen = false" 
-                                                                class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-red-600/10 hover:bg-red-600 border-2 border-red-600/30 hover:border-red-500 transition-all transform hover:scale-105">
-                                                                <div class="w-14 h-14 rounded-full bg-red-600/20 group-hover:bg-red-600 flex items-center justify-center transition-colors">
-                                                                    <i class="fas fa-file-pdf text-2xl text-red-400 group-hover:text-white"></i>
-                                                                </div>
-                                                                <div class="text-center">
-                                                                    <p class="text-sm font-bold text-white">PDF</p>
-                                                                    <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Descargar</p>
-                                                                </div>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Footer -->
-                                                    <div class="p-4 border-t border-zinc-800 bg-zinc-950/50">
-                                                        <button @click="shareModalOpen = false" 
-                                                            class="w-full px-4 py-2 text-sm font-semibold text-zinc-400 hover:text-white transition-colors">
-                                                            Cancelar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
 
                                         @if($quotation->status !== 'converted' && $quotation->status !== 'expired')
@@ -306,12 +210,106 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Detail Modal -->
-    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm" 
-         x-show="modalOpen" 
-         x-cloak>
+        <!-- Share Modal -->
+        <div x-show="shareModalOpen" 
+         x-cloak
+         class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-sm"
+         @click.away="shareModalOpen = false"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="bg-zinc-900 w-full max-w-md rounded-2xl border-2 border-zinc-700 shadow-2xl overflow-hidden"
+            @click.stop
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95">
+            <!-- Header -->
+            <div class="p-6 border-b border-zinc-800 bg-zinc-950/50">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-black text-white">Compartir Cotización</h3>
+                        <p class="text-xs text-zinc-400 mt-1" x-text="'Folio: ' + (shareModalData ? shareModalData.folio : '')"></p>
+                    </div>
+                    <button @click="shareModalOpen = false" 
+                        class="text-zinc-400 hover:text-white transition-colors p-2">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Options Grid -->
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- WhatsApp -->
+                    <button @click="shareWhatsApp(shareModalData); shareModalOpen = false" 
+                        class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-emerald-600/10 hover:bg-emerald-600 border-2 border-emerald-600/30 hover:border-emerald-500 transition-all transform hover:scale-105">
+                        <div class="w-14 h-14 rounded-full bg-emerald-600/20 group-hover:bg-emerald-600 flex items-center justify-center transition-colors">
+                            <i class="fab fa-whatsapp text-2xl text-emerald-400 group-hover:text-white"></i>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm font-bold text-white">WhatsApp</p>
+                            <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Enviar texto</p>
+                        </div>
+                    </button>
+                    
+                    <!-- Copiar Imagen -->
+                    <button @click="exportQuotation(shareModalData, 'copy'); shareModalOpen = false" 
+                        class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-pink-600/10 hover:bg-pink-600 border-2 border-pink-600/30 hover:border-pink-500 transition-all transform hover:scale-105">
+                        <div class="w-14 h-14 rounded-full bg-pink-600/20 group-hover:bg-pink-600 flex items-center justify-center transition-colors">
+                            <i class="fas fa-copy text-2xl text-pink-400 group-hover:text-white"></i>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm font-bold text-white">Copiar</p>
+                            <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Al portapapeles</p>
+                        </div>
+                    </button>
+                    
+                    <!-- Descargar Imagen -->
+                    <button @click="exportQuotation(shareModalData, 'image'); shareModalOpen = false" 
+                        class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-blue-600/10 hover:bg-blue-600 border-2 border-blue-600/30 hover:border-blue-500 transition-all transform hover:scale-105">
+                        <div class="w-14 h-14 rounded-full bg-blue-600/20 group-hover:bg-blue-600 flex items-center justify-center transition-colors">
+                            <i class="fas fa-image text-2xl text-blue-400 group-hover:text-white"></i>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm font-bold text-white">Imagen</p>
+                            <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Descargar JPG</p>
+                        </div>
+                    </button>
+                    
+                    <!-- Descargar PDF -->
+                    <button @click="exportQuotation(shareModalData, 'pdf'); shareModalOpen = false" 
+                        class="group flex flex-col items-center justify-center gap-3 p-6 rounded-xl bg-red-600/10 hover:bg-red-600 border-2 border-red-600/30 hover:border-red-500 transition-all transform hover:scale-105">
+                        <div class="w-14 h-14 rounded-full bg-red-600/20 group-hover:bg-red-600 flex items-center justify-center transition-colors">
+                            <i class="fas fa-file-pdf text-2xl text-red-400 group-hover:text-white"></i>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm font-bold text-white">PDF</p>
+                            <p class="text-xs text-zinc-400 group-hover:text-zinc-300">Descargar</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-4 border-t border-zinc-800 bg-zinc-950/50">
+                <button @click="shareModalOpen = false" 
+                    class="w-full px-4 py-2 text-sm font-semibold text-zinc-400 hover:text-white transition-colors">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+
+        <!-- Detail Modal -->
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-sm" 
+             x-show="modalOpen" 
+             x-cloak>
         
         <div class="bg-zinc-900 w-full max-w-2xl rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden" @click.away="modalOpen = false">
             <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/50">
@@ -424,7 +422,14 @@
                 modalData: null,
                 isLoadingModal: false,
                 isExporting: false,
+                shareModalOpen: false,
+                shareModalData: null,
                 paymentMethods: @json($paymentMethods),
+
+                openShareModal(quotation) {
+                    this.shareModalData = quotation;
+                    this.shareModalOpen = true;
+                },
 
                 async openModal(id) {
                     this.modalOpen = true;
