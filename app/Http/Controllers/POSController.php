@@ -442,30 +442,44 @@ class POSController extends Controller
                     $variant = ProductVariant::find($item['variant']['id']);
                     $variant->decrement('stock', $item['quantity']);
 
-                    InventoryMovement::create([
-                        'product_id' => $item['id'],
-                        'variant_id' => $item['variant']['id'],
-                        'type' => 'out',
-                        'quantity' => $item['quantity'],
-                        'reason' => "Venta POS - Orden #{$order->order_number} ({$status})",
-                        'reference_type' => 'Order',
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::id(),
-                    ]);
+                    try {
+                        InventoryMovement::create([
+                            'product_id' => $item['id'],
+                            'variant_id' => $item['variant']['id'],
+                            'type' => 'out',
+                            'quantity' => $item['quantity'],
+                            'reason' => "Venta POS - Orden #{$order->order_number} ({$status})",
+                            'reference_type' => 'OrderMovement:' . $order->id . ':product:' . $item['id'] . ':variant:' . $item['variant']['id'],
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::id(),
+                        ]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // Si ya existe el movimiento (restricción única), ignorar el error
+                        if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) {
+                            throw $e;
+                        }
+                    }
                 } else {
                     $product = Product::find($item['id']);
                     $product->decrement('stock', $item['quantity']);
 
-                    InventoryMovement::create([
-                        'product_id' => $item['id'],
-                        'variant_id' => null,
-                        'type' => 'out',
-                        'quantity' => $item['quantity'],
-                        'reason' => "Venta POS - Orden #{$order->order_number} ({$status})",
-                        'reference_type' => 'Order',
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::id(),
-                    ]);
+                    try {
+                        InventoryMovement::create([
+                            'product_id' => $item['id'],
+                            'variant_id' => null,
+                            'type' => 'out',
+                            'quantity' => $item['quantity'],
+                            'reason' => "Venta POS - Orden #{$order->order_number} ({$status})",
+                            'reference_type' => 'OrderMovement:' . $order->id . ':product:' . $item['id'] . ':variant:0',
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::id(),
+                        ]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // Si ya existe el movimiento (restricción única), ignorar el error
+                        if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) {
+                            throw $e;
+                        }
+                    }
                 }
             }
 
