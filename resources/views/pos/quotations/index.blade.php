@@ -612,7 +612,7 @@
                             </div>
 
                             <!-- Total -->
-                            <div style="text-align: right; margin-bottom: 24px; margin-top: 32px;">
+                            <div style="text-align: right; margin-bottom: 0; margin-top: 32px; padding-bottom: 60px;">
                                 <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 16px;">
                                     <span style="font-size: 16px; font-weight: 900; color: #111827; text-transform: uppercase;">TOTAL A PAGAR:</span>
                                     <span style="font-size: 32px; font-weight: 900; color: #db2777;">$${parseFloat(q.total).toFixed(2)}</span>
@@ -620,14 +620,14 @@
                             </div>
 
                             <!-- Footer -->
-                            <div style="text-align: center; padding-top: 24px; border-top: 2px solid #d1d5db;">
-                                <div style="margin-bottom: 16px;">
-                                    <p style="font-size: 18px; font-weight: 900; color: #111827; margin: 0 0 8px 0;">¡Gracias por tu preferencia!</p>
-                                    <p style="font-size: 14px; color: #4b5563; margin: 0 0 8px 0;">Te esperamos pronto en</p>
-                                    <p style="font-size: 20px; font-weight: 900; color: #db2777; margin: 0;">mincoli.com</p>
+                            <div style="text-align: center; padding-top: 50px; margin-top: 0; border-top: 2px solid #d1d5db;">
+                                <div style="margin-bottom: 20px;">
+                                    <p style="font-size: 18px; font-weight: 900; color: #111827; margin: 0 0 12px 0;">¡Gracias por tu preferencia!</p>
+                                    <p style="font-size: 14px; color: #4b5563; margin: 0 0 12px 0;">Te esperamos pronto en</p>
+                                    <p style="font-size: 20px; font-weight: 900; color: #db2777; margin: 0 0 16px 0;">mincoli.com</p>
                                 </div>
-                                <div style="font-size: 12px; color: #6b7280;">
-                                    <p style="margin: 0 0 4px 0;">📱 WhatsApp para pedidos: +52 56 1170 11660</p>
+                                <div style="font-size: 12px; color: #6b7280; padding-top: 8px;">
+                                    <p style="margin: 0 0 6px 0;">📱 WhatsApp para pedidos: +52 56 1170 11660</p>
                                     <p style="margin: 0;">📍 Envíos a toda la República Mexicana</p>
                                 </div>
                             </div>
