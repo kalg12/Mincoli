@@ -118,22 +118,30 @@
             <!-- Subcategories Grid -->
             @if(isset($subcategories) && $subcategories->count() > 0)
             <div class="mb-8">
-                <div class="flex flex-wrap justify-center gap-6">
-                    @foreach($subcategories as $sub)
-                    <a href="{{ route('shop') }}?category={{ $currentCategory->slug }}&subcategory={{ $sub->id }}" 
-                       class="flex flex-col items-center group w-32">
-                        <div class="w-24 h-24 rounded-full border-2 border-transparent group-hover:border-pink-500 transition-all overflow-hidden mb-3 shadow-md">
-                             @if(isset($sub->random_image))
-                                <img src="{{ $sub->random_image }}" alt="{{ $sub->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                            @else
-                                <div class="w-full h-full bg-gray-100 flex items-center justify-center">
-                                    <i class="fas fa-box text-3xl text-gray-300"></i>
-                                </div>
-                            @endif
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 group-hover:text-pink-600 text-center leading-tight">{{ $sub->name }}</span>
-                    </a>
-                    @endforeach
+                <div class="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-gray-100" style="scrollbar-width: thin; scrollbar-color: rgb(249 168 212) rgb(243 244 246);">
+                    <style>
+                        .subcategories-scroll::-webkit-scrollbar { height: 6px; }
+                        .subcategories-scroll::-webkit-scrollbar-track { background: rgb(243 244 246); border-radius: 10px; }
+                        .subcategories-scroll::-webkit-scrollbar-thumb { background-color: rgb(249 168 212); border-radius: 10px; }
+                        .subcategories-scroll::-webkit-scrollbar-thumb:hover { background-color: rgb(244 114 182); }
+                    </style>
+                    <div class="flex gap-6 min-w-max justify-start subcategories-scroll">
+                        @foreach($subcategories as $sub)
+                        <a href="{{ route('shop.category', $currentCategory->slug) }}?subcategory={{ $sub->id }}" 
+                           class="flex flex-col items-center group flex-shrink-0 w-32">
+                            <div class="w-24 h-24 rounded-full border-2 border-transparent group-hover:border-pink-500 transition-all overflow-hidden mb-3 shadow-md">
+                                 @if(isset($sub->random_image))
+                                    <img src="{{ $sub->random_image }}" alt="{{ $sub->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                @else
+                                    <div class="w-full h-full bg-gray-100 flex items-center justify-center">
+                                        <i class="fas fa-box text-3xl text-gray-300"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900 group-hover:text-pink-600 text-center leading-tight whitespace-nowrap">{{ $sub->name }}</span>
+                        </a>
+                        @endforeach
+                    </div>
                 </div>
                 <hr class="mt-8 border-gray-200">
             </div>
