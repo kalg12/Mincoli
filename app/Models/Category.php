@@ -12,13 +12,40 @@ class Category extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'description', 'parent_id', 'is_active'];
+    protected $fillable = ['name', 'slug', 'description', 'parent_id', 'is_active', 'image'];
 
     protected $casts = [
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the image to display for the category
+     */
+    public function getDisplayImageAttribute(): ?string
+    {
+        // 1. Check if category has a custom image
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+
+        // 2. Fallback: Get a random product image from this category or its subcategories
+        $randomProduct = Product::where('is_active', true)
+            ->where(function($q) {
+                $q->where('category_id', $this->id)
+                  ->orWhere('subcategory_id', $this->id);
+            })
+            ->whereHas('images')
+            ->inRandomOrder()
+            ->first();
+
+        if ($randomProduct && $randomProduct->images->first()) {
+            return $randomProduct->images->first()->url;
+        }
+
+        return null;
+    }
 
     /**
      * Get all products in this category

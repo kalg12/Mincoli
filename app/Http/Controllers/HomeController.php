@@ -16,20 +16,7 @@ class HomeController extends Controller
             ->withCount('products')
             ->get();
 
-        foreach ($categories as $category) {
-            $randomProduct = Product::where(function($query) use ($category) {
-                    $query->where('category_id', $category->id)
-                          ->orWhere('subcategory_id', $category->id);
-                })
-                ->where('is_active', true)
-                ->whereHas('images')
-                ->inRandomOrder()
-                ->first();
-
-            if ($randomProduct && $randomProduct->images->first()) {
-                $category->random_image = $randomProduct->images->first()->url;
-            }
-        }
+        // Selection of images is now handled by Category model's display_image attribute
 
         $featuredProducts = Product::where('is_active', true)
             ->whereHas('category', function($q) {

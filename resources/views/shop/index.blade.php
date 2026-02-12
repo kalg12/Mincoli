@@ -47,13 +47,13 @@
                     <a href="{{ route('shop.category', $cat->slug) }}" 
                        class="flex flex-col items-center group w-32">
                         <div class="w-24 h-24 rounded-full border-2 border-transparent group-hover:border-pink-500 transition-all overflow-hidden mb-3 shadow-md">
-                            @if(isset($cat->random_image))
-                                <img src="{{ $cat->random_image }}" alt="{{ $cat->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                            @else
-                                <div class="w-full h-full bg-gray-100 flex items-center justify-center">
-                                    <i class="fas fa-box text-3xl text-gray-300"></i>
-                                </div>
-                            @endif
+                        @if($cat->display_image)
+                            <img src="{{ $cat->display_image }}" alt="{{ $cat->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        @else
+                            <div class="w-full h-full bg-gray-100 flex items-center justify-center">
+                                <i class="fas fa-box text-3xl text-gray-300"></i>
+                            </div>
+                        @endif
                         </div>
                         <span class="text-sm font-semibold text-gray-900 group-hover:text-pink-600 text-center leading-tight">{{ $cat->name }}</span>
                     </a>
@@ -130,8 +130,8 @@
                         <a href="{{ route('shop.category', $currentCategory->slug) }}?subcategory={{ $sub->id }}" 
                            class="flex flex-col items-center group flex-shrink-0 w-32">
                             <div class="w-24 h-24 rounded-full border-2 border-transparent group-hover:border-pink-500 transition-all overflow-hidden mb-3 shadow-md">
-                                 @if(isset($sub->random_image))
-                                    <img src="{{ $sub->random_image }}" alt="{{ $sub->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                 @if($sub->display_image)
+                                    <img src="{{ $sub->display_image }}" alt="{{ $sub->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 @else
                                     <div class="w-full h-full bg-gray-100 flex items-center justify-center">
                                         <i class="fas fa-box text-3xl text-gray-300"></i>

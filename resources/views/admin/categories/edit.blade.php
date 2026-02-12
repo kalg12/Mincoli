@@ -12,10 +12,26 @@
             </div>
         </div>
 
-        <form action="{{ route('dashboard.categories.update', $category->id) }}" method="POST" class="bg-white dark:bg-zinc-900">
+        <form action="{{ route('dashboard.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" class="bg-white dark:bg-zinc-900">
             @csrf
             @method('PUT')
             <div class="space-y-4 border-b border-zinc-200 p-6 dark:border-zinc-700">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Imagen de la categoría</label>
+                    <div class="mt-2 flex items-center gap-4">
+                        @if($category->image)
+                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="h-20 w-20 rounded-lg object-cover">
+                        @else
+                            <div class="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700">
+                                <i class="fas fa-image text-zinc-400"></i>
+                            </div>
+                        @endif
+                        <div class="flex-1">
+                            <input type="file" name="image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Sube una nueva imagen para reemplazar la actual o dejarla vacía para seguir usando una aleatoria.</p>
+                        </div>
+                    </div>
+                </div>
                 <div class="grid gap-4 md:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Nombre</label>

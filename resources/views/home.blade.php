@@ -102,8 +102,8 @@
                 
                 <div class="px-4 flex-grow flex flex-col">
                      <a href="{{ route('shop.category', $category->slug) }}" class="block flex-grow">
-                        @if(isset($category->random_image))
-                            <img src="{{ $category->random_image }}" alt="{{ $category->name }}" class="w-full h-64 object-cover object-center mb-2 rounded-sm">
+                        @if($category->display_image)
+                            <img src="{{ $category->display_image }}" alt="{{ $category->name }}" class="w-full h-64 object-cover object-center mb-2 rounded-sm">
                         @else
                             <div class="w-full h-64 bg-gray-50 flex items-center justify-center mb-2 rounded-sm">
                                 <i class="fas fa-box-open text-4xl text-gray-300"></i>

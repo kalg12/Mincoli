@@ -12,10 +12,15 @@
             </a>
         </div>
 
-        <form action="{{ route('dashboard.categories.store') }}" method="POST" class="space-y-6">
+        <form action="{{ route('dashboard.categories.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                 <div class="space-y-4">
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Imagen de la categoría (opcional)</label>
+                        <input type="file" name="image" accept="image/*" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">
+                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">Si no se sube, se usará una imagen aleatoria de sus productos</p>
+                    </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-zinc-900 dark:text-white">Nombre de la categoría</label>
                         <input type="text" name="name" id="name" placeholder="Ej: Joyería" class="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:ring-offset-zinc-900" required>
