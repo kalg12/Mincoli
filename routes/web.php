@@ -202,6 +202,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/exclusive-landing/phones', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'index'])->name('exclusive-landing.phones.index');
     Route::post('/exclusive-landing/phones', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'store'])->name('exclusive-landing.phones.store');
     Route::post('/exclusive-landing/phones/from-customer/{customer}', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'addFromCustomer'])->name('exclusive-landing.phones.add-from-customer');
+    Route::delete('/exclusive-landing/phones/from-customer/{customer}', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'removeFromCustomer'])->name('exclusive-landing.phones.remove-from-customer');
     Route::post('/exclusive-landing/phones/from-customers-all', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'addAllFromCustomers'])->name('exclusive-landing.phones.add-all-from-customers');
     Route::delete('/exclusive-landing/phones/{authorized_phone}', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'destroy'])->name('exclusive-landing.phones.destroy');
     Route::patch('/exclusive-landing/phones/{authorized_phone}/toggle', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'toggleActive'])->name('exclusive-landing.phones.toggle');

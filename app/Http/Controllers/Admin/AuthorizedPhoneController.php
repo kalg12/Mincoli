@@ -17,6 +17,21 @@ class AuthorizedPhoneController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $customerNamesByPhone = [];
+        if ($phones->isNotEmpty()) {
+            $phonesInPage = $phones->pluck('phone')->toArray();
+            $customers = Customer::query()
+                ->whereNotNull('phone')
+                ->where('phone', '!=', '')
+                ->get();
+            foreach ($customers as $customer) {
+                $normalized = AuthorizedPhone::normalizePhone($customer->phone);
+                if (in_array($normalized, $phonesInPage, true)) {
+                    $customerNamesByPhone[$normalized] = $customer->name;
+                }
+            }
+        }
+
         $authorizedPhones = AuthorizedPhone::pluck('id', 'phone')->toArray();
 
         $customerPerPage = (int) $request->input('customer_per_page', 10);
@@ -59,6 +74,7 @@ class AuthorizedPhoneController extends Controller
 
         return view('admin.exclusive-landing.phones.index', [
             'phones' => $phones,
+            'customerNamesByPhone' => $customerNamesByPhone,
             'customersWithPhone' => $customersWithPhone,
             'customersWithPhonePaginator' => $customersWithPhonePaginator,
             'customerPerPage' => $customerPerPage,
@@ -131,6 +147,26 @@ class AuthorizedPhoneController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Número de ' . $customer->name . ' agregado a autorizados.');
+    }
+
+    /**
+     * Remove a customer's phone from the authorized list (desautorizar).
+     */
+    public function removeFromCustomer(Customer $customer)
+    {
+        if (empty(trim((string) $customer->phone))) {
+            return redirect()->back()->with('error', 'El cliente no tiene número registrado.');
+        }
+
+        $normalized = AuthorizedPhone::normalizePhone($customer->phone);
+        $authorized = AuthorizedPhone::where('phone', $normalized)->first();
+
+        if (!$authorized) {
+            return redirect()->back()->with('error', 'Ese número no está en la lista de autorizados.');
+        }
+
+        $authorized->delete();
+        return redirect()->back()->with('success', 'Número de ' . $customer->name . ' desautorizado.');
     }
 
     /**

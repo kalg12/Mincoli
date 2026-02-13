@@ -32,11 +32,6 @@
                     <button type="submit" class="rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700">Agregar</button>
                 </form>
 
-                <form method="GET" class="mb-4">
-                    <input type="search" name="q" value="{{ request('q') }}" placeholder="Buscar por número..." class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white w-64">
-                    <button type="submit" class="ml-2 rounded-lg bg-zinc-200 px-3 py-2 text-sm dark:bg-zinc-700 dark:text-zinc-200">Buscar</button>
-                </form>
-
                 <div class="mb-8 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5 bg-white dark:bg-zinc-900 shadow-sm">
                     <h3 class="text-base font-semibold text-zinc-900 dark:text-white mb-1">Agregar desde clientes</h3>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Clientes con teléfono en <a href="{{ route('dashboard.customers.index') }}" class="text-pink-600 hover:text-pink-500 font-medium">Clientes</a>. Agrega su número a autorizados para la landing exclusiva.</p>
@@ -102,7 +97,11 @@
                                         @if(!$row->valid_phone)
                                             —
                                         @elseif($row->already_authorized)
-                                            —
+                                            <form action="{{ route('dashboard.exclusive-landing.phones.remove-from-customer', $row->customer) }}" method="POST" class="inline" onsubmit="return confirm('¿Desautorizar este número? Dejará de acceder a la landing exclusiva.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 text-sm font-medium">Desautorizar</button>
+                                            </form>
                                         @else
                                             <form action="{{ route('dashboard.exclusive-landing.phones.add-from-customer', $row->customer) }}" method="POST" class="inline">
                                                 @csrf
@@ -134,11 +133,24 @@
                     @endif
                 </div>
 
+                <form method="GET" class="mb-4 flex flex-wrap items-center gap-3">
+                    @if(request('customer_q'))<input type="hidden" name="customer_q" value="{{ request('customer_q') }}">@endif
+                    @if(request('customer_per_page'))<input type="hidden" name="customer_per_page" value="{{ request('customer_per_page') }}">@endif
+                    @if(request('customer_page'))<input type="hidden" name="customer_page" value="{{ request('customer_page') }}">@endif
+                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Buscar en autorizados</label>
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Por número..." class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white w-56 text-sm py-2">
+                    <button type="submit" class="rounded-lg bg-zinc-200 px-3 py-2 text-sm dark:bg-zinc-700 dark:text-zinc-200">Buscar</button>
+                    @if(request('q'))
+                    <a href="{{ route('dashboard.exclusive-landing.phones.index', array_filter(['customer_q' => request('customer_q'), 'customer_per_page' => request('customer_per_page'), 'customer_page' => request('customer_page')])) }}" class="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">Limpiar</a>
+                    @endif
+                </form>
+
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
                         <thead>
                             <tr>
                                 <th class="py-3 text-left text-sm font-semibold text-zinc-900 dark:text-white">Teléfono</th>
+                                <th class="py-3 text-left text-sm font-semibold text-zinc-900 dark:text-white">Cliente</th>
                                 <th class="py-3 text-left text-sm font-semibold text-zinc-900 dark:text-white">Estado</th>
                                 <th class="py-3 text-left text-sm font-semibold text-zinc-900 dark:text-white">Alta</th>
                                 <th class="py-3 text-right text-sm font-semibold text-zinc-900 dark:text-white">Acciones</th>
@@ -148,6 +160,7 @@
                             @forelse($phones as $phone)
                                 <tr>
                                     <td class="py-3 text-zinc-700 dark:text-zinc-300">{{ $phone->phone }}</td>
+                                    <td class="py-3 text-zinc-600 dark:text-zinc-400 text-sm">{{ $customerNamesByPhone[$phone->phone] ?? '—' }}</td>
                                     <td class="py-3">
                                         @if($phone->is_active)
                                             <span class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">Activo</span>
@@ -171,7 +184,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="py-8 text-center text-zinc-500 dark:text-zinc-400">No hay números autorizados. Agrega al menos uno para que las clientas puedan acceder a la landing.</td>
+                                    <td colspan="5" class="py-8 text-center text-zinc-500 dark:text-zinc-400">No hay números autorizados. Agrega al menos uno para que las clientas puedan acceder a la landing.</td>
                                 </tr>
                             @endforelse
                         </tbody>
