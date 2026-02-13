@@ -351,6 +351,15 @@ class ProductController extends Controller
         return back()->with('success', $product->is_active ? 'Producto activado correctamente' : 'Producto desactivada correctamente');
     }
 
+    public function toggleExclusive($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->is_exclusive_content = !$product->is_exclusive_content;
+        $product->save();
+
+        return back()->with('success', $product->is_exclusive_content ? 'Producto marcado como exclusivo' : 'Producto desmarcado como exclusivo');
+    }
+
     public function storeVariant(Request $request, $productId)
     {
         $product = Product::findOrFail($productId);

@@ -144,6 +144,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::delete('/products/{id}/force', [App\Http\Controllers\Admin\ProductController::class, 'forceDelete'])->name('products.forceDelete');
     Route::post('/products/{id}/toggle-featured', [App\Http\Controllers\Admin\ProductController::class, 'toggleFeatured'])->name('products.toggleFeatured');
     Route::patch('/products/{id}/toggle-active', [App\Http\Controllers\Admin\ProductController::class, 'toggleActive'])->name('products.toggleActive');
+    Route::patch('/products/{id}/toggle-exclusive', [App\Http\Controllers\Admin\ProductController::class, 'toggleExclusive'])->name('products.toggleExclusive');
     Route::post('/products/{id}/images/reorder', [App\Http\Controllers\Admin\ProductController::class, 'reorderImages'])->name('products.images.reorder');
     Route::delete('/products/{id}/images/{imageId}', [App\Http\Controllers\Admin\ProductController::class, 'destroyImage'])->name('products.images.destroy');
 
