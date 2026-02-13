@@ -37,29 +37,41 @@
                     <button type="submit" class="ml-2 rounded-lg bg-zinc-200 px-3 py-2 text-sm dark:bg-zinc-700 dark:text-zinc-200">Buscar</button>
                 </form>
 
-                <div class="mb-8 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50 dark:bg-zinc-800/50">
-                    <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-2">Agregar desde clientes</h3>
-                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-3">Clientes con teléfono registrado en <a href="{{ route('dashboard.customers.index') }}" class="text-pink-600 hover:underline">Clientes</a>. Agrega su número a la lista de autorizados para la landing exclusiva.</p>
+                <div class="mb-8 rounded-xl border border-zinc-200 dark:border-zinc-700 p-5 bg-white dark:bg-zinc-900 shadow-sm">
+                    <h3 class="text-base font-semibold text-zinc-900 dark:text-white mb-1">Agregar desde clientes</h3>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Clientes con teléfono en <a href="{{ route('dashboard.customers.index') }}" class="text-pink-600 hover:text-pink-500 font-medium">Clientes</a>. Agrega su número a autorizados para la landing exclusiva.</p>
                     <form action="{{ route('dashboard.exclusive-landing.phones.add-all-from-customers') }}" method="POST" class="mb-4 inline">
                         @csrf
-                        <button type="submit" class="rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5">Agregar todos los clientes con teléfono</button>
+                        <button type="submit" class="rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-4 py-2 shadow-sm transition">Agregar todos los clientes con teléfono</button>
                     </form>
-                    <form method="GET" class="flex flex-wrap items-end gap-3 mb-4">
+                    <form id="customer-filter-form" method="GET" action="{{ route('dashboard.exclusive-landing.phones.index') }}" class="flex flex-wrap items-end gap-3 mb-4">
                         @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
                         @if(request('page'))<input type="hidden" name="page" value="{{ request('page') }}">@endif
-                        <div>
+                        <div class="flex-1 min-w-[200px] max-w-sm">
                             <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Buscar cliente</label>
-                            <input type="search" name="customer_q" value="{{ request('customer_q') }}" placeholder="Nombre, teléfono o email..." class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white w-56 text-sm">
+                            <div class="relative">
+                                <input type="text" id="customer-q-input" name="customer_q" value="{{ request('customer_q') }}" placeholder="Nombre, teléfono o email..." autocomplete="off"
+                                    class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm py-2 pl-3 pr-9 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+                                @if(request('customer_q'))
+                                <a href="{{ route('dashboard.exclusive-landing.phones.index', array_filter(['q' => request('q'), 'page' => request('page'), 'customer_per_page' => request('customer_per_page', 10)])) }}" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-600 dark:hover:text-white transition" title="Limpiar filtro">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </a>
+                                @endif
+                            </div>
                         </div>
-                        <div>
+                        <div class="w-24">
                             <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Por página</label>
-                            <select name="customer_per_page" onchange="this.form.submit()" class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                            <select name="customer_per_page" onchange="this.form.submit()" class="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm py-2 focus:ring-2 focus:ring-pink-500">
                                 @foreach($customerPerPageOptions as $opt)
                                     <option value="{{ $opt }}" {{ $customerPerPage === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <button type="submit" class="rounded-lg bg-zinc-200 dark:bg-zinc-700 px-3 py-2 text-sm dark:text-zinc-200">Buscar</button>
+                        @if(request('customer_q'))
+                        <a href="{{ route('dashboard.exclusive-landing.phones.index', array_filter(['q' => request('q'), 'page' => request('page'), 'customer_per_page' => request('customer_per_page', 10)])) }}" class="rounded-lg border border-zinc-300 dark:border-zinc-600 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition">
+                            Limpiar filtro
+                        </a>
+                        @endif
                     </form>
                     @if($customersWithPhone->isNotEmpty())
                     <div class="overflow-x-auto">
@@ -171,5 +183,18 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
+    <script>
+    (function() {
+        var form = document.getElementById('customer-filter-form');
+        var input = document.getElementById('customer-q-input');
+        if (!form || !input) return;
+        var debounceTimer;
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() { form.submit(); }, 380);
+        });
+    })();
+    </script>
 </x-layouts.app>
