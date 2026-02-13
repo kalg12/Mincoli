@@ -253,9 +253,15 @@
                                     <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">IVA (%)</label>
                                     <input type="number" name="iva_rate" value="{{ old('iva_rate', $product->iva_rate ?? 0) }}" step="0.01" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
                                 </div>
-                                <div class="flex items-center gap-3 pt-2">
-                                    <input type="checkbox" name="is_featured" id="is_featured" value="1" @if($product->is_featured) checked @endif class="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700" />
-                                    <label for="is_featured" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Destacar producto</label>
+                                <div class="flex items-center gap-6 pt-2 flex-wrap">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="is_featured" id="is_featured" value="1" @if($product->is_featured) checked @endif class="rounded border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                        <label for="is_featured" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Destacar producto</label>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="is_exclusive_content" id="is_exclusive_content" value="1" @if($product->is_exclusive_content) checked @endif class="rounded border-zinc-300 text-pink-600 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                                        <label for="is_exclusive_content" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Contenido exclusivo (landing)</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -549,6 +555,7 @@
         </div>
     </div>
 
+    <script type="application/json" id="edit-product-data">{!! json_encode(['categories' => $categories, 'subcategoryId' => $product->subcategory_id, 'oldSubcategoryId' => old('subcategory_id')]) !!}</script>
     <script>
         async function submitDeleteImage(button) {
             var action = button.getAttribute('data-delete-image-action');
@@ -672,11 +679,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const categories = @json($categories);
-        const categorySelect = document.getElementById('category_id');
-        const subcategorySelect = document.getElementById('subcategory_id');
-        const currentSubcategoryId = "{{ $product->subcategory_id }}";
-        const oldSubcategoryId = "{{ old('subcategory_id') }}";
+            var data = JSON.parse(document.getElementById('edit-product-data').textContent);
+            const categories = data.categories;
+            const currentSubcategoryId = data.subcategoryId;
+            const oldSubcategoryId = data.oldSubcategoryId || '';
+            const categorySelect = document.getElementById('category_id');
+            const subcategorySelect = document.getElementById('subcategory_id');
 
         function updateSubcategories(initial = false) {
             const categoryId = categorySelect.value;

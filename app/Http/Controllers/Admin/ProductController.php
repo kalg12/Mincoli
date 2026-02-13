@@ -104,6 +104,7 @@ class ProductController extends Controller
         $payload['slug'] = $this->generateUniqueSlug($validated['name']);
         $payload['is_active'] = $validated['status'] === 'published';
         $payload['is_featured'] = $request->boolean('is_featured');
+        $payload['is_exclusive_content'] = $request->boolean('is_exclusive_content');
         $payload['cost'] = $validated['cost'] ?? ($validated['price'] * 0.6);
 
         $product = DB::transaction(function () use ($payload, $request) {
@@ -189,6 +190,7 @@ class ProductController extends Controller
         $payload = $validated;
         $payload['is_active'] = $validated['status'] === 'published';
         $payload['is_featured'] = $request->boolean('is_featured');
+        $payload['is_exclusive_content'] = $request->boolean('is_exclusive_content');
 
         if ($product->name !== $validated['name']) {
             $payload['slug'] = $this->generateUniqueSlug($validated['name'], $product->id);

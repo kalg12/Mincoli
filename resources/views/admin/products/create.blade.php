@@ -94,6 +94,10 @@
                     </select>
                     @error('status')<p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
                 </div>
+                <div class="mt-3 flex items-center gap-3">
+                    <input type="checkbox" name="is_exclusive_content" id="is_exclusive_content" value="1" {{ old('is_exclusive_content') ? 'checked' : '' }} class="rounded border-zinc-300 text-pink-600 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-700" />
+                    <label for="is_exclusive_content" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Contenido exclusivo (landing)</label>
+                </div>
             </div>
 
             <!-- Imágenes -->
@@ -141,19 +145,21 @@
         </form>
     </div>
 
+    <script type="application/json" id="create-product-data">{!! json_encode(['categories' => $categories, 'oldSubcategoryId' => old('subcategory_id')]) !!}</script>
     <script>
     document.addEventListener('DOMContentLoaded', function(){
-        const categories = @json($categories);
+        var data = JSON.parse(document.getElementById('create-product-data').textContent);
+        const categories = data.categories;
+        const oldSubcategoryId = String(data.oldSubcategoryId || '');
         const categorySelect = document.getElementById('category_id');
         const subcategorySelect = document.getElementById('subcategory_id');
-        const oldSubcategoryId = "{{ old('subcategory_id') }}";
 
         function updateSubcategories() {
             const categoryId = categorySelect.value;
             const category = categories.find(c => c.id == categoryId);
-            
+
             subcategorySelect.innerHTML = '<option value="">Seleccionar subcategoría</option>';
-            
+
             if (category && category.children && category.children.length > 0) {
                 category.children.forEach(sub => {
                     const option = document.createElement('option');

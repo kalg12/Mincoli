@@ -53,6 +53,12 @@ Route::get('/terminos-condiciones', [PagesController::class, 'terms'])->name('te
 Route::get('/politica-privacidad', [PagesController::class, 'privacy'])->name('privacy');
 Route::get('/aviso-legal', [PagesController::class, 'legal'])->name('legal');
 
+// Exclusive Landing (content by phone validation)
+Route::get('/exclusivo', [App\Http\Controllers\ExclusiveLandingController::class, 'gate'])->name('exclusive-landing.gate');
+Route::post('/exclusivo/validar', [App\Http\Controllers\ExclusiveLandingController::class, 'validatePhone'])->name('exclusive-landing.validate');
+Route::get('/exclusivo/salir', [App\Http\Controllers\ExclusiveLandingController::class, 'logout'])->name('exclusive-landing.logout');
+Route::get('/exclusivo/tienda', [App\Http\Controllers\ExclusiveLandingController::class, 'index'])->name('exclusive-landing.index');
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -189,6 +195,14 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/banners/{id}/edit', [App\Http\Controllers\Admin\BannerController::class, 'edit'])->name('banners.edit');
     Route::put('/banners/{id}', [App\Http\Controllers\Admin\BannerController::class, 'update'])->name('banners.update');
     Route::delete('/banners/{id}', [App\Http\Controllers\Admin\BannerController::class, 'destroy'])->name('banners.destroy');
+
+    // Exclusive Landing
+    Route::get('/exclusive-landing', [App\Http\Controllers\Admin\ExclusiveLandingConfigController::class, 'index'])->name('exclusive-landing.config');
+    Route::put('/exclusive-landing', [App\Http\Controllers\Admin\ExclusiveLandingConfigController::class, 'update'])->name('exclusive-landing.update');
+    Route::get('/exclusive-landing/phones', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'index'])->name('exclusive-landing.phones.index');
+    Route::post('/exclusive-landing/phones', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'store'])->name('exclusive-landing.phones.store');
+    Route::delete('/exclusive-landing/phones/{authorized_phone}', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'destroy'])->name('exclusive-landing.phones.destroy');
+    Route::patch('/exclusive-landing/phones/{authorized_phone}/toggle', [App\Http\Controllers\Admin\AuthorizedPhoneController::class, 'toggleActive'])->name('exclusive-landing.phones.toggle');
 
     // Orders
     Route::get('/orders', [App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');

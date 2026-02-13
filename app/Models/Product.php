@@ -28,6 +28,7 @@ class Product extends Model
         'iva_rate',
         'is_active',
         'is_featured',
+        'is_exclusive_content',
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class Product extends Model
         'iva_rate' => 'decimal:2',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
+        'is_exclusive_content' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
