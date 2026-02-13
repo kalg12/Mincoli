@@ -92,7 +92,7 @@
                 @endif
 
                 @if($product->total_stock > 0)
-                <form action="{{ route('cart.add') }}" method="POST" class="space-y-3" id="add-to-cart-form">
+                <form action="{{ route('cart.add') }}" method="POST" class="space-y-3" id="add-to-cart-form" data-has-variants="{{ $product->variants->count() > 0 ? '1' : '0' }}">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <input type="hidden" name="return_to" value="exclusivo">
@@ -167,15 +167,19 @@
             document.getElementById('quantity').disabled = false;
         });
     });
-    document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
-        if ({{ $product->variants->count() > 0 ? 'true' : 'false' }}) {
-            if (!document.getElementById('variant_id').value) {
-                e.preventDefault();
-                alert('Selecciona una variante');
-                return;
+    (function() {
+        var form = document.getElementById('add-to-cart-form');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            if (form.getAttribute('data-has-variants') === '1') {
+                if (!document.getElementById('variant_id').value) {
+                    e.preventDefault();
+                    alert('Selecciona una variante');
+                    return;
+                }
             }
-        }
-    });
+        });
+    })();
     </script>
 </body>
 </html>
