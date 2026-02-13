@@ -138,7 +138,7 @@
                     @if(request('customer_per_page'))<input type="hidden" name="customer_per_page" value="{{ request('customer_per_page') }}">@endif
                     @if(request('customer_page'))<input type="hidden" name="customer_page" value="{{ request('customer_page') }}">@endif
                     <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Buscar en autorizados</label>
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Por número..." class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white w-56 text-sm py-2">
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Número o nombre del cliente..." class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white w-56 text-sm py-2">
                     <button type="submit" class="rounded-lg bg-zinc-200 px-3 py-2 text-sm dark:bg-zinc-700 dark:text-zinc-200">Buscar</button>
                     @if(request('q'))
                     <a href="{{ route('dashboard.exclusive-landing.phones.index', array_filter(['customer_q' => request('customer_q'), 'customer_per_page' => request('customer_per_page'), 'customer_page' => request('customer_page')])) }}" class="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">Limpiar</a>

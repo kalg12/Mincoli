@@ -12,7 +12,30 @@ class AuthorizedPhoneController extends Controller
     public function index(Request $request)
     {
         $phones = AuthorizedPhone::query()
-            ->when($request->filled('q'), fn ($q) => $q->where('phone', 'like', '%' . preg_replace('/\D/', '', $request->q) . '%'))
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $term = $request->q;
+                $digits = preg_replace('/\D/', '', $term);
+                $q->where(function ($query) use ($term, $digits) {
+                    if ($digits !== '') {
+                        $query->where('phone', 'like', '%' . $digits . '%');
+                    }
+                    $customerPhones = Customer::query()
+                        ->whereNotNull('phone')
+                        ->where('phone', '!=', '')
+                        ->where(function ($cq) use ($term) {
+                            $cq->where('name', 'like', '%' . $term . '%')
+                                ->orWhere('email', 'like', '%' . $term . '%');
+                        })
+                        ->get()
+                        ->map(fn ($c) => AuthorizedPhone::normalizePhone($c->phone))
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    if ($customerPhones !== []) {
+                        $query->orWhereIn('phone', $customerPhones);
+                    }
+                });
+            })
             ->orderByDesc('created_at')
             ->paginate(20)
             ->withQueryString();
