@@ -225,7 +225,7 @@
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900 transition-colors" title="{{ $product->is_exclusive_content ? 'Quitar de exclusivos' : 'Marcar como exclusivo (landing)' }}">
-                                            <svg class="h-4 w-4 {{ $product->is_exclusive_content ? 'text-pink-500' : 'text-zinc-400' }}" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" stroke-width="0.5"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                                            <svg class="h-4 w-4 {{ $product->is_exclusive_content ? 'text-pink-500' : 'text-zinc-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                         </button>
                                     </form>
                                     <form action="{{ route('dashboard.products.toggleActive', $product->id) }}" method="POST" style="display:inline;">
