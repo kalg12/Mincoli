@@ -199,70 +199,127 @@ class CartController extends Controller
             ]);
         }
 
+        if (request()->input('return_to') === 'exclusivo') {
+            return redirect()->route('exclusive-landing.cart')->with('success', 'Producto agregado al carrito');
+        }
+
         return back()->with('success', 'Producto agregado al carrito');
     }
 
-    public function update(Request $request, $id)
+    public function indexExclusive()
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1'
-        ]);
+        $data = $this->getCartDataForView();
+        return view('exclusive-landing.cart', $data);
+    }
 
+    public function updateExclusive(Request $request, $id)
+    {
+        $msg = $this->performUpdate($request, $id);
+        return redirect()->route('exclusive-landing.cart')->with('success', $msg);
+    }
+
+    public function removeExclusive($id)
+    {
+        $this->performRemove($id);
+        return redirect()->route('exclusive-landing.cart')->with('success', 'Producto eliminado del carrito');
+    }
+
+    protected function performUpdate(Request $request, $id): string
+    {
+        $request->validate(['quantity' => 'required|integer|min:1']);
         $cart = session()->get('cart', []);
-        $updated = false;
         $message = 'Carrito actualizado';
-
         foreach ($cart as $key => $item) {
             if ($item['id'] == $id) {
-                // Obtener producto y variante para validar stock
                 $product = Product::with('variants')->find($item['product_id']);
                 if (!$product) break;
-
                 $availableStock = $product->total_stock;
                 if (!empty($item['variant_id'])) {
                     $variant = $product->variants->firstWhere('id', $item['variant_id']);
-                    if ($variant) {
-                        $availableStock = (int) $variant->stock;
-                    }
+                    if ($variant) $availableStock = (int) $variant->stock;
                 }
-
                 $newQty = (int) $request->quantity;
                 if ($newQty > $availableStock) {
                     $newQty = max(1, (int) $availableStock);
                     $message = 'Cantidad ajustada al stock disponible';
                 }
-
                 $cart[$key]['quantity'] = $newQty;
-                $updated = true;
+                session()->put('cart', $cart);
                 break;
             }
         }
+        return $message;
+    }
 
-        if ($updated) {
-            session()->put('cart', $cart);
-        }
+    protected function performRemove($id): void
+    {
+        $cart = session()->get('cart', []);
+        $cart = array_values(array_filter($cart, fn ($item) => $item['id'] != $id));
+        session()->put('cart', $cart);
+    }
 
+    private function getCartDataForView()
+    {
+        $cart = session()->get('cart', []);
+        $items = collect($cart)->map(function ($item) {
+            $product = Product::with(['images', 'variants'])->find($item['product_id']);
+            if (!$product) return null;
+
+            $variant = null;
+            $unitPrice = $product->sale_price ?? $product->price;
+            $maxStock = $product->stock ?? $product->total_stock ?? 0;
+            $imageUrl = $product->images->first()?->url ?? '/images/placeholder.jpg';
+
+            if (!empty($item['variant_id'])) {
+                $variant = $product->variants->firstWhere('id', $item['variant_id']);
+                if ($variant) {
+                    $unitPrice = $variant->sale_price ?? ($variant->price ?? $unitPrice);
+                    $maxStock = (int) $variant->stock;
+                    $imageUrl = $variant->images()->first()?->url ?? $imageUrl;
+                }
+            }
+
+            return (object)[
+                'id' => $item['id'],
+                'product' => $product,
+                'variant' => $variant,
+                'quantity' => $item['quantity'],
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $item['quantity'],
+                'max_stock' => $maxStock,
+                'image_url' => $imageUrl
+            ];
+        })->filter();
+
+        $subtotal = $items->sum('subtotal');
+        $showIva = SiteSetting::get('store', 'show_iva', true);
+        $iva = $showIva ? ($subtotal * 0.16) : 0;
+        $total = $subtotal + $iva;
+
+        $recommendations = $this->recommendationEngine->getRecommendations($cart, 6);
+
+        return [
+            'items' => $items,
+            'cart' => (object)['subtotal' => $subtotal, 'total_iva' => $iva, 'total' => $total, 'show_iva' => $showIva],
+            'recommendations' => $recommendations,
+        ];
+    }
+
+    public function update(Request $request, $id)
+    {
+        $message = $this->performUpdate($request, $id);
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }
-
         return back()->with('success', $message);
     }
 
     public function remove($id)
     {
-        $cart = session()->get('cart', []);
-
-        $cart = array_filter($cart, function($item) use ($id) {
-            return $item['id'] != $id;
-        });
-
-        session()->put('cart', array_values($cart));
-
+        $this->performRemove($id);
         if (request()->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Producto eliminado']);
         }
-
         return back()->with('success', 'Producto eliminado del carrito');
     }
 

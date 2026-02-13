@@ -59,6 +59,18 @@ Route::post('/exclusivo/validar', [App\Http\Controllers\ExclusiveLandingControll
 Route::get('/exclusivo/salir', [App\Http\Controllers\ExclusiveLandingController::class, 'logout'])->name('exclusive-landing.logout');
 Route::get('/exclusivo/tienda', [App\Http\Controllers\ExclusiveLandingController::class, 'index'])->name('exclusive-landing.index');
 
+// Exclusive flow: producto, carrito, checkout (require validated session)
+Route::middleware(['exclusive.landing'])->prefix('exclusivo')->name('exclusive-landing.')->group(function () {
+    Route::get('/producto/{slug}', [App\Http\Controllers\ExclusiveLandingController::class, 'product'])->name('product');
+    Route::get('/carrito', [App\Http\Controllers\CartController::class, 'indexExclusive'])->name('cart');
+    Route::patch('/carrito/{id}', [App\Http\Controllers\CartController::class, 'updateExclusive'])->name('cart.update');
+    Route::delete('/carrito/{id}', [App\Http\Controllers\CartController::class, 'removeExclusive'])->name('cart.remove');
+    Route::get('/checkout', [App\Http\Controllers\CheckoutController::class, 'indexExclusive'])->name('checkout');
+    Route::post('/checkout/procesar', [App\Http\Controllers\CheckoutController::class, 'processExclusive'])->name('checkout.process');
+    Route::get('/checkout/exito/{order}', [App\Http\Controllers\CheckoutController::class, 'successExclusive'])->name('checkout.success');
+    Route::get('/checkout/fallo', [App\Http\Controllers\CheckoutController::class, 'failureExclusive'])->name('checkout.failure');
+});
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

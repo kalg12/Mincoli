@@ -91,7 +91,7 @@ class ExclusiveLandingController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->session()->forget(['exclusive_landing_validated', 'exclusive_landing_validated_at']);
+        $request->session()->forget(['exclusive_landing_validated', 'exclusive_landing_validated_at', 'exclusive_flow']);
         return redirect()->route('exclusive-landing.gate');
     }
 
@@ -113,6 +113,8 @@ class ExclusiveLandingController extends Controller
         if (!$request->session()->get('exclusive_landing_validated')) {
             return redirect()->route('exclusive-landing.gate');
         }
+
+        $request->session()->put('exclusive_flow', true);
 
         $query = Product::query()
             ->where('is_active', true)
@@ -186,5 +188,43 @@ class ExclusiveLandingController extends Controller
             'config' => $config,
             'expired_message' => $config->expired_message,
         ]);
+    }
+
+    /**
+     * Show exclusive product detail (add to cart, stays in exclusivo flow).
+     */
+    public function product(Request $request, string $slug)
+    {
+        $config = ExclusiveLandingConfig::current();
+        if (!$config || !$config->isAvailable()) {
+            return $config && $config->isExpired() ? $this->viewExpired($config) : $this->viewDisabled();
+        }
+
+        $product = Product::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->where('is_exclusive_content', true)
+            ->with(['images', 'category', 'subcategory', 'variants'])
+            ->firstOrFail();
+
+        $relatedProducts = Product::query()
+            ->where('is_active', true)
+            ->where('is_exclusive_content', true)
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->with(['images', 'variants'])
+            ->where(function ($q) {
+                $q->whereHas('variants', fn ($v) => $v->where('stock', '>', 0))
+                    ->orWhere(function ($q2) {
+                $q2->whereDoesntHave('variants')->where('stock', '>', 0);
+            });
+            })
+            ->inRandomOrder()
+            ->take(5)
+            ->get();
+
+        return response()
+            ->view('exclusive-landing.product', compact('config', 'product', 'relatedProducts'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 }

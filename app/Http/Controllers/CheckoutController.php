@@ -20,9 +20,19 @@ class CheckoutController extends Controller
 {
     public function index()
     {
+        return $this->indexCheckout('checkout.index', 'cart');
+    }
+
+    public function indexExclusive()
+    {
+        return $this->indexCheckout('exclusive-landing.checkout', 'exclusive-landing.cart');
+    }
+
+    private function indexCheckout(string $indexRoute, string $cartRoute)
+    {
         $cart = session()->get('cart', []);
         if (empty($cart)) {
-            return redirect()->route('cart')->with('error', 'Tu carrito está vacío.');
+            return redirect()->route($cartRoute)->with('error', 'Tu carrito está vacío.');
         }
 
         // Re-calculate totals to ensure accuracy
@@ -61,24 +71,41 @@ class CheckoutController extends Controller
 
         $paymentMethods = PaymentMethod::where('is_active', true)->get();
 
-        return view('checkout.index', compact('items', 'subtotal', 'iva', 'total', 'paymentMethods'));
+        $view = str_starts_with($indexRoute, 'exclusive') ? 'exclusive-landing.checkout' : 'checkout.index';
+        return view($view, compact('items', 'subtotal', 'iva', 'total', 'paymentMethods'));
     }
 
     public function process(Request $request)
     {
+        return $this->performProcess($request, false);
+    }
+
+    public function processExclusive(Request $request)
+    {
+        session()->put('exclusive_flow', true);
+        return $this->performProcess($request, true);
+    }
+
+    private function performProcess(Request $request, bool $exclusive)
+    {
         $request->validate([
             'payment_method_id' => 'required|exists:payment_methods,id',
             'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|min:10|confirmed', // expects customer_phone_confirmation field
+            'customer_phone' => 'required|string|min:10|confirmed',
             'customer_email' => 'required|email',
         ], [
              'customer_phone.confirmed' => 'Los números de teléfono no coinciden.',
              'customer_phone.min' => 'El teléfono debe tener al menos 10 dígitos.'
         ]);
 
+        $cartRoute = $exclusive ? 'exclusive-landing.cart' : 'cart';
+        $successRoute = $exclusive ? 'exclusive-landing.checkout.success' : 'checkout.success';
+        $failureRoute = $exclusive ? 'exclusive-landing.checkout.failure' : 'checkout.failure';
+        $indexRoute = $exclusive ? 'exclusive-landing.checkout' : 'checkout.index';
+
         $cart = session()->get('cart', []);
         if (empty($cart)) {
-            return redirect()->route('cart')->with('error', 'Tu carrito está vacío.');
+            return redirect()->route($cartRoute)->with('error', 'Tu carrito está vacío.');
         }
 
         $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
@@ -202,24 +229,24 @@ class CheckoutController extends Controller
             // Handle Payment Method Specifics
             if ($paymentMethod->code === 'mercadopago') {
                 try {
-                    $preferenceData = $this->createMercadoPagoPreference($order, $paymentMethod);
+                    $preferenceData = $this->createMercadoPagoPreference($order, $paymentMethod, $exclusive);
                     return view('checkout.mercadopago', $preferenceData);
                 } catch (\Exception $e) {
                     Log::error('Mercado Pago Init Failed after Order Commit', ['order_id' => $order->id, 'error' => $e->getMessage()]);
                     // Order is created but payment init failed. Redirect to success/receipt page with error.
-                    return redirect()->route('checkout.success', $order)
+                    return redirect()->route($successRoute, $order)
                         ->with('error', 'El pedido fue creado pero hubo un error al conectar con Mercado Pago: ' . $e->getMessage() . '. Por favor intenta pagar nuevamente desde tu historial.');
                 }
 
             } elseif ($paymentMethod->code === 'oxxo') {
-                return redirect()->route('checkout.success', $order);
+                return redirect()->route($successRoute, $order);
 
             } elseif ($paymentMethod->code === 'transfer') {
-                return redirect()->route('checkout.success', $order);
+                return redirect()->route($successRoute, $order);
             }
 
             // Default fallback
-            return redirect()->route('checkout.success', $order);
+            return redirect()->route($successRoute, $order);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -238,7 +265,7 @@ class CheckoutController extends Controller
      * Creates Mercado Pago preference and returns view data.
      * Throws exception on failure.
      */
-    private function createMercadoPagoPreference($order, $paymentMethod)
+    private function createMercadoPagoPreference($order, $paymentMethod, bool $exclusive = false)
     {
         $settings = $paymentMethod->settings;
 
@@ -295,10 +322,12 @@ class CheckoutController extends Controller
             // standard route() uses the current scheme (http/https) correctly.
             // Note: MP API requires HTTPS for auto_return back_urls.
             // We use secure_url() to force HTTPS. Ensure your local environment supports it (e.g., 'herd secure').
+            $successRoute = $exclusive ? 'exclusive-landing.checkout.success' : 'checkout.success';
+            $failureRoute = $exclusive ? 'exclusive-landing.checkout.failure' : 'checkout.failure';
             $backUrls = [
-                "success" => secure_url(route('checkout.success', $order, false)),
-                "failure" => secure_url(route('checkout.failure', ['order_id' => $order->id], false)),
-                "pending" => secure_url(route('checkout.success', $order, false))
+                "success" => secure_url(route($successRoute, $order, false)),
+                "failure" => secure_url(route($failureRoute, ['order_id' => $order->id], false)),
+                "pending" => secure_url(route($successRoute, $order, false))
             ];
 
             $request = [
@@ -364,7 +393,19 @@ class CheckoutController extends Controller
 
     public function success(Order $order, Request $request)
     {
-        // Security Check
+        if (session('exclusive_flow')) {
+            return redirect()->route('exclusive-landing.checkout.success', $order);
+        }
+        return $this->renderSuccess($order, $request);
+    }
+
+    public function successExclusive(Order $order, Request $request)
+    {
+        return $this->renderSuccess($order, $request, true);
+    }
+
+    private function renderSuccess(Order $order, Request $request, bool $exclusive = false)
+    {
         $allowed = false;
         if (Auth::check() && $order->customer_id === Auth::id()) $allowed = true;
         elseif (session()->has('last_order_id') && session('last_order_id') == $order->id) $allowed = true;
@@ -377,8 +418,10 @@ class CheckoutController extends Controller
         }
 
         $paymentMethod = $order->payments->sortByDesc('created_at')->first()?->method;
-        return view('checkout.success', compact('order', 'paymentMethod'));
+        $view = $exclusive ? 'exclusive-landing.checkout-success' : 'checkout.success';
+        return view($view, compact('order', 'paymentMethod'));
     }
+
 
     public function webhook(Request $request)
     {
@@ -477,27 +520,34 @@ class CheckoutController extends Controller
     }
     public function failure(Request $request)
     {
+        return $this->performFailure($request, 'checkout.index', 'cart');
+    }
+
+    public function failureExclusive(Request $request)
+    {
+        return $this->performFailure($request, 'exclusive-landing.checkout', 'exclusive-landing.cart');
+    }
+
+    private function performFailure(Request $request, string $indexRoute, string $cartRoute)
+    {
         $orderId = $request->get('order_id') ?? $request->get('external_reference');
 
         if (!$orderId) {
-            return redirect()->route('cart')->with('error', 'No se pudo identificar el pedido cancelado.');
+            return redirect()->route($cartRoute)->with('error', 'No se pudo identificar el pedido cancelado.');
         }
 
         $order = Order::with('items')->find($orderId);
 
-        // Security: Ensure order belongs to user or session
         $allowed = false;
         if (Auth::check() && $order && $order->customer_id === Auth::id()) $allowed = true;
         elseif (session()->has('last_order_id') && session('last_order_id') == $orderId) $allowed = true;
 
         if (!$allowed || !$order) {
-            return redirect()->route('cart')->with('error', 'Pedido no encontrado o no autorizado.');
+            return redirect()->route($cartRoute)->with('error', 'Pedido no encontrado o no autorizado.');
         }
 
-        // Cancel Logic (Restore Stock because it was reserved at start)
         if ($order->status === 'pending') {
             DB::transaction(function () use ($order) {
-                // Cancel Order
                 $order->status = 'cancelled';
                 $order->expires_at = null;
                 $order->save();
@@ -509,7 +559,6 @@ class CheckoutController extends Controller
                     'note' => 'Cancelado automáticamente por fallo/cancelación en pasarela (Restauración de stock y carrito)',
                 ]);
 
-                // Restore Stock (increment)
                 foreach ($order->items as $item) {
                     if ($item->variant_id) {
                         \App\Models\ProductVariant::where('id', $item->variant_id)->increment('stock', $item->quantity);
@@ -520,25 +569,21 @@ class CheckoutController extends Controller
             });
         }
 
-        // Restore Cart Logic (Simplified restoration)
         $cart = [];
         foreach ($order->items as $item) {
             $product = Product::find($item->product_id);
             if ($product) {
-                $cartKey = $item->variant_id ? $item->product_id . '-' . $item->variant_id : $item->product_id;
-                $cart[$cartKey] = [
+                $cart[] = [
+                    'id' => uniqid(),
                     'product_id' => $item->product_id,
                     'variant_id' => $item->variant_id,
                     'quantity' => $item->quantity,
-                    'name' => $product->name,
-                    'price' => $item->unit_price,
-                    'image' => $product->images->first()?->url
                 ];
             }
         }
         session()->put('cart', $cart);
 
-        return redirect()->route('checkout.index')
+        return redirect()->route($indexRoute)
             ->withInput([
                 'customer_name' => $order->customer_name,
                 'customer_email' => $order->customer_email,

@@ -17,7 +17,7 @@
                 <span class="font-bold text-gray-900 hidden sm:inline">Exclusivo</span>
             </a>
             <div class="flex items-center gap-4">
-                <a href="{{ route('cart') }}" class="text-gray-700 hover:text-pink-600 flex items-center gap-1">
+                <a href="{{ route('exclusive-landing.cart') }}" class="text-gray-700 hover:text-pink-600 flex items-center gap-1">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="hidden sm:inline">Carrito</span>
                 </a>
@@ -81,7 +81,7 @@
                     @php
                         $price = $product->sale_price && $product->sale_price < $product->price ? $product->sale_price : $product->price;
                     @endphp
-                    <a href="{{ route('shop.product', $product->slug) }}" class="bg-white rounded-xl shadow-md hover:shadow-lg transition overflow-hidden group block">
+                    <a href="{{ route('exclusive-landing.product', $product->slug) }}" class="bg-white rounded-xl shadow-md hover:shadow-lg transition overflow-hidden group block">
                         <div class="aspect-square bg-gray-100 overflow-hidden">
                             @if($product->images->first())
                                 <img src="{{ $product->images->first()->url }}" alt="{{ $product->name }}" class="w-full h-full object-contain p-4 group-hover:scale-105 transition">
