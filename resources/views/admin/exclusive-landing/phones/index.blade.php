@@ -193,8 +193,16 @@
         var debounceTimer;
         input.addEventListener('input', function() {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(function() { form.submit(); }, 380);
+            debounceTimer = setTimeout(function() {
+                var action = form.getAttribute('action') || '';
+                form.setAttribute('action', action.split('#')[0] + '#customer-search');
+                form.submit();
+            }, 380);
         });
+        if (window.location.hash === '#customer-search') {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
     })();
     </script>
 </x-layouts.app>
