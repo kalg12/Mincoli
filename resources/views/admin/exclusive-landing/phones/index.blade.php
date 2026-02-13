@@ -37,15 +37,32 @@
                     <button type="submit" class="ml-2 rounded-lg bg-zinc-200 px-3 py-2 text-sm dark:bg-zinc-700 dark:text-zinc-200">Buscar</button>
                 </form>
 
-                @if($customersWithPhone->isNotEmpty())
                 <div class="mb-8 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50 dark:bg-zinc-800/50">
                     <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-2">Agregar desde clientes</h3>
                     <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-3">Clientes con teléfono registrado en <a href="{{ route('dashboard.customers.index') }}" class="text-pink-600 hover:underline">Clientes</a>. Agrega su número a la lista de autorizados para la landing exclusiva.</p>
-                    <form action="{{ route('dashboard.exclusive-landing.phones.add-all-from-customers') }}" method="POST" class="mb-3 inline">
+                    <form action="{{ route('dashboard.exclusive-landing.phones.add-all-from-customers') }}" method="POST" class="mb-4 inline">
                         @csrf
                         <button type="submit" class="rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-3 py-1.5">Agregar todos los clientes con teléfono</button>
                     </form>
-                    <div class="overflow-x-auto max-h-48 overflow-y-auto">
+                    <form method="GET" class="flex flex-wrap items-end gap-3 mb-4">
+                        @if(request('q'))<input type="hidden" name="q" value="{{ request('q') }}">@endif
+                        @if(request('page'))<input type="hidden" name="page" value="{{ request('page') }}">@endif
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Buscar cliente</label>
+                            <input type="search" name="customer_q" value="{{ request('customer_q') }}" placeholder="Nombre, teléfono o email..." class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white w-56 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Por página</label>
+                            <select name="customer_per_page" onchange="this.form.submit()" class="rounded-lg border border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white text-sm">
+                                @foreach($customerPerPageOptions as $opt)
+                                    <option value="{{ $opt }}" {{ $customerPerPage === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="rounded-lg bg-zinc-200 dark:bg-zinc-700 px-3 py-2 text-sm dark:text-zinc-200">Buscar</button>
+                    </form>
+                    @if($customersWithPhone->isNotEmpty())
+                    <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700 text-sm">
                             <thead>
                                 <tr>
@@ -61,14 +78,18 @@
                                     <td class="py-2 text-zinc-700 dark:text-zinc-300">{{ $row->customer->name }}</td>
                                     <td class="py-2 text-zinc-600 dark:text-zinc-400">{{ $row->customer->phone }}</td>
                                     <td class="py-2">
-                                        @if($row->already_authorized)
+                                        @if(!$row->valid_phone)
+                                            <span class="text-amber-600 dark:text-amber-400 text-xs">Número inválido</span>
+                                        @elseif($row->already_authorized)
                                             <span class="text-green-600 dark:text-green-400 text-xs">Ya autorizado</span>
                                         @else
                                             <span class="text-zinc-500 dark:text-zinc-400 text-xs">No autorizado</span>
                                         @endif
                                     </td>
                                     <td class="py-2 text-right">
-                                        @if($row->already_authorized)
+                                        @if(!$row->valid_phone)
+                                            —
+                                        @elseif($row->already_authorized)
                                             —
                                         @else
                                             <form action="{{ route('dashboard.exclusive-landing.phones.add-from-customer', $row->customer) }}" method="POST" class="inline">
@@ -82,8 +103,24 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                            Mostrando {{ $customersWithPhonePaginator->firstItem() ?? 0 }}–{{ $customersWithPhonePaginator->lastItem() ?? 0 }} de {{ $customersWithPhonePaginator->total() }} clientes
+                        </p>
+                        <div class="customers-pagination">
+                            {{ $customersWithPhonePaginator->links() }}
+                        </div>
+                    </div>
+                    @else
+                    <p class="py-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
+                        @if(request('customer_q'))
+                            No hay clientes con teléfono que coincidan con "{{ request('customer_q') }}".
+                        @else
+                            No hay clientes con teléfono registrado.
+                        @endif
+                    </p>
+                    @endif
                 </div>
-                @endif
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">

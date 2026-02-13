@@ -19,23 +19,51 @@ class AuthorizedPhoneController extends Controller
 
         $authorizedPhones = AuthorizedPhone::pluck('id', 'phone')->toArray();
 
-        $customersWithPhone = Customer::query()
+        $customerPerPage = (int) $request->input('customer_per_page', 10);
+        $allowedPerPage = [10, 15, 25, 50];
+        if (!in_array($customerPerPage, $allowedPerPage, true)) {
+            $customerPerPage = 10;
+        }
+
+        $customersQuery = Customer::query()
             ->whereNotNull('phone')
             ->where('phone', '!=', '')
-            ->orderBy('name')
-            ->get()
-            ->map(function (Customer $customer) use ($authorizedPhones) {
-                $normalized = AuthorizedPhone::normalizePhone($customer->phone);
-                $alreadyAuthorized = isset($authorizedPhones[$normalized]);
-                return (object)[
-                    'customer' => $customer,
-                    'normalized_phone' => $normalized,
-                    'already_authorized' => $alreadyAuthorized,
-                ];
-            })
-            ->filter(fn ($row) => strlen($row->normalized_phone) >= 10);
+            ->orderBy('name');
 
-        return view('admin.exclusive-landing.phones.index', compact('phones', 'customersWithPhone'));
+        if ($request->filled('customer_q')) {
+            $term = $request->customer_q;
+            $digits = preg_replace('/\D/', '', $term);
+            $customersQuery->where(function ($q) use ($term, $digits) {
+                $q->where('name', 'like', '%' . $term . '%')
+                    ->orWhere('email', 'like', '%' . $term . '%')
+                    ->orWhere('phone', 'like', '%' . $term . '%');
+                if ($digits !== '') {
+                    $q->orWhere('phone', 'like', '%' . $digits . '%');
+                }
+            });
+        }
+
+        $customersWithPhonePaginator = $customersQuery->paginate($customerPerPage, ['*'], 'customer_page')->withQueryString();
+
+        $customersWithPhone = $customersWithPhonePaginator->getCollection()->map(function (Customer $customer) use ($authorizedPhones) {
+            $normalized = AuthorizedPhone::normalizePhone($customer->phone);
+            $alreadyAuthorized = isset($authorizedPhones[$normalized]);
+            $validPhone = strlen($normalized) >= 10;
+            return (object)[
+                'customer' => $customer,
+                'normalized_phone' => $normalized,
+                'already_authorized' => $alreadyAuthorized,
+                'valid_phone' => $validPhone,
+            ];
+        });
+
+        return view('admin.exclusive-landing.phones.index', [
+            'phones' => $phones,
+            'customersWithPhone' => $customersWithPhone,
+            'customersWithPhonePaginator' => $customersWithPhonePaginator,
+            'customerPerPage' => $customerPerPage,
+            'customerPerPageOptions' => $allowedPerPage,
+        ]);
     }
 
     public function store(Request $request)
