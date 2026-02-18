@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Payment extends Model
@@ -60,6 +61,32 @@ class Payment extends Model
     public function receipt(): HasOne
     {
         return $this->hasOne(Receipt::class);
+    }
+
+    /**
+     * Get order items assigned to this payment
+     */
+    public function orderItems(): BelongsToMany
+    {
+        return $this->belongsToMany(OrderItem::class, 'payment_order_items')
+            ->withPivot('amount')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the total amount assigned to order items
+     */
+    public function getAssignedAmountAttribute(): float
+    {
+        return $this->orderItems()->sum('payment_order_items.amount');
+    }
+
+    /**
+     * Get the unassigned amount (payment amount - assigned to items)
+     */
+    public function getUnassignedAmountAttribute(): float
+    {
+        return max(0, $this->amount - $this->assigned_amount);
     }
 
     /**

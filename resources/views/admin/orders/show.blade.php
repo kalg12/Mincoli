@@ -31,14 +31,66 @@
                     <div class="p-6">
                         <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
                             @foreach($order->items as $item)
-                            <li class="flex py-4">
-                                <div class="ml-4 flex flex-1 flex-col">
-                                    <div class="flex justify-between text-base font-medium text-zinc-900 dark:text-white">
-                                        <h3>{{ $item->product->name }}</h3>
-                                        <p class="ml-4">${{ number_format($item->total, 2) }}</p>
+                            <li class="py-4">
+                                <div class="flex flex-col gap-3">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-3 mb-2">
+                                                <h3 class="text-base font-medium text-zinc-900 dark:text-white">{{ $item->product->name }}</h3>
+                                                <span class="px-2 py-1 rounded text-xs font-medium {{ $item->status_color }}">
+                                                    {{ $item->status_label }}
+                                                </span>
+                                            </div>
+                                            @if($item->variant)
+                                                <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{{ $item->variant->name }}</p>
+                                            @endif
+                                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Cantidad: {{ $item->quantity }}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-base font-medium text-zinc-900 dark:text-white">${{ number_format($item->total, 2) }}</p>
+                                            @if($item->total_paid > 0)
+                                                <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                                    Pagado: ${{ number_format($item->total_paid, 2) }}
+                                                </p>
+                                            @endif
+                                            @if($item->remaining > 0)
+                                                <p class="text-xs text-red-600 dark:text-red-400">
+                                                    Restante: ${{ number_format($item->remaining, 2) }}
+                                                </p>
+                                            @elseif($item->total_paid >= $item->total)
+                                                <p class="text-xs text-green-600 dark:text-green-400">
+                                                    <i class="fas fa-check-circle"></i> Pagado
+                                                </p>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ $item->variant->name ?? '' }}</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Cant: {{ $item->quantity }}</p>
+                                    
+                                    <!-- Progress Bar -->
+                                    @if($item->total > 0)
+                                    @php
+                                        $widthPct = min(100, round(($item->total_paid / $item->total) * 100));
+                                    @endphp
+                                    <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                                        <div class="bg-green-600 h-2 rounded-full transition-all"
+                                             data-pct="{{ $widthPct }}"
+                                             x-init="$el.style.width = $el.getAttribute('data-pct') + '%'"></div>
+                                    </div>
+                                    @endif
+
+                                    <!-- Status Selector -->
+                                    <form action="{{ route('dashboard.orders.items.update-status', [$order->id, $item->id]) }}" method="POST" class="flex items-center gap-2">
+                                        @csrf
+                                        @method('PUT')
+                                        <select name="status" onchange="this.form.submit()" 
+                                                class="text-xs rounded border-gray-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                            <option value="pending" {{ $item->status === 'pending' ? 'selected' : '' }}>Pendiente</option>
+                                            <option value="preparing" {{ $item->status === 'preparing' ? 'selected' : '' }}>En Preparación</option>
+                                            <option value="ready_to_ship" {{ $item->status === 'ready_to_ship' ? 'selected' : '' }}>Listo para Enviar</option>
+                                            <option value="shipped" {{ $item->status === 'shipped' ? 'selected' : '' }}>Enviado</option>
+                                            <option value="delivered" {{ $item->status === 'delivered' ? 'selected' : '' }}>Entregado</option>
+                                            <option value="cancelled" {{ $item->status === 'cancelled' ? 'selected' : '' }}>Cancelado</option>
+                                        </select>
+                                    </form>
                                 </div>
                             </li>
                             @endforeach
@@ -116,6 +168,22 @@
                                         @else
                                             {{ $payment->reference ?? '-' }}
                                         @endif
+                                        
+                                        @if($payment->orderItems->count() > 0)
+                                            <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                <div class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-1">Asignado a productos:</div>
+                                                @foreach($payment->orderItems as $orderItem)
+                                                    <div class="text-[10px] text-gray-600 dark:text-gray-400">
+                                                        • {{ $orderItem->product->name }}: ${{ number_format($orderItem->pivot->amount, 2) }}
+                                                    </div>
+                                                @endforeach
+                                                @if($payment->unassigned_amount > 0)
+                                                    <div class="text-[10px] text-gray-500 italic mt-1">
+                                                        Sin asignar: ${{ number_format($payment->unassigned_amount, 2) }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="px-4 py-2 text-right font-medium whitespace-nowrap">
                                         ${{ number_format($payment->amount, 2) }}
@@ -136,35 +204,98 @@
 
                         <!-- Add Payment Form -->
                         @if($order->remaining > 0)
-                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-                            <h3 class="text-sm font-bold text-blue-900 dark:text-blue-300 mb-2">Registrar Nuevo Pago (Abono)</h3>
-                            <form action="{{ route('dashboard.orders.payments.store', $order->id) }}" method="POST" class="grid gap-3 lg:grid-cols-4 items-end">
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800"
+                             data-order-remaining="{{ $order->remaining }}"
+                             x-data="paymentForm()">
+                            <h3 class="text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">Registrar Nuevo Pago (Abono)</h3>
+                            
+                            <!-- Allocation Type Toggle -->
+                            <div class="mb-4 flex gap-2">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="allocation_type" value="general" x-model="allocationType" class="mr-2">
+                                    <span class="text-xs font-medium">Abono General</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer ml-4">
+                                    <input type="radio" name="allocation_type" value="specific" x-model="allocationType" class="mr-2">
+                                    <span class="text-xs font-medium">Asignar a Productos Específicos</span>
+                                </label>
+                            </div>
+
+                            <form action="{{ route('dashboard.orders.payments.store', $order->id) }}" method="POST" @submit="submitForm($event)">
                                 @csrf
-                                <div class="col-span-1">
-                                    <label class="block text-xs font-medium mb-1">Monto ($)</label>
-                                    <input type="number" step="0.01" name="amount" value="{{ $order->remaining }}" max="{{ $order->remaining }}" class="w-full rounded border-gray-300 text-sm p-2">
+                                <input type="hidden" name="allocation_type" :value="allocationType">
+                                
+                                <div class="grid gap-3 lg:grid-cols-4 items-end mb-3">
+                                    <div class="col-span-1">
+                                        <label class="block text-xs font-medium mb-1">Monto ($)</label>
+                                        <input type="number" step="0.01" name="amount" x-model="amount"
+                                               x-bind:max="maxAmount"
+                                               @input="updateAllocations"
+                                               class="w-full rounded border-gray-300 text-sm p-2">
+                                    </div>
+                                    <div class="col-span-1">
+                                        <label class="block text-xs font-medium mb-1">Método</label>
+                                        <select name="payment_method_id" class="w-full rounded border-gray-300 text-sm p-2">
+                                            @foreach(\App\Models\PaymentMethod::where('is_active', true)->get() as $pm)
+                                                <option value="{{ $pm->id }}">{{ $pm->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <label class="block text-xs font-medium mb-1">Referencia</label>
+                                        <input type="text" name="reference" placeholder="Ej. Voucher 123" class="w-full rounded border-gray-300 text-sm p-2">
+                                    </div>
+                                    <div class="col-span-1">
+                                        <label class="block text-xs font-medium mb-1">Núm. transferencia</label>
+                                        <input type="text" name="transfer_number" placeholder="Folio / Núm. transferencia" class="w-full rounded border-gray-300 text-sm p-2">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-xs font-medium mb-1">Línea de captura</label>
+                                        <input type="text" name="capture_line" placeholder="Línea de captura / referencia bancaria" class="w-full rounded border-gray-300 text-sm p-2">
+                                    </div>
                                 </div>
-                                <div class="col-span-1">
-                                    <label class="block text-xs font-medium mb-1">Método</label>
-                                    <select name="payment_method_id" class="w-full rounded border-gray-300 text-sm p-2">
-                                        @foreach(\App\Models\PaymentMethod::where('is_active', true)->get() as $pm)
-                                            <option value="{{ $pm->id }}">{{ $pm->name }}</option>
+
+                                <!-- Product Allocation Section -->
+                                <div x-show="allocationType === 'specific'" x-transition class="mt-4 p-3 bg-white dark:bg-zinc-800 rounded border border-blue-200 dark:border-blue-700">
+                                    <h4 class="text-xs font-bold text-blue-900 dark:text-blue-300 mb-3">Asignar Monto a Productos:</h4>
+                                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                                        @foreach($order->items as $item)
+                                            @if($item->remaining > 0)
+                                            <div class="flex items-center gap-2 text-xs" data-item-id="{{ $item->id }}" data-item-remaining="{{ $item->remaining }}">
+                                                <div class="flex-1">
+                                                    <span class="font-medium">{{ $item->product->name }}</span>
+                                                    <span class="text-gray-500">(Restante: ${{ number_format($item->remaining, 2) }})</span>
+                                                </div>
+                                                <input type="hidden" name="allocations[{{ $loop->index }}][order_item_id]" value="{{ $item->id }}">
+                                                <input type="number"
+                                                       step="0.01"
+                                                       min="0"
+                                                       x-bind:max="getItemMaxForEl($el.closest('[data-item-remaining]'))"
+                                                       x-model.number="allocations[$el.closest('[data-item-id]').getAttribute('data-item-id')]"
+                                                       name="allocations[{{ $loop->index }}][amount]"
+                                                       @input="updateTotalAllocated"
+                                                       placeholder="0.00"
+                                                       class="w-24 rounded border-gray-300 text-xs p-1.5">
+                                            </div>
+                                            @endif
                                         @endforeach
-                                    </select>
+                                    </div>
+                                    <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
+                                        <span class="font-medium">Total Asignado:</span>
+                                        <span class="font-bold" :class="totalAllocated > amount ? 'text-red-600' : 'text-green-600'">
+                                            $<span x-text="totalAllocated.toFixed(2)"></span>
+                                        </span>
+                                    </div>
+                                    <div x-show="totalAllocated > amount" class="mt-2 text-xs text-red-600">
+                                        <i class="fas fa-exclamation-triangle"></i> El total asignado excede el monto del pago
+                                    </div>
                                 </div>
-                                <div class="col-span-1">
-                                    <label class="block text-xs font-medium mb-1">Referencia</label>
-                                    <input type="text" name="reference" placeholder="Ej. Voucher 123" class="w-full rounded border-gray-300 text-sm p-2">
-                                </div>
-                                <div class="col-span-1">
-                                    <label class="block text-xs font-medium mb-1">Núm. transferencia</label>
-                                    <input type="text" name="transfer_number" placeholder="Folio / Núm. transferencia" class="w-full rounded border-gray-300 text-sm p-2">
-                                </div>
-                                <div class="col-span-2">
-                                    <label class="block text-xs font-medium mb-1">Línea de captura</label>
-                                    <input type="text" name="capture_line" placeholder="Línea de captura / referencia bancaria" class="w-full rounded border-gray-300 text-sm p-2">
-                                </div>
-                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 text-sm font-medium">Registrar</button>
+
+                                <button type="submit" 
+                                        :disabled="allocationType === 'specific' && totalAllocated > amount"
+                                        class="mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded px-4 py-2 text-sm font-medium">
+                                    Registrar Pago
+                                </button>
                             </form>
                         </div>
                         @else
@@ -356,6 +487,38 @@
                                 }
                             }
                         }
+                    }
+
+                    function paymentForm() {
+                        const el = document.querySelector('[data-order-remaining]');
+                        const orderRemaining = el ? parseFloat(el.getAttribute('data-order-remaining')) : 0;
+                        return {
+                            allocationType: 'general',
+                            amount: orderRemaining,
+                            maxAmount: orderRemaining,
+                            allocations: {},
+                            totalAllocated: 0,
+                            getItemMaxForEl(el) {
+                                if (!el) return 0;
+                                const itemRemaining = parseFloat(el.getAttribute('data-item-remaining')) || 0;
+                                return Math.min(itemRemaining, this.amount - this.totalAllocated);
+                            },
+                            updateTotalAllocated() {
+                                this.totalAllocated = Object.values(this.allocations).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+                            },
+                            updateAllocations() {
+                                if (this.allocationType === 'specific') {
+                                    this.updateTotalAllocated();
+                                }
+                            },
+                            submitForm(event) {
+                                if (this.allocationType === 'specific' && this.totalAllocated > this.amount) {
+                                    event.preventDefault();
+                                    alert('El total asignado no puede exceder el monto del pago');
+                                    return false;
+                                }
+                            }
+                        };
                     }
                 </script>
             </div>

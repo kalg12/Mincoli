@@ -231,6 +231,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::put('/orders/{order}/link-customer', [App\Http\Controllers\Admin\OrderController::class, 'linkCustomer'])->name('orders.link-customer');
     Route::post('/orders/{order}/register-customer', [App\Http\Controllers\Admin\OrderController::class, 'registerAsCustomer'])->name('orders.register-customer');
     Route::delete('/orders/{order}/payments/{payment}', [App\Http\Controllers\Admin\OrderController::class, 'destroyPayment'])->name('orders.payments.destroy');
+    Route::put('/orders/{order}/items/{item}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateItemStatus'])->name('orders.items.update-status');
 
     // Customers
     Route::get('/customers', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');

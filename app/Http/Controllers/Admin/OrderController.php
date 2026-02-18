@@ -46,7 +46,16 @@ class OrderController extends Controller
 
     public function show($id)
     {
-         $order = Order::with(['customer', 'items.product.images', 'payments.method', 'statusHistory'])->findOrFail($id);
+         $order = Order::with([
+             'customer', 
+             'items.product.images', 
+             'items.payments' => function($query) {
+                 $query->where('status', 'paid');
+             },
+             'payments.method', 
+             'payments.orderItems',
+             'statusHistory'
+         ])->findOrFail($id);
          return view('admin.orders.show', compact('order'));
     }
 
@@ -247,23 +256,42 @@ class OrderController extends Controller
             'transfer_number' => 'nullable|string|max:255',
             'capture_line' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'allocation_type' => 'nullable|in:general,specific',
+            'allocations' => 'nullable|array',
+            'allocations.*.order_item_id' => 'required_with:allocations|exists:order_items,id',
+            'allocations.*.amount' => 'required_with:allocations|numeric|min:0.01',
         ]);
 
         $payment = new \App\Models\Payment();
         $payment->order_id = $order->id;
         $payment->method_id = $request->payment_method_id;
         $payment->amount = $request->amount;
-        $payment->reference = $request->reference; // e.g., Auth Code or Manual Note
+        $payment->reference = $request->reference;
         $payment->transfer_number = $request->transfer_number;
         $payment->capture_line = $request->capture_line;
-        $payment->status = 'paid'; // Manual payments are usually confirmed immediately
+        $payment->status = 'paid';
         $payment->paid_at = now();
         $payment->save();
 
+        // Assign payment to specific order items if provided
+        if ($request->allocation_type === 'specific' && $request->has('allocations')) {
+            $totalAllocated = 0;
+            foreach ($request->allocations as $allocation) {
+                if (isset($allocation['order_item_id']) && isset($allocation['amount']) && $allocation['amount'] > 0) {
+                    $orderItem = $order->items()->find($allocation['order_item_id']);
+                    if ($orderItem) {
+                        // Don't allow allocating more than the item's remaining amount
+                        $maxAmount = min($allocation['amount'], $orderItem->remaining, $request->amount - $totalAllocated);
+                        if ($maxAmount > 0) {
+                            $payment->orderItems()->attach($orderItem->id, ['amount' => $maxAmount]);
+                            $totalAllocated += $maxAmount;
+                        }
+                    }
+                }
+            }
+        }
+
         // Update Order Status based on Balance
-        $totalPaid = $order->total_paid; // Uses the fresh calculation including the new payment?
-        // Need to reload relations or trust the helper which queries DB?
-        // Model attribute uses relationship query, so we should refresh or just query again.
         $totalPaid = $order->payments()->where('status', 'paid')->sum('amount');
 
         if ($totalPaid >= $order->total) {
@@ -274,6 +302,18 @@ class OrderController extends Controller
         $order->save();
 
         return back()->with('success', 'Pago registrado correctamente.');
+    }
+
+    public function updateItemStatus(Request $request, Order $order, $itemId)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,preparing,ready_to_ship,shipped,delivered,cancelled',
+        ]);
+
+        $item = $order->items()->findOrFail($itemId);
+        $item->update(['status' => $request->status]);
+
+        return back()->with('success', 'Estado del producto actualizado correctamente.');
     }
 
     public function destroy(Order $order)
