@@ -244,6 +244,8 @@ class OrderController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'reference' => 'nullable|string',
+            'transfer_number' => 'nullable|string|max:255',
+            'capture_line' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
@@ -252,6 +254,8 @@ class OrderController extends Controller
         $payment->method_id = $request->payment_method_id;
         $payment->amount = $request->amount;
         $payment->reference = $request->reference; // e.g., Auth Code or Manual Note
+        $payment->transfer_number = $request->transfer_number;
+        $payment->capture_line = $request->capture_line;
         $payment->status = 'paid'; // Manual payments are usually confirmed immediately
         $payment->paid_at = now();
         $payment->save();

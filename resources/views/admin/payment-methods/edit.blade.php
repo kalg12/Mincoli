@@ -27,14 +27,23 @@
                         <textarea name="description" rows="3" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900">{{ $method->description }}</textarea>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                         <input type="checkbox" name="is_active" id="is_active" value="1" {{ $method->is_active ? 'checked' : '' }} class="rounded text-pink-600 focus:ring-pink-500"/>
-                         <label for="is_active" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Activo</label>
-                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="is_active" id="is_active" value="1" {{ $method->is_active ? 'checked' : '' }} class="rounded text-pink-600 focus:ring-pink-500"/>
+                            <label for="is_active" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Activo</label>
+                        </div>
 
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" name="supports_card_number" id="supports_card_number" value="1" {{ $method->supports_card_number ? 'checked' : '' }} class="rounded text-pink-600 focus:ring-pink-500" onchange="toggleCardFields()"/>
-                        <label for="supports_card_number" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Acepta tarjetas (mostrar mis tarjetas al cliente)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="supports_card_number" id="supports_card_number" value="1" {{ $method->supports_card_number ? 'checked' : '' }} class="rounded text-pink-600 focus:ring-pink-500" onchange="toggleCardFields()"/>
+                            <label for="supports_card_number" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Acepta tarjetas (mostrar mis tarjetas al cliente)</label>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="requires_transfer_details" id="requires_transfer_details" value="1" {{ $method->requires_transfer_details ? 'checked' : '' }} class="rounded text-pink-600 focus:ring-pink-500"/>
+                            <label for="requires_transfer_details" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                Pedir núm. de transferencia y línea de captura al registrar el pago
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Campos de tarjeta del administrador -->

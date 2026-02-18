@@ -300,17 +300,74 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-3 pt-2 border-t border-zinc-800/50">
+                        <!-- Payment method selection -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Método de pago</label>
+                            <select
+                                x-model="selectedPaymentMethodId"
+                                class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100 focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                            >
+                                <template x-for="method in paymentMethods" :key="method.id">
+                                    <option :value="method.id" x-text="method.name"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- Extra fields for bank transfer -->
+                        <div
+                            class="space-y-2 rounded-lg border border-amber-500/40 bg-amber-900/20 px-3 py-2"
+                            x-show="selectedPaymentMethod && selectedPaymentMethod.requires_transfer_details"
+                        >
+                            <p class="text-[10px] font-black uppercase tracking-widest text-amber-300 flex items-center gap-1">
+                                <i class="fas fa-university text-amber-300"></i>
+                                Detalles de transferencia
+                            </p>
+                            <div class="space-y-1">
+                                <input
+                                    type="text"
+                                    x-model="transferNumber"
+                                    placeholder="Número de transferencia / folio"
+                                    class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-pink-500 focus:border-pink-500"
+                                >
+                                <input
+                                    type="text"
+                                    x-model="captureLine"
+                                    placeholder="Línea de captura / referencia"
+                                    class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-pink-500 focus:border-pink-500"
+                                >
+                            </div>
+                        </div>
+
                         <div class="flex gap-2">
                              <button @click="paymentStatus = 'paid'"
                                      :class="{'bg-pink-600 text-white shadow-pink-900/40': paymentStatus === 'paid', 'bg-zinc-800 text-zinc-500 hover:text-white': paymentStatus !== 'paid'}"
                                      class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg">
                                  <i class="fas fa-check-circle"></i> Pagado
                              </button>
+                             <button @click="paymentStatus = 'partial'"
+                                     :class="{'bg-blue-600 text-white shadow-blue-900/40': paymentStatus === 'partial', 'bg-zinc-800 text-zinc-500 hover:text-white': paymentStatus !== 'partial'}"
+                                     class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg">
+                                 <i class="fas fa-adjust"></i> Parcial
+                             </button>
                              <button @click="paymentStatus = 'pending'"
                                      :class="{'bg-yellow-600 text-white shadow-yellow-900/40': paymentStatus === 'pending', 'bg-zinc-800 text-zinc-500 hover:text-white': paymentStatus !== 'pending'}"
                                      class="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg">
                                  <i class="fas fa-clock"></i> Pendiente
                              </button>
+                        </div>
+
+                        <!-- Partial payment amount -->
+                        <div x-show="paymentStatus === 'partial'" class="space-y-1">
+                            <label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Monto pagado ahora</label>
+                            <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                :max="total"
+                                x-model.number="paidAmount"
+                                class="w-full rounded-lg bg-zinc-950 border-zinc-800 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-pink-500 focus:border-pink-500"
+                                :placeholder="`Hasta $${total.toLocaleString()}`"
+                            >
                         </div>
                         <button @click="proceedToOrder()" :disabled="cart.length === 0"
                             class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-black uppercase tracking-widest transition-all disabled:opacity-20 disabled:cursor-not-allowed text-sm shadow-xl shadow-emerald-900/20 active:scale-95">
@@ -561,6 +618,10 @@
                  manualCustomerMode: false,
                   manualCustomer: { name: '', phone: '' },
                   paymentStatus: 'paid',
+                  selectedPaymentMethodId: {{ $paymentMethods->first()->id ?? 'null' }},
+                  transferNumber: '',
+                  captureLine: '',
+                  paidAmount: null,
                   quotationId: null,
 
                  // Persistir cotización en el servidor
@@ -768,6 +829,11 @@
 
                 get filteredProducts() {
                     return this.products;
+                },
+
+                get selectedPaymentMethod() {
+                    const id = Number(this.selectedPaymentMethodId);
+                    return this.paymentMethods.find(m => Number(m.id) === id) || null;
                 },
 
                 getSubcategories() {
@@ -1237,7 +1303,11 @@
                                 customer_name: this.manualCustomerMode ? this.manualCustomer.name : null,
                                 customer_phone: this.manualCustomerMode ? this.manualCustomer.phone : null,
                                 payment_status: this.paymentStatus,
-                                quotation_id: this.quotationId
+                                quotation_id: this.quotationId,
+                                payment_method_id: this.selectedPaymentMethodId,
+                                transfer_number: this.transferNumber || null,
+                                capture_line: this.captureLine || null,
+                                paid_amount: this.paymentStatus === 'partial' ? this.paidAmount : null,
                             })
                         });
 

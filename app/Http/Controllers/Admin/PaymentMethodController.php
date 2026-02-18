@@ -27,6 +27,7 @@ class PaymentMethodController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'supports_card_number' => 'boolean',
+            'requires_transfer_details' => 'boolean',
             'card_number' => 'nullable|string|size:16',
             'card_type' => 'nullable|string|in:credit,debit',
             'card_holder_name' => 'nullable|string|max:255',
@@ -38,6 +39,7 @@ class PaymentMethodController extends Controller
         $data = $request->only(['name', 'code', 'description', 'instructions', 'card_number', 'card_type', 'card_holder_name', 'bank_name']);
         $data['is_active'] = $request->has('is_active');
         $data['supports_card_number'] = $request->has('supports_card_number');
+        $data['requires_transfer_details'] = $request->has('requires_transfer_details');
 
         if ($request->has('settings')) {
             $data['settings'] = $request->input('settings');
@@ -64,6 +66,7 @@ class PaymentMethodController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'supports_card_number' => 'boolean',
+            'requires_transfer_details' => 'boolean',
             'card_number' => 'nullable|string|size:16',
             'card_type' => 'nullable|string|in:credit,debit',
             'card_holder_name' => 'nullable|string|max:255',
@@ -75,6 +78,7 @@ class PaymentMethodController extends Controller
         $data = $request->only(['name', 'description', 'instructions', 'card_number', 'card_type', 'card_holder_name', 'bank_name']);
         $data['is_active'] = $request->has('is_active');
         $data['supports_card_number'] = $request->has('supports_card_number');
+        $data['requires_transfer_details'] = $request->has('requires_transfer_details');
 
         if ($request->has('settings')) {
             $data['settings'] = $request->input('settings');

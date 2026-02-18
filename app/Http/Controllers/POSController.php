@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\InventoryMovement;
 use App\Models\PaymentMethod;
+use App\Models\Payment;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -67,7 +68,7 @@ class POSController extends Controller
 
         // Obtener métodos de pago activos
         $paymentMethods = PaymentMethod::where('is_active', true)
-            ->select('id', 'name', 'code', 'supports_card_number', 'card_number', 'card_type', 'card_holder_name', 'bank_name')
+            ->select('id', 'name', 'code', 'supports_card_number', 'requires_transfer_details', 'card_number', 'card_type', 'card_holder_name', 'bank_name')
             ->get();
 
         return view('pos.index', [
@@ -367,8 +368,12 @@ class POSController extends Controller
             'customer_id' => 'nullable|exists:customers,id',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:255',
-            'payment_status' => 'nullable|in:paid,pending',
+            'payment_status' => 'nullable|in:paid,pending,partial',
             'quotation_id' => 'nullable|exists:quotations,id',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'transfer_number' => 'nullable|string|max:255',
+            'capture_line' => 'nullable|string|max:255',
+            'paid_amount' => 'nullable|numeric|min:0.01',
         ]);
 
         try {
@@ -401,6 +406,13 @@ class POSController extends Controller
 
             $status = $request->payment_status ?? 'paid';
 
+            // Map POS payment status to order status
+            $orderStatus = match ($status) {
+                'paid' => 'paid',
+                'partial' => 'partially_paid',
+                default => 'pending',
+            };
+
             $order = Order::create([
                 'customer_id' => $request->customer_id,
                 'customer_name' => $request->customer_name,
@@ -409,9 +421,35 @@ class POSController extends Controller
                 'iva_total' => $iva,
                 'total' => $total,
                 'channel' => 'pos',
-                'status' => $status,
+                'status' => $orderStatus,
                 'placed_at' => now(),
-                'notes' => 'Pedido generado desde el POS.' . ($request->quotation_id ? " Basado en cotización #{$request->quotation_id}." : "") . ' Estado: ' . ($status == 'paid' ? 'Pagado' : 'Pendiente'),
+                'notes' => 'Pedido generado desde el POS.' . ($request->quotation_id ? " Basado en cotización #{$request->quotation_id}." : "") . ' Estado: ' . ($orderStatus == 'paid' ? 'Pagado' : ($orderStatus === 'partially_paid' ? 'Pago Parcial' : 'Pendiente')),
+            ]);
+
+            // Create payment record with method and optional transfer data
+            $paidAmount = $total;
+            $paymentStatus = 'pending';
+            $paidAt = null;
+
+            if ($status === 'paid') {
+                $paymentStatus = 'paid';
+                $paidAt = now();
+            } elseif ($status === 'partial' && $request->filled('paid_amount')) {
+                $paidAmount = min((float)$request->paid_amount, $total);
+                $paymentStatus = 'paid';
+                $paidAt = now();
+            }
+
+            Payment::create([
+                'order_id' => $order->id,
+                'customer_id' => $order->customer_id,
+                'method_id' => $request->payment_method_id,
+                'amount' => $paidAmount,
+                'status' => $paymentStatus,
+                'paid_at' => $paidAt,
+                'reference' => $request->capture_line,
+                'transfer_number' => $request->transfer_number,
+                'capture_line' => $request->capture_line,
             ]);
 
             if ($request->quotation_id) {

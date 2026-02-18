@@ -20,6 +20,8 @@ class POSPayment extends Model
         'card_number',
         'card_type',
         'card_holder_name',
+        'transfer_number',
+        'capture_line',
     ];
 
     protected $casts = [

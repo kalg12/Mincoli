@@ -111,28 +111,55 @@
          </div>
          @endif
 
-         @if($order->payments->first() && $order->payments->first()->card_number)
+         @php
+             $mainPayment = $order->payments->first();
+         @endphp
+
+         @if($mainPayment && ($mainPayment->card_number || $mainPayment->transfer_number || $mainPayment->capture_line))
          <div class="border border-gray-300 p-4 rounded text-sm mb-8">
-             <h3 class="font-bold text-gray-900 mb-2">Datos de la Tarjeta</h3>
+             <h3 class="font-bold text-gray-900 mb-2">
+                 @if($mainPayment->card_number)
+                     Datos de la Tarjeta
+                 @else
+                     Detalles de la Transferencia Bancaria
+                 @endif
+             </h3>
              <div class="space-y-2 text-gray-800">
+                 @if($mainPayment->card_number)
                  <div class="flex justify-between">
-                     <span>Numero:</span>
-                     <span class="font-mono font-bold">{{ $order->payments->first()->card_number }}</span>
+                     <span>Número:</span>
+                     <span class="font-mono font-bold">{{ $mainPayment->card_number }}</span>
                  </div>
                  <div class="flex justify-between">
                      <span>Tipo:</span>
-                     <span class="font-semibold">{{ ucfirst($order->payments->first()->card_type === 'credit' ? 'Crédito' : 'Débito') }}</span>
-                 </div>
-                 @if($order->payments->first()->method && $order->payments->first()->method->bank_name)
-                 <div class="flex justify-between">
-                     <span>Banco:</span>
-                     <span>{{ $order->payments->first()->method->bank_name }}</span>
+                     <span class="font-semibold">{{ ucfirst($mainPayment->card_type === 'credit' ? 'Crédito' : 'Débito') }}</span>
                  </div>
                  @endif
-                 @if($order->payments->first()->card_holder_name)
+
+                 @if($mainPayment->transfer_number)
+                 <div class="flex justify-between">
+                     <span>Núm. transferencia:</span>
+                     <span class="font-mono font-bold">{{ $mainPayment->transfer_number }}</span>
+                 </div>
+                 @endif
+
+                 @if($mainPayment->capture_line)
+                 <div class="flex justify-between">
+                     <span>Línea de captura:</span>
+                     <span class="font-mono font-bold break-all">{{ $mainPayment->capture_line }}</span>
+                 </div>
+                 @endif
+
+                 @if($mainPayment->method && $mainPayment->method->bank_name)
+                 <div class="flex justify-between">
+                     <span>Banco:</span>
+                     <span>{{ $mainPayment->method->bank_name }}</span>
+                 </div>
+                 @endif
+                 @if($mainPayment->card_holder_name)
                  <div class="flex justify-between">
                      <span>Titular:</span>
-                     <span>{{ $order->payments->first()->card_holder_name }}</span>
+                     <span>{{ $mainPayment->card_holder_name }}</span>
                  </div>
                  @endif
              </div>

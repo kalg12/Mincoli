@@ -88,17 +88,36 @@
                                 <tr>
                                     <th class="px-4 py-2">Fecha</th>
                                     <th class="px-4 py-2">Método</th>
-                                    <th class="px-4 py-2">Ref</th>
+                                    <th class="px-4 py-2">Detalles</th>
                                     <th class="px-4 py-2 text-right">Monto</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($order->payments as $payment)
-                                <tr class="border-b dark:border-gray-700">
-                                    <td class="px-4 py-2">{{ $payment->created_at->format('d/m/Y') }}</td>
-                                    <td class="px-4 py-2">{{ $payment->method->name }}</td>
-                                    <td class="px-4 py-2 text-xs">{{ $payment->reference ?? '-' }}</td>
-                                    <td class="px-4 py-2 text-right font-medium">
+                                <tr class="border-b dark:border-gray-700 align-top">
+                                    <td class="px-4 py-2 whitespace-nowrap">{{ $payment->created_at->format('d/m/Y') }}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap">
+                                        {{ $payment->method->name }}
+                                        <div class="text-[11px] text-gray-500">
+                                            {{ ucfirst($payment->status) }}
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-2 text-xs">
+                                        @if($payment->transfer_number || $payment->capture_line)
+                                            @if($payment->transfer_number)
+                                                <div><span class="font-semibold">Núm. transferencia:</span> {{ $payment->transfer_number }}</div>
+                                            @endif
+                                            @if($payment->capture_line)
+                                                <div><span class="font-semibold">Línea de captura:</span> {{ $payment->capture_line }}</div>
+                                            @endif
+                                            @if($payment->reference)
+                                                <div class="mt-1 text-[11px] text-gray-500">Ref: {{ $payment->reference }}</div>
+                                            @endif
+                                        @else
+                                            {{ $payment->reference ?? '-' }}
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2 text-right font-medium whitespace-nowrap">
                                         ${{ number_format($payment->amount, 2) }}
                                         <form action="{{ route('dashboard.orders.payments.destroy', [$order->id, $payment->id]) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('¿Eliminar este pago?');">
                                             @csrf
@@ -136,6 +155,14 @@
                                 <div class="col-span-1">
                                     <label class="block text-xs font-medium mb-1">Referencia</label>
                                     <input type="text" name="reference" placeholder="Ej. Voucher 123" class="w-full rounded border-gray-300 text-sm p-2">
+                                </div>
+                                <div class="col-span-1">
+                                    <label class="block text-xs font-medium mb-1">Núm. transferencia</label>
+                                    <input type="text" name="transfer_number" placeholder="Folio / Núm. transferencia" class="w-full rounded border-gray-300 text-sm p-2">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-medium mb-1">Línea de captura</label>
+                                    <input type="text" name="capture_line" placeholder="Línea de captura / referencia bancaria" class="w-full rounded border-gray-300 text-sm p-2">
                                 </div>
                                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 text-sm font-medium">Registrar</button>
                             </form>

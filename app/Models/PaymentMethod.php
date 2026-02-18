@@ -15,6 +15,7 @@ class PaymentMethod extends Model
         'settings',
         'instructions',
         'supports_card_number',
+        'requires_transfer_details',
         'card_number',
         'card_type',
         'card_holder_name',
@@ -24,6 +25,7 @@ class PaymentMethod extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'supports_card_number' => 'boolean',
+        'requires_transfer_details' => 'boolean',
         'settings' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
