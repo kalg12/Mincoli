@@ -66,6 +66,7 @@
                      <span class="inline-block px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-full
                          {{ $order->status === 'paid' ? 'bg-green-100 text-green-800' : '' }}
                          {{ $order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                         {{ $order->status === 'partially_paid' ? 'bg-blue-100 text-blue-800' : '' }}
                          {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
                          {{ $statusText }}
                      </span>
@@ -102,6 +103,27 @@
                   </tr>
               </tfoot>
           </table>
+
+         @if($order->status === 'partially_paid')
+         <div class="border-2 border-blue-200 bg-blue-50 p-4 rounded-lg mb-6">
+             <h3 class="font-bold text-blue-900 mb-3 uppercase text-sm tracking-wider">Resumen de pago parcial</h3>
+             <div class="space-y-2 text-sm">
+                 <div class="flex justify-between text-gray-700">
+                     <span>Total del pedido</span>
+                     <span class="font-semibold">${{ number_format($order->total, 2) }}</span>
+                 </div>
+                 <div class="flex justify-between text-green-700 font-semibold">
+                     <span>Pagado hasta ahora</span>
+                     <span>${{ number_format($order->total_paid, 2) }}</span>
+                 </div>
+                 <div class="flex justify-between text-red-700 font-bold border-t border-blue-200 pt-2 mt-2">
+                     <span>Saldo pendiente</span>
+                     <span>${{ number_format($order->remaining, 2) }}</span>
+                 </div>
+             </div>
+             <p class="text-xs text-blue-800 mt-2">Puedes abonar el resto más adelante. Contáctanos para completar tu pago.</p>
+         </div>
+         @endif
 
          @if($order->status == 'pending' && $order->payments->first())
          <div class="border border-gray-300 p-4 rounded text-sm mb-6">
