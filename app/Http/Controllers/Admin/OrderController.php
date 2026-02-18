@@ -10,6 +10,8 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -56,7 +58,124 @@ class OrderController extends Controller
              'payments.orderItems',
              'statusHistory'
          ])->findOrFail($id);
-         return view('admin.orders.show', compact('order'));
+
+         $productsForAdd = Product::query()
+             ->select(['id', 'name', 'price', 'sale_price', 'stock'])
+             ->with(['variants:id,product_id,name,price,sale_price,stock'])
+             ->orderBy('name')
+             ->get();
+
+         return view('admin.orders.show', compact('order', 'productsForAdd'));
+    }
+
+    public function addItem(Request $request, Order $order)
+    {
+        if (in_array($order->status, ['cancelled', 'refunded'])) {
+            return back()->with('error', 'No se pueden agregar productos a un pedido cancelado o reembolsado.');
+        }
+
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'variant_id' => 'nullable|exists:product_variants,id',
+            'quantity' => 'required|integer|min:1',
+            'unit_price' => 'nullable|numeric|min:0',
+        ]);
+
+        return DB::transaction(function () use ($request, $order) {
+            $order = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
+
+            $product = Product::findOrFail($request->product_id);
+            $variant = null;
+
+            if ($request->filled('variant_id')) {
+                $variant = ProductVariant::where('id', $request->variant_id)
+                    ->where('product_id', $product->id)
+                    ->firstOrFail();
+            }
+
+            $quantity = (int) $request->quantity;
+
+            $derivedPrice = $product->sale_price ?? $product->price;
+            if ($variant) {
+                $derivedPrice = $variant->sale_price ?? ($variant->price ?? $derivedPrice);
+            }
+
+            $unitPrice = $request->filled('unit_price') ? (float) $request->unit_price : (float) $derivedPrice;
+            $subtotalItem = $unitPrice * $quantity;
+
+            $applyIva = (float) $order->iva_total > 0;
+            $ivaItem = $applyIva ? ($subtotalItem * 0.16) : 0;
+            $totalItem = $subtotalItem + $ivaItem;
+
+            $orderItem = new \App\Models\OrderItem();
+            $orderItem->order_id = $order->id;
+            $orderItem->product_id = $product->id;
+            $orderItem->variant_id = $variant?->id;
+            $orderItem->quantity = $quantity;
+            $orderItem->unit_price = $unitPrice;
+            $orderItem->iva_amount = $ivaItem;
+            $orderItem->total = $totalItem;
+            $orderItem->status = 'pending';
+            $orderItem->save();
+
+            // Reserva/descuento de stock atómico
+            if ($variant) {
+                $affected = DB::table('product_variants')
+                    ->where('id', $variant->id)
+                    ->where('stock', '>=', $quantity)
+                    ->decrement('stock', $quantity);
+            } else {
+                $affected = DB::table('products')
+                    ->where('id', $product->id)
+                    ->where('stock', '>=', $quantity)
+                    ->decrement('stock', $quantity);
+            }
+
+            if ($affected === 0) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'No hay stock suficiente para agregar este producto.',
+                ]);
+            }
+
+            // Actualizar totales del pedido
+            $order->subtotal = (float) $order->subtotal + $subtotalItem;
+            $order->iva_total = (float) $order->iva_total + $ivaItem;
+            $order->total = (float) $order->total + $totalItem;
+            $order->save();
+
+            // Mantener consistencia básica del estado (sin pisar shipped/delivered)
+            if (in_array($order->status, ['pending', 'paid', 'partially_paid'])) {
+                $totalPaid = $order->payments()->where('status', 'paid')->sum('amount');
+                if ($totalPaid >= $order->total) {
+                    $order->status = 'paid';
+                } elseif ($totalPaid > 0) {
+                    $order->status = 'partially_paid';
+                } else {
+                    $order->status = 'pending';
+                }
+                $order->save();
+            }
+
+            // Registrar movimiento para auditar el agregado
+            try {
+                InventoryMovement::create([
+                    'product_id' => $product->id,
+                    'variant_id' => $variant?->id,
+                    'type' => 'out',
+                    'quantity' => $quantity,
+                    'reason' => 'Producto agregado a pedido #' . $order->order_number,
+                    'reference_type' => 'OrderItemAdded',
+                    'reference_id' => $orderItem->id,
+                    'created_by' => Auth::id(),
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->getCode() != 23000 && !str_contains($e->getMessage(), '19')) {
+                    throw $e;
+                }
+            }
+
+            return back()->with('success', 'Producto agregado al pedido correctamente.');
+        });
     }
 
     public function updateStatus(Request $request, $id)

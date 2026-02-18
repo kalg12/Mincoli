@@ -64,7 +64,7 @@
                                             @endif
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Progress Bar -->
                                     @if($item->total > 0)
                                     @php
@@ -81,7 +81,7 @@
                                     <form action="{{ route('dashboard.orders.items.update-status', [$order->id, $item->id]) }}" method="POST" class="flex items-center gap-2">
                                         @csrf
                                         @method('PUT')
-                                        <select name="status" onchange="this.form.submit()" 
+                                        <select name="status" onchange="this.form.submit()"
                                                 class="text-xs rounded border-gray-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                             <option value="pending" {{ $item->status === 'pending' ? 'selected' : '' }}>Pendiente</option>
                                             <option value="preparing" {{ $item->status === 'preparing' ? 'selected' : '' }}>En Preparación</option>
@@ -96,6 +96,104 @@
                             @endforeach
                         </ul>
                         <div class="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-700">
+                            <!-- Add Item to Order -->
+                            <details class="mb-6 rounded-lg border border-zinc-200  p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
+                                <summary class="cursor-pointer select-none text-sm font-bold text-zinc-900 dark:text-white">
+                                    <i class="fas fa-plus-circle mr-2 text-pink-600"></i> Agregar producto al pedido
+                                </summary>
+                                <div class="mt-4">
+                                    <form action="{{ route('dashboard.orders.items.store', $order->id) }}" method="POST" class="grid gap-3 lg:grid-cols-6 items-end">
+                                        @csrf
+                                        <div class="lg:col-span-3">
+                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Producto</label>
+                                            <select name="product_id" id="add_product_id" required class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+                                                <option value="" selected disabled>Selecciona un producto…</option>
+                                                @foreach($productsForAdd as $p)
+                                                    <option value="{{ $p->id }}" data-price="{{ $p->sale_price ?? $p->price }}">
+                                                        {{ $p->name }} (Stock: {{ $p->stock }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Variante (opcional)</label>
+                                            <select name="variant_id" id="add_variant_id" class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+                                                <option value="">Sin variante</option>
+                                                @foreach($productsForAdd as $p)
+                                                    @foreach($p->variants as $v)
+                                                        <option value="{{ $v->id }}"
+                                                            data-product-id="{{ $p->id }}"
+                                                            data-price="{{ $v->sale_price ?? ($v->price ?? ($p->sale_price ?? $p->price)) }}">
+                                                            {{ $p->name }} — {{ $v->name }} (Stock: {{ $v->stock }})
+                                                        </option>
+                                                    @endforeach
+                                                @endforeach
+                                            </select>
+                                            <p class="mt-1 text-[10px] text-zinc-500 dark:text-zinc-400">Primero selecciona un producto para ver sus variantes.</p>
+                                        </div>
+                                        <div class="lg:col-span-1">
+                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Cantidad</label>
+                                            <input type="number" name="quantity" min="1" value="1" required class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Precio unitario (opcional)</label>
+                                            <input type="number" step="0.01" name="unit_price" id="add_unit_price" placeholder="Auto" class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <button type="submit" class="w-full rounded bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 text-sm font-semibold">
+                                                Agregar
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <script>
+                                        (function () {
+                                            const productSel = document.getElementById('add_product_id');
+                                            const variantSel = document.getElementById('add_variant_id');
+                                            const unitPrice = document.getElementById('add_unit_price');
+
+                                            if (!productSel || !variantSel || !unitPrice) return;
+
+                                            const allVariantOptions = Array.from(variantSel.querySelectorAll('option[data-product-id]'));
+
+                                            function filterVariants() {
+                                                const pid = productSel.value;
+                                                allVariantOptions.forEach(opt => {
+                                                    opt.hidden = opt.getAttribute('data-product-id') !== pid;
+                                                });
+                                                // Reset variant if it doesn't belong to product
+                                                if (variantSel.selectedOptions.length) {
+                                                    const sel = variantSel.selectedOptions[0];
+                                                    const selPid = sel.getAttribute('data-product-id');
+                                                    if (selPid && selPid !== pid) {
+                                                        variantSel.value = '';
+                                                    }
+                                                }
+                                            }
+
+                                            function syncPriceFromSelection() {
+                                                const vOpt = variantSel.selectedOptions && variantSel.selectedOptions[0];
+                                                const pOpt = productSel.selectedOptions && productSel.selectedOptions[0];
+                                                const price = (vOpt && vOpt.getAttribute('data-price')) || (pOpt && pOpt.getAttribute('data-price')) || '';
+                                                if (price !== '') unitPrice.value = price;
+                                            }
+
+                                            productSel.addEventListener('change', () => {
+                                                filterVariants();
+                                                syncPriceFromSelection();
+                                            });
+
+                                            variantSel.addEventListener('change', () => {
+                                                syncPriceFromSelection();
+                                            });
+
+                                            // Init
+                                            filterVariants();
+                                        })();
+                                    </script>
+                                </div>
+                            </details>
+
                             <div class="flex justify-between text-sm">
                                 <p class="text-zinc-600 dark:text-zinc-400">Subtotal</p>
                                 <p class="font-medium text-zinc-900 dark:text-white">${{ number_format($order->subtotal, 2) }}</p>
@@ -168,7 +266,7 @@
                                         @else
                                             {{ $payment->reference ?? '-' }}
                                         @endif
-                                        
+
                                         @if($payment->orderItems->count() > 0)
                                             <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                                                 <div class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-1">Asignado a productos:</div>
@@ -217,7 +315,7 @@
                              data-order-remaining="{{ $order->remaining }}"
                              x-data="paymentForm()">
                             <h3 class="text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">Registrar Nuevo Pago (Abono)</h3>
-                            
+
                             <!-- Allocation Type Toggle -->
                             <div class="mb-4 flex gap-2">
                                 <label class="flex items-center cursor-pointer">
@@ -233,7 +331,7 @@
                             <form action="{{ route('dashboard.orders.payments.store', $order->id) }}" method="POST" @submit="submitForm($event)">
                                 @csrf
                                 <input type="hidden" name="allocation_type" :value="allocationType">
-                                
+
                                 <div class="grid gap-3 lg:grid-cols-4 items-end mb-3">
                                     <div class="col-span-1">
                                         <label class="block text-xs font-medium mb-1">Monto ($)</label>
@@ -300,7 +398,7 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" 
+                                <button type="submit"
                                         :disabled="allocationType === 'specific' && totalAllocated > amount"
                                         class="mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded px-4 py-2 text-sm font-medium">
                                     Registrar Pago
@@ -357,7 +455,7 @@
                         </form>
                     </div>
                 </div>
-                
+
                 <!-- Helper for AlpineJS status -->
                 <script>
                     document.addEventListener('alpine:init', () => {
@@ -385,7 +483,7 @@
                             <label class="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Vincular con base de datos</label>
                             <div class="relative">
                                 <input type="text" x-model="search" @input.debounce.300ms="performSearch()"
-                                    placeholder="Buscar por nombre o teléfono..." 
+                                    placeholder="Buscar por nombre o teléfono..."
                                     class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 pl-10 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3">
                                     <i class="fas fa-search text-zinc-400"></i>
@@ -413,30 +511,30 @@
                             @method('PUT')
                             <div>
                                 <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Nombre Completo</label>
-                                <input type="text" name="customer_name" id="field_name" value="{{ $order->customer_name }}" 
+                                <input type="text" name="customer_name" id="field_name" value="{{ $order->customer_name }}"
                                     class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Correo Electrónico</label>
-                                <input type="email" name="customer_email" id="field_email" value="{{ $order->customer_email }}" 
+                                <input type="email" name="customer_email" id="field_email" value="{{ $order->customer_email }}"
                                     class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">Teléfono</label>
-                                <input type="text" name="customer_phone" id="field_phone" value="{{ $order->customer_phone }}" 
+                                <input type="text" name="customer_phone" id="field_phone" value="{{ $order->customer_phone }}"
                                     class="w-full rounded-lg border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                             </div>
                             <div class="flex gap-2 pt-2">
                                 <button type="submit" class="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-xs font-black uppercase text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 transition-colors">
                                     <i class="fas fa-save mr-2"></i> Guardar Solo Info
                                 </button>
-                                <button type="button" @click="confirmLink()" x-show="selectedCustomerId" 
+                                <button type="button" @click="confirmLink()" x-show="selectedCustomerId"
                                     class="flex-1 rounded-lg bg-pink-600 px-4 py-2 text-xs font-black uppercase text-white hover:bg-pink-700 shadow-lg shadow-pink-500/20 transition-all">
                                     <i class="fas fa-link mr-2"></i> Vincular Cliente
                                 </button>
                             </div>
                         </form>
-                        
+
                         @if(!$order->customer_id)
                         <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                             <form action="{{ route('dashboard.orders.register-customer', $order->id) }}" method="POST">
@@ -449,13 +547,13 @@
                         </div>
                         @else
                         <div class="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                            <a href="{{ route('dashboard.customers.show', $order->customer_id) }}" 
+                            <a href="{{ route('dashboard.customers.show', $order->customer_id) }}"
                                 class="inline-flex items-center justify-center w-full px-4 py-2 rounded-lg border border-zinc-200 bg-zinc-50 text-xs font-bold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors">
                                 <i class="fas fa-external-link-alt mr-2"></i> Ver Perfil Permanente
                             </a>
                         </div>
                         @endif
-                        
+
                         <form id="link-form" action="{{ route('dashboard.orders.link-customer', $order->id) }}" method="POST" class="hidden">
                             @csrf
                             @method('PUT')
