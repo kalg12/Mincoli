@@ -249,6 +249,11 @@ class OrderController extends Controller
 
     public function addPayment(Request $request, Order $order)
     {
+        // Cuando es abono general no validar/usan allocations (los inputs ocultos pueden enviar valores vacíos)
+        if ($request->input('allocation_type') !== 'specific') {
+            $request->merge(['allocations' => []]);
+        }
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_method_id' => 'required|exists:payment_methods,id',

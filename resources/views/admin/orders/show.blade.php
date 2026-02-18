@@ -204,6 +204,15 @@
 
                         <!-- Add Payment Form -->
                         @if($order->remaining > 0)
+                        @if($errors->any())
+                        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                            <ul class="list-inside list-disc">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
                         <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800"
                              data-order-remaining="{{ $order->remaining }}"
                              x-data="paymentForm()">
