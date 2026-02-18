@@ -1,4 +1,8 @@
 <x-layouts.app :title="__('Detalle del Pedido')">
+    <style>
+        .payment-method-select option { background: #fff; color: #18181b; }
+        .dark .payment-method-select option { background: #27272a; color: #fafafa; }
+    </style>
     <div class="flex-1">
         <div class="border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-700 dark:bg-zinc-900 flex items-center justify-between">
             <div>
@@ -236,68 +240,80 @@
 
                                 <div class="grid gap-3 lg:grid-cols-4 items-end mb-3">
                                     <div class="col-span-1">
-                                        <label class="block text-xs font-medium mb-1">Monto ($)</label>
+                                        <label class="block text-xs font-medium mb-1 text-zinc-700 dark:text-zinc-300">Monto ($)</label>
                                         <input type="number" step="0.01" name="amount" x-model="amount"
                                                x-bind:max="maxAmount"
                                                @input="updateAllocations"
-                                               class="w-full rounded border-gray-300 text-sm p-2">
+                                               class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                     </div>
                                     <div class="col-span-1">
-                                        <label class="block text-xs font-medium mb-1">Método</label>
-                                        <select name="payment_method_id" class="w-full rounded border-gray-300 text-sm p-2">
+                                        <label class="block text-xs font-medium mb-1 text-zinc-700 dark:text-zinc-300">Método</label>
+                                        <select name="payment_method_id" class="payment-method-select w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-pink-500 focus:ring-pink-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                             @foreach(\App\Models\PaymentMethod::where('is_active', true)->get() as $pm)
                                                 <option value="{{ $pm->id }}">{{ $pm->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="col-span-1">
-                                        <label class="block text-xs font-medium mb-1">Referencia</label>
-                                        <input type="text" name="reference" placeholder="Ej. Voucher 123" class="w-full rounded border-gray-300 text-sm p-2">
+                                        <label class="block text-xs font-medium mb-1 text-zinc-700 dark:text-zinc-300">Referencia</label>
+                                        <input type="text" name="reference" placeholder="Ej. Voucher 123" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                     </div>
                                     <div class="col-span-1">
-                                        <label class="block text-xs font-medium mb-1">Núm. transferencia</label>
-                                        <input type="text" name="transfer_number" placeholder="Folio / Núm. transferencia" class="w-full rounded border-gray-300 text-sm p-2">
+                                        <label class="block text-xs font-medium mb-1 text-zinc-700 dark:text-zinc-300">Núm. transferencia</label>
+                                        <input type="text" name="transfer_number" placeholder="Folio / Núm. transferencia" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                     </div>
                                     <div class="col-span-2">
-                                        <label class="block text-xs font-medium mb-1">Línea de captura</label>
-                                        <input type="text" name="capture_line" placeholder="Línea de captura / referencia bancaria" class="w-full rounded border-gray-300 text-sm p-2">
+                                        <label class="block text-xs font-medium mb-1 text-zinc-700 dark:text-zinc-300">Línea de captura</label>
+                                        <input type="text" name="capture_line" placeholder="Línea de captura / referencia bancaria" class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
                                     </div>
                                 </div>
 
-                                <!-- Product Allocation Section -->
-                                <div x-show="allocationType === 'specific'" x-transition class="mt-4 p-3 bg-white dark:bg-zinc-800 rounded border border-blue-200 dark:border-blue-700">
-                                    <h4 class="text-xs font-bold text-blue-900 dark:text-blue-300 mb-3">Asignar Monto a Productos:</h4>
-                                    <div class="space-y-2 max-h-60 overflow-y-auto">
-                                        @foreach($order->items as $item)
-                                            @if($item->remaining > 0)
-                                            <div class="flex items-center gap-2 text-xs" data-item-id="{{ $item->id }}" data-item-remaining="{{ $item->remaining }}">
-                                                <div class="flex-1">
-                                                    <span class="font-medium">{{ $item->product->name }}</span>
-                                                    <span class="text-gray-500">(Restante: ${{ number_format($item->remaining, 2) }})</span>
+                                <!-- Product Allocation Section: choose which products to assign this payment to -->
+                                <div x-show="allocationType === 'specific'" x-transition x-cloak class="mt-4 rounded-lg border border-pink-200 dark:border-pink-900/50 bg-pink-50/50 dark:bg-zinc-800 p-4">
+                                    <h4 class="text-sm font-bold text-zinc-900 dark:text-white mb-1">Asignar abono a productos</h4>
+                                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-3">Indica cuánto de este pago corresponde a cada producto (opcional). Si dejas 0, ese producto no recibe parte del abono.</p>
+                                    @php
+                                        $itemsWithRemaining = $order->items->filter(fn($i) => $i->remaining > 0);
+                                    @endphp
+                                    @if($itemsWithRemaining->isEmpty())
+                                        <p class="text-sm text-amber-700 dark:text-amber-400 py-2">No hay productos con saldo pendiente en este pedido. Usa <strong>Abono general</strong> o agrega productos al pedido primero.</p>
+                                    @else
+                                        <div class="space-y-3 max-h-60 overflow-y-auto">
+                                            @foreach($itemsWithRemaining->values() as $idx => $item)
+                                            <div class="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-3" data-item-id="{{ $item->id }}" data-item-remaining="{{ $item->remaining }}">
+                                                <div class="flex-1 min-w-0">
+                                                    <span class="font-medium text-zinc-900 dark:text-white block truncate">{{ $item->product->name }}</span>
+                                                    @if($item->variant)
+                                                        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $item->variant->name }}</span>
+                                                    @endif
+                                                    <span class="text-xs text-zinc-500 dark:text-zinc-400 block">Restante: ${{ number_format($item->remaining, 2) }}</span>
                                                 </div>
-                                                <input type="hidden" name="allocations[{{ $loop->index }}][order_item_id]" value="{{ $item->id }}">
-                                                <input type="number"
-                                                       step="0.01"
-                                                       min="0"
-                                                       x-bind:max="getItemMaxForEl($el.closest('[data-item-remaining]'))"
-                                                       x-model.number="allocations[$el.closest('[data-item-id]').getAttribute('data-item-id')]"
-                                                       name="allocations[{{ $loop->index }}][amount]"
-                                                       @input="updateTotalAllocated"
-                                                       placeholder="0.00"
-                                                       class="w-24 rounded border-gray-300 text-xs p-1.5">
+                                                <div class="flex items-center gap-2">
+                                                    <label class="text-xs font-medium text-zinc-600 dark:text-zinc-300 whitespace-nowrap">Monto $</label>
+                                                    <input type="hidden" name="allocations[{{ $idx }}][order_item_id]" value="{{ $item->id }}">
+                                                    <input type="number"
+                                                           step="0.01"
+                                                           min="0"
+                                                           x-bind:max="getItemMaxForEl($el.closest('[data-item-remaining]'))"
+                                                           x-model.number="allocations[$el.closest('[data-item-id]').getAttribute('data-item-id')]"
+                                                           name="allocations[{{ $idx }}][amount]"
+                                                           @input="updateTotalAllocated"
+                                                           placeholder="0.00"
+                                                           class="w-28 rounded-lg border border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800 px-2 py-1.5 text-sm text-zinc-900 dark:text-white">
+                                                </div>
                                             </div>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                    <div class="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
-                                        <span class="font-medium">Total Asignado:</span>
-                                        <span class="font-bold" :class="totalAllocated > amount ? 'text-red-600' : 'text-green-600'">
-                                            $<span x-text="totalAllocated.toFixed(2)"></span>
-                                        </span>
-                                    </div>
-                                    <div x-show="totalAllocated > amount" class="mt-2 text-xs text-red-600">
-                                        <i class="fas fa-exclamation-triangle"></i> El total asignado excede el monto del pago
-                                    </div>
+                                            @endforeach
+                                        </div>
+                                        <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700 flex justify-between text-sm">
+                                            <span class="font-medium text-zinc-700 dark:text-zinc-300">Total asignado:</span>
+                                            <span class="font-bold" :class="totalAllocated > amount ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+                                                $<span x-text="totalAllocated.toFixed(2)"></span>
+                                            </span>
+                                        </div>
+                                        <div x-show="totalAllocated > amount" class="mt-2 text-xs text-red-600 dark:text-red-400">
+                                            <i class="fas fa-exclamation-triangle"></i> El total asignado no puede exceder el monto del pago.
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <button type="submit"
