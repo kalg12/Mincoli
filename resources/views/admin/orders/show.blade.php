@@ -96,104 +96,6 @@
                             @endforeach
                         </ul>
                         <div class="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-700">
-                            <!-- Add Item to Order -->
-                            <details class="mb-6 rounded-lg border border-zinc-200  p-4 dark:border-zinc-700 dark:bg-zinc-800/40">
-                                <summary class="cursor-pointer select-none text-sm font-bold text-zinc-900 dark:text-white">
-                                    <i class="fas fa-plus-circle mr-2 text-pink-600"></i> Agregar producto al pedido
-                                </summary>
-                                <div class="mt-4">
-                                    <form action="{{ route('dashboard.orders.items.store', $order->id) }}" method="POST" class="grid gap-3 lg:grid-cols-6 items-end">
-                                        @csrf
-                                        <div class="lg:col-span-3">
-                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Producto</label>
-                                            <select name="product_id" id="add_product_id" required class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
-                                                <option value="" selected disabled>Selecciona un producto…</option>
-                                                @foreach($productsForAdd as $p)
-                                                    <option value="{{ $p->id }}" data-price="{{ $p->sale_price ?? $p->price }}">
-                                                        {{ $p->name }} (Stock: {{ $p->stock }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="lg:col-span-2">
-                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Variante (opcional)</label>
-                                            <select name="variant_id" id="add_variant_id" class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
-                                                <option value="">Sin variante</option>
-                                                @foreach($productsForAdd as $p)
-                                                    @foreach($p->variants as $v)
-                                                        <option value="{{ $v->id }}"
-                                                            data-product-id="{{ $p->id }}"
-                                                            data-price="{{ $v->sale_price ?? ($v->price ?? ($p->sale_price ?? $p->price)) }}">
-                                                            {{ $p->name }} — {{ $v->name }} (Stock: {{ $v->stock }})
-                                                        </option>
-                                                    @endforeach
-                                                @endforeach
-                                            </select>
-                                            <p class="mt-1 text-[10px] text-zinc-500 dark:text-zinc-400">Primero selecciona un producto para ver sus variantes.</p>
-                                        </div>
-                                        <div class="lg:col-span-1">
-                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Cantidad</label>
-                                            <input type="number" name="quantity" min="1" value="1" required class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
-                                        </div>
-                                        <div class="lg:col-span-2">
-                                            <label class="block text-xs font-medium mb-1 text-zinc-600 dark:text-zinc-300">Precio unitario (opcional)</label>
-                                            <input type="number" step="0.01" name="unit_price" id="add_unit_price" placeholder="Auto" class="w-full rounded border-gray-300 text-sm p-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-white">
-                                        </div>
-                                        <div class="lg:col-span-2">
-                                            <button type="submit" class="w-full rounded bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 text-sm font-semibold">
-                                                Agregar
-                                            </button>
-                                        </div>
-                                    </form>
-
-                                    <script>
-                                        (function () {
-                                            const productSel = document.getElementById('add_product_id');
-                                            const variantSel = document.getElementById('add_variant_id');
-                                            const unitPrice = document.getElementById('add_unit_price');
-
-                                            if (!productSel || !variantSel || !unitPrice) return;
-
-                                            const allVariantOptions = Array.from(variantSel.querySelectorAll('option[data-product-id]'));
-
-                                            function filterVariants() {
-                                                const pid = productSel.value;
-                                                allVariantOptions.forEach(opt => {
-                                                    opt.hidden = opt.getAttribute('data-product-id') !== pid;
-                                                });
-                                                // Reset variant if it doesn't belong to product
-                                                if (variantSel.selectedOptions.length) {
-                                                    const sel = variantSel.selectedOptions[0];
-                                                    const selPid = sel.getAttribute('data-product-id');
-                                                    if (selPid && selPid !== pid) {
-                                                        variantSel.value = '';
-                                                    }
-                                                }
-                                            }
-
-                                            function syncPriceFromSelection() {
-                                                const vOpt = variantSel.selectedOptions && variantSel.selectedOptions[0];
-                                                const pOpt = productSel.selectedOptions && productSel.selectedOptions[0];
-                                                const price = (vOpt && vOpt.getAttribute('data-price')) || (pOpt && pOpt.getAttribute('data-price')) || '';
-                                                if (price !== '') unitPrice.value = price;
-                                            }
-
-                                            productSel.addEventListener('change', () => {
-                                                filterVariants();
-                                                syncPriceFromSelection();
-                                            });
-
-                                            variantSel.addEventListener('change', () => {
-                                                syncPriceFromSelection();
-                                            });
-
-                                            // Init
-                                            filterVariants();
-                                        })();
-                                    </script>
-                                </div>
-                            </details>
-
                             <div class="flex justify-between text-sm">
                                 <p class="text-zinc-600 dark:text-zinc-400">Subtotal</p>
                                 <p class="font-medium text-zinc-900 dark:text-white">${{ number_format($order->subtotal, 2) }}</p>
@@ -456,16 +358,190 @@
                     </div>
                 </div>
 
-                <!-- Helper for AlpineJS status -->
-                <script>
-                    document.addEventListener('alpine:init', () => {
-                        Alpine.data('statusManager', () => ({
-                            selectedStatus: '{{ $order->status }}',
-                        }))
-                    })
-                </script>
+                <!-- Agregar producto al pedido (sidebar) -->
+                <script type="application/json" id="order-add-products-data">@json($productsForAdd)</script>
+                <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+                     x-data="addProductToOrder()">
+                    <div class="border-b border-zinc-200 px-6 py-4 dark:border-zinc-700">
+                        <h2 class="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-plus-circle text-pink-500"></i>
+                            Agregar producto
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <form action="{{ route('dashboard.orders.items.store', $order->id) }}" method="POST" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="product_id" :value="selectedProduct ? selectedProduct.id : ''">
+                            <input type="hidden" name="variant_id" :value="selectedVariant ? selectedVariant.id : ''">
+
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Buscar producto</label>
+                                <div class="relative">
+                                    <input type="text"
+                                           x-model="searchQuery"
+                                           @focus="resultsOpen = true"
+                                           placeholder="Escribe nombre del producto…"
+                                           class="w-full rounded-lg border border-zinc-300 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-500">
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
+                                        <i class="fas fa-search text-sm"></i>
+                                    </span>
+                                </div>
+
+                                <div x-show="resultsOpen"
+                                     @click.away="resultsOpen = false"
+                                     x-transition
+                                     x-cloak
+                                     class="absolute z-20 mt-1 left-0 right-0 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800 max-h-56 overflow-y-auto">
+                                    <template x-for="item in filteredProducts" :key="item.uniqueId">
+                                        <div>
+                                            <button type="button"
+                                                    @click="selectProduct(item.product, item.variant); resultsOpen = false"
+                                                    class="w-full text-left px-4 py-3 hover:bg-pink-50 dark:hover:bg-zinc-700/80 transition-colors border-b border-zinc-100 last:border-0 dark:border-zinc-700">
+                                                <span class="font-medium text-zinc-900 dark:text-white" x-text="item.product.name"></span>
+                                                <template x-if="item.variant">
+                                                    <span class="text-zinc-500 dark:text-zinc-400 text-sm ml-1" x-text="' — ' + item.variant.name"></span>
+                                                </template>
+                                                <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                                    Stock: <span x-text="item.variant ? item.variant.stock : item.product.stock"></span>
+                                                    · $<span x-text="(item.variant ? item.variant.price : item.product.price).toFixed(2)"></span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <p x-show="filteredProducts.length === 0 && searchQuery.length >= 2" class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                                        No hay productos que coincidan.
+                                    </p>
+                                    <p x-show="searchQuery.length < 2" class="px-4 py-3 text-sm text-zinc-400 dark:text-zinc-500">
+                                        Escribe al menos 2 caracteres.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div x-show="selectedProduct" x-cloak class="rounded-lg bg-pink-500/10 border border-pink-500/30 dark:border-pink-500/20 p-3">
+                                <p class="text-sm font-medium text-zinc-900 dark:text-white">
+                                    <span x-text="selectedProduct ? selectedProduct.name : ''"></span>
+                                    <template x-if="selectedVariant">
+                                        <span class="text-zinc-500 dark:text-zinc-400" x-text="' — ' + (selectedVariant ? selectedVariant.name : '')"></span>
+                                    </template>
+                                </p>
+                                <button type="button" @click="clearSelection()" class="text-xs text-pink-600 dark:text-pink-400 hover:underline mt-1">
+                                    Cambiar producto
+                                </button>
+                            </div>
+
+                            <div x-show="selectedProduct && selectedProduct.variants && selectedProduct.variants.length > 1">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Variante</label>
+                                <select x-model="selectedVariantId"
+                                        @change="onVariantChange()"
+                                        class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                    <option :value="null">Sin variante</option>
+                                    <template x-for="v in (selectedProduct ? selectedProduct.variants : [])" :key="v.id">
+                                        <option :value="v.id" x-text="v.name + ' — $' + v.price.toFixed(2) + ' (Stock: ' + v.stock + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Cantidad</label>
+                                    <input type="number" name="quantity" min="1" x-model.number="quantity" required
+                                           class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Precio unit.</label>
+                                    <input type="number" step="0.01" name="unit_price" x-model="unitPrice" placeholder="Auto"
+                                           class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                </div>
+                            </div>
+
+                            <button type="submit"
+                                    :disabled="!selectedProduct"
+                                    class="w-full rounded-lg bg-pink-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                <i class="fas fa-cart-plus mr-2"></i> Agregar al pedido
+                            </button>
+                        </form>
                     </div>
                 </div>
+
+                <!-- Helper for AlpineJS status + addProductToOrder -->
+                <script>
+                    document.addEventListener('alpine:init', () => {
+                        var el = document.getElementById('order-add-products-data');
+                        if (el) window.ORDER_ADD_PRODUCTS = JSON.parse(el.textContent);
+
+                        Alpine.data('statusManager', () => ({
+                            selectedStatus: '{{ $order->status }}',
+                        }));
+
+                        Alpine.data('addProductToOrder', () => {
+                            const raw = window.ORDER_ADD_PRODUCTS || [];
+                            const products = raw.map(p => ({
+                                id: p.id,
+                                name: p.name,
+                                price: parseFloat(p.sale_price ?? p.price ?? 0),
+                                stock: parseInt(p.stock, 10) || 0,
+                                variants: (p.variants || []).map(v => ({
+                                    id: v.id,
+                                    product_id: v.product_id,
+                                    name: v.name,
+                                    price: parseFloat(v.sale_price ?? v.price ?? p.sale_price ?? p.price ?? 0),
+                                    stock: parseInt(v.stock, 10) || 0,
+                                }))
+                            }));
+
+                            return {
+                                products,
+                                searchQuery: '',
+                                resultsOpen: false,
+                                selectedProduct: null,
+                                selectedVariant: null,
+                                selectedVariantId: null,
+                                quantity: 1,
+                                unitPrice: '',
+                                get filteredProducts() {
+                                    const q = (this.searchQuery || '').toLowerCase().trim();
+                                    if (q.length < 2) return [];
+                                    const out = [];
+                                    this.products.forEach(product => {
+                                        const nameMatch = (product.name || '').toLowerCase().includes(q);
+                                        if (!product.variants || product.variants.length === 0) {
+                                            if (nameMatch) out.push({ product, variant: null, uniqueId: 'p-' + product.id });
+                                            return;
+                                        }
+                                        product.variants.forEach(v => {
+                                            const vMatch = (v.name || '').toLowerCase().includes(q) || nameMatch;
+                                            if (vMatch) out.push({ product, variant: v, uniqueId: 'v-' + v.id });
+                                        });
+                                    });
+                                    return out;
+                                },
+                                selectProduct(product, variant) {
+                                    this.selectedProduct = product;
+                                    this.selectedVariant = variant || null;
+                                    this.selectedVariantId = variant ? variant.id : null;
+                                    this.unitPrice = (variant ? variant.price : product.price).toFixed(2);
+                                },
+                                clearSelection() {
+                                    this.selectedProduct = null;
+                                    this.selectedVariant = null;
+                                    this.selectedVariantId = null;
+                                    this.unitPrice = '';
+                                },
+                                onVariantChange() {
+                                    const id = this.selectedVariantId;
+                                    if (!this.selectedProduct || !id) {
+                                        this.selectedVariant = null;
+                                        if (this.selectedProduct) this.unitPrice = this.selectedProduct.price.toFixed(2);
+                                        return;
+                                    }
+                                    const v = (this.selectedProduct.variants || []).find(x => x.id == id);
+                                    this.selectedVariant = v || null;
+                                    this.unitPrice = (v ? v.price : this.selectedProduct.price).toFixed(2);
+                                }
+                            };
+                        });
+                    });
+                </script>
 
                 <!-- Customer Info -->
                 <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900" x-data="customerLink()">
