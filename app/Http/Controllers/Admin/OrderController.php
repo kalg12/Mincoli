@@ -383,7 +383,18 @@ class OrderController extends Controller
             'allocation_type' => 'nullable|in:general,specific',
             'allocations' => 'nullable|array',
             'allocations.*.order_item_id' => 'required_with:allocations|exists:order_items,id',
-            'allocations.*.amount' => 'required_with:allocations|numeric|min:0.01',
+            'allocations.*.amount' => 'nullable|numeric|min:0',
+        ], [
+            'amount.required' => 'El monto del pago es obligatorio.',
+            'amount.numeric' => 'El monto debe ser un número.',
+            'amount.min' => 'El monto debe ser mayor a 0.',
+            'payment_method_id.required' => 'Debes elegir un método de pago.',
+            'payment_method_id.exists' => 'El método de pago seleccionado no es válido.',
+            'allocations.*.order_item_id.required_with' => 'Al asignar a productos específicos, cada fila debe tener un producto válido.',
+            'allocations.*.order_item_id.exists' => 'Uno de los productos seleccionados no pertenece a este pedido.',
+            'allocations.*.amount.required_with' => 'Al asignar a productos específicos, indica el monto por producto (o 0 si no aplica).',
+            'allocations.*.amount.numeric' => 'El monto asignado debe ser un número.',
+            'allocations.*.amount.min' => 'El monto asignado no puede ser negativo.',
         ]);
 
         $payment = new \App\Models\Payment();
