@@ -27,6 +27,15 @@ class LiveIndicator extends Component
             ->with('productHighlights')
             ->first();
 
+        if (! $this->activeLive) {
+            // Fallback to last finished live with recording
+            $this->activeLive = LiveSession::where('is_live', false)
+                ->whereNotNull('ends_at')
+                ->whereNotNull('live_url')
+                ->orderByDesc('ends_at')
+                ->first();
+        }
+
         $this->embedUrl = $this->activeLive?->live_url
             ? $this->buildEmbedUrl($this->activeLive->live_url)
             : null;

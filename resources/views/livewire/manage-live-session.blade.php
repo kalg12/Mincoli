@@ -80,6 +80,26 @@
                         @error('live_url') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
 
+                    <!-- Duration -->
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                            Duración Estimada (minutos)
+                        </label>
+                        <select
+                            wire:model="duration_minutes"
+                            class="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+                        >
+                            <option value="15">15 minutos</option>
+                            <option value="30">30 minutos</option>
+                            <option value="45">45 minutos</option>
+                            <option value="60">1 hora</option>
+                            <option value="90">1.5 horas</option>
+                            <option value="120">2 horas</option>
+                            <option value="180">3 horas</option>
+                        </select>
+                        @error('duration_minutes') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                    </div>
+
                     <!-- Buttons -->
                     <div class="flex gap-3 pt-4">
                         <button
@@ -132,12 +152,19 @@
                             <td class="px-6 py-4">
                                 @if ($live->is_live)
                                     <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                        🔴 EN VIVO
+                                        🔴 EN VIVO • {{ $live->duration_minutes }} min
                                     </span>
                                 @elseif ($live->ends_at && $live->ends_at <= now())
-                                    <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-700 dark:text-zinc-400">
-                                        ⚫ FINALIZADA
-                                    </span>
+                                    <div class="space-y-1">
+                                        <span class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-800 dark:bg-zinc-700 dark:text-zinc-400">
+                                            ⚫ FINALIZADA
+                                        </span>
+                                        @if ($live->live_url)
+                                            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                                Ya puedes visualizar la grabación en {{ $live->platform_label }}.
+                                            </p>
+                                        @endif
+                                    </div>
                                 @elseif ($live->starts_at && $live->starts_at > now())
                                     <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                                         ⏰ PROGRAMADA
@@ -167,6 +194,17 @@
                                             <i class="fas fa-play-circle"></i>
                                             Iniciar Live
                                         </button>
+                                    @endif
+
+                                    @if ($live->ends_at && $live->live_url)
+                                        <a
+                                            href="{{ $live->live_url }}"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800 transition"
+                                        >
+                                            <i class="fas fa-play"></i>
+                                            Ver grabación
+                                        </a>
                                     @endif
 
                                     <!-- Editar -->

@@ -9,7 +9,11 @@
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                 <span class="relative inline-flex h-full w-full rounded-full bg-white"></span>
             </span>
-            EN VIVO
+            @if ($activeLive->is_live)
+                EN VIVO
+            @else
+                GRABACIÓN
+            @endif
         </button>
 
         <!-- Desktop: Full Card -->
@@ -22,7 +26,13 @@
                 </span>
             </div>
             <div class="text-sm flex-1">
-                <p class="font-bold text-gray-900 text-xs uppercase tracking-wider">EN VIVO</p>
+                <p class="font-bold text-gray-900 text-xs uppercase tracking-wider">
+                    @if ($activeLive->is_live)
+                        EN VIVO
+                    @else
+                        ÚLTIMO LIVE GRABADO
+                    @endif
+                </p>
                 <p class="text-gray-600">{{ $activeLive->title }}</p>
             </div>
 

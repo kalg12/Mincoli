@@ -14,6 +14,7 @@ class LiveSession extends Model
         'is_live',
         'starts_at',
         'ends_at',
+        'duration_minutes',
     ];
 
     protected $casts = [
@@ -54,19 +55,6 @@ class LiveSession extends Model
             'is_live' => false,
             'ends_at' => now(),
         ]);
-    }
-
-    /**
-     * Get duration in minutes
-     */
-    public function getDurationMinutesAttribute(): ?int
-    {
-        if (!$this->starts_at) {
-            return null;
-        }
-
-        $end = $this->ends_at ?? now();
-        return (int)$this->starts_at->diffInMinutes($end);
     }
 
     /**

@@ -23,6 +23,9 @@ class ManageLiveSession extends Component
     #[Validate('nullable|url')]
     public $live_url = '';
 
+    #[Validate('nullable|integer|min:1|max:480')]
+    public $duration_minutes = 60;
+
     public function render()
     {
         $lives = LiveSession::orderBy('created_at', 'desc')->paginate(10);
@@ -40,6 +43,7 @@ class ManageLiveSession extends Component
             $this->title = $live->title;
             $this->platform = $live->platform;
             $this->live_url = $live->live_url ?? '';
+            $this->duration_minutes = $live->duration_minutes ?? 60;
         } else {
             $this->resetForm();
         }
@@ -59,6 +63,7 @@ class ManageLiveSession extends Component
         $this->title = '';
         $this->platform = 'instagram';
         $this->live_url = '';
+        $this->duration_minutes = 60;
         $this->resetValidation();
     }
 
@@ -71,6 +76,7 @@ class ManageLiveSession extends Component
                 'title' => $this->title,
                 'platform' => $this->platform,
                 'live_url' => $this->live_url ?: null,
+                'duration_minutes' => $this->duration_minutes,
             ]);
 
             $live = $this->editingLive;
@@ -81,6 +87,7 @@ class ManageLiveSession extends Component
                 'platform' => $this->platform,
                 'live_url' => $this->live_url ?: null,
                 'is_live' => false,
+                'duration_minutes' => $this->duration_minutes,
             ]);
 
             $this->dispatch('notify', type: 'success', message: 'Transmisión creada correctamente');
@@ -95,7 +102,7 @@ class ManageLiveSession extends Component
 
         if ($live) {
             $live->start();
-            $this->dispatch('notify', type: 'success', message: '🔴 ¡Transmisión iniciada!');
+            $this->dispatch('notify', type: 'success', message: '🔴 ¡Transmisión iniciada! Duración: ' . $live->duration_minutes . ' minutos');
         }
     }
 
@@ -105,7 +112,7 @@ class ManageLiveSession extends Component
 
         if ($live) {
             $live->end();
-            $this->dispatch('notify', type: 'success', message: '⚫ Transmisión detenida');
+            $this->dispatch('notify', type: 'success', message: '⚫ Transmisión finalizada. Ya puedes visualizar la grabación.');
         }
     }
 
