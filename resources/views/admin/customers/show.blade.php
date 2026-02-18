@@ -44,40 +44,177 @@
                     </div>
                 </div>
 
-                <div class="pt-4">
-                    <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-4">Información de Envío</h3>
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Empresa</label>
-                            <input type="text" name="company" value="{{ old('company', $customer->company) }}" placeholder="Opcional" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Dirección</label>
-                            <input type="text" name="address" value="{{ old('address', $customer->address) }}" placeholder="Opcional" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Ciudad</label>
-                            <input type="text" name="city" value="{{ old('city', $customer->city) }}" placeholder="Opcional" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Estado/Provincia</label>
-                            <input type="text" name="state" value="{{ old('state', $customer->state) }}" placeholder="Opcional" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código Postal</label>
-                            <input type="text" name="postal_code" value="{{ old('postal_code', $customer->postal_code) }}" placeholder="Opcional" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">País</label>
-                            <input type="text" name="country" value="{{ old('country', $customer->country) }}" placeholder="Opcional" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:ring-offset-zinc-900" />
-                        </div>
-                    </div>
-                </div>
                 <div class="flex justify-end gap-2 pt-4">
                     <a href="{{ route('dashboard.customers.index') }}" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100/50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-900">Cancelar</a>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:hover:bg-blue-700 dark:focus:ring-offset-zinc-900">Guardar cambios</button>
                 </div>
             </form>
+
+            <!-- Sección de Direcciones de Envío -->
+            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900 md:col-span-2">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Direcciones de Envío</h2>
+                    <button onclick="document.getElementById('add-address-modal').showModal()" class="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-700">
+                        + Agregar Dirección
+                    </button>
+                </div>
+
+                @if($customer->addresses->count() > 0)
+                    <div class="grid gap-4 md:grid-cols-2">
+                        @foreach($customer->addresses as $address)
+                            <div class="relative rounded-lg border {{ $address->is_default ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-zinc-200 dark:border-zinc-700' }} p-4">
+                                @if($address->is_default)
+                                    <span class="absolute -top-2 -right-2 rounded-full bg-green-500 px-2 py-0.5 text-xs font-semibold text-white">Predeterminada</span>
+                                @endif
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-semibold text-zinc-900 dark:text-white">{{ $address->label }}</p>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
+                                            {{ $address->street }} {{ $address->ext_number }}@if($address->int_number), Int. {{ $address->int_number }}@endif
+                                        </p>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $address->colony }}, {{ $address->city }}, {{ $address->state }}</p>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-400">C.P. {{ $address->zip }}</p>
+                                        @if($address->references)
+                                            <p class="text-xs text-zinc-500 dark:text-zinc-500 mt-1">Ref: {{ $address->references }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="mt-3 flex gap-2">
+                                    @if(!$address->is_default)
+                                        <form method="POST" action="{{ route('dashboard.customers.addresses.set-default', [$customer->id, $address->id]) }}">
+                                            @csrf
+                                            <button type="submit" class="rounded border border-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">Establecer predeterminada</button>
+                                        </form>
+                                    @endif
+                                    <button onclick="document.getElementById('edit-address-{{ $address->id }}').showModal()" class="rounded border border-zinc-200 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-zinc-600 dark:text-blue-300 dark:hover:bg-blue-900/20">Editar</button>
+                                    <form method="POST" action="{{ route('dashboard.customers.addresses.destroy', [$customer->id, $address->id]) }}" onsubmit="return confirm('¿Eliminar esta dirección?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20">Eliminar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">No hay direcciones agregadas. Agrega una dirección para facilitar el envío de pedidos.</p>
+                @endif
+            </div>
+
+            <!-- Modal para agregar dirección -->
+            <dialog id="add-address-modal" class="rounded-lg p-6 dark:bg-zinc-900 w-full max-w-lg">
+                <h3 class="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">Agregar Dirección</h3>
+                <form method="POST" action="{{ route('dashboard.customers.addresses.store', $customer->id) }}" class="space-y-4">
+                    @csrf
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Etiqueta <span class="text-red-500">*</span></label>
+                            <input type="text" name="label" placeholder="Casa, Oficina, etc." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div class="flex items-end">
+                            <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                                <input type="checkbox" name="is_default" class="rounded border-zinc-300" />
+                                Establecer como predeterminada
+                            </label>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Calle <span class="text-red-500">*</span></label>
+                            <input type="text" name="street" placeholder="Calle principal" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">No. Exterior</label>
+                            <input type="text" name="ext_number" placeholder="123" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">No. Interior</label>
+                            <input type="text" name="int_number" placeholder="Apt 4" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Colonia <span class="text-red-500">*</span></label>
+                            <input type="text" name="colony" placeholder="Colonia" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Ciudad <span class="text-red-500">*</span></label>
+                            <input type="text" name="city" placeholder="Ciudad" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Estado <span class="text-red-500">*</span></label>
+                            <input type="text" name="state" placeholder="Estado" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código Postal <span class="text-red-500">*</span></label>
+                            <input type="text" name="zip" placeholder="CP" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Referencias</label>
+                            <input type="text" name="references" placeholder="Entre calles, señas, etc." class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-4">
+                        <button type="button" onclick="document.getElementById('add-address-modal').close()" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">Cancelar</button>
+                        <button type="submit" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">Guardar Dirección</button>
+                    </div>
+                </form>
+            </dialog>
+
+            <!-- Modales para editar direcciones -->
+            @foreach($customer->addresses as $address)
+            <dialog id="edit-address-{{ $address->id }}" class="rounded-lg p-6 dark:bg-zinc-900 w-full max-w-lg">
+                <h3 class="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">Editar Dirección</h3>
+                <form method="POST" action="{{ route('dashboard.customers.addresses.update', [$customer->id, $address->id]) }}" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Etiqueta <span class="text-red-500">*</span></label>
+                            <input type="text" name="label" value="{{ $address->label }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div class="flex items-end">
+                            <label class="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                                <input type="checkbox" name="is_default" class="rounded border-zinc-300" {{ $address->is_default ? 'checked' : '' }} />
+                                Predeterminada
+                            </label>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Calle <span class="text-red-500">*</span></label>
+                            <input type="text" name="street" value="{{ $address->street }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">No. Exterior</label>
+                            <input type="text" name="ext_number" value="{{ $address->ext_number }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">No. Interior</label>
+                            <input type="text" name="int_number" value="{{ $address->int_number }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Colonia <span class="text-red-500">*</span></label>
+                            <input type="text" name="colony" value="{{ $address->colony }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Ciudad <span class="text-red-500">*</span></label>
+                            <input type="text" name="city" value="{{ $address->city }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Estado <span class="text-red-500">*</span></label>
+                            <input type="text" name="state" value="{{ $address->state }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Código Postal <span class="text-red-500">*</span></label>
+                            <input type="text" name="zip" value="{{ $address->zip }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" required />
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Referencias</label>
+                            <input type="text" name="references" value="{{ $address->references }}" class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-4">
+                        <button type="button" onclick="document.getElementById('edit-address-{{ $address->id }}').close()" class="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-700 dark:text-white dark:hover:bg-zinc-800">Cancelar</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Actualizar Dirección</button>
+                    </div>
+                </form>
+            </dialog>
+            @endforeach
 
             <!-- Panel lateral -->
             <div class="space-y-4">

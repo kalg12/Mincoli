@@ -239,6 +239,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::get('/customers/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'show'])->name('customers.show');
     Route::put('/customers/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customers.update');
     Route::post('/customers/{id}/notes', [App\Http\Controllers\Admin\CustomerController::class, 'addNote'])->name('customers.notes.store');
+    Route::post('/customers/{id}/addresses', [App\Http\Controllers\Admin\CustomerController::class, 'storeAddress'])->name('customers.addresses.store');
+    Route::put('/customers/{id}/addresses/{addressId}', [App\Http\Controllers\Admin\CustomerController::class, 'updateAddress'])->name('customers.addresses.update');
+    Route::delete('/customers/{id}/addresses/{addressId}', [App\Http\Controllers\Admin\CustomerController::class, 'destroyAddress'])->name('customers.addresses.destroy');
+    Route::post('/customers/{id}/addresses/{addressId}/default', [App\Http\Controllers\Admin\CustomerController::class, 'setDefaultAddress'])->name('customers.addresses.set-default');
 
     // Payment Methods
     // Payment Methods

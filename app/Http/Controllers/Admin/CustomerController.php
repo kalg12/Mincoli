@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
 use App\Models\CustomerNote;
 use Illuminate\Http\Request;
 
@@ -61,6 +62,7 @@ class CustomerController extends Controller
             ->with([
                 'orders' => fn ($q) => $q->latest()->take(20),
                 'notes.user',
+                'addresses',
             ])->findOrFail($id);
 
         return view('admin.customers.show', compact('customer'));
@@ -109,5 +111,90 @@ class CustomerController extends Controller
         ]);
 
         return back()->with('success', 'Nota agregada');
+    }
+
+    public function storeAddress(Request $request, $customerId)
+    {
+        $customer = Customer::findOrFail($customerId);
+
+        $validated = $request->validate([
+            'label' => 'required|string|max:255',
+            'street' => 'required|string|max:255',
+            'ext_number' => 'nullable|string|max:20',
+            'int_number' => 'nullable|string|max:20',
+            'colony' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'state' => 'required|string|max:255',
+            'zip' => 'required|string|max:20',
+            'references' => 'nullable|string|max:500',
+            'is_default' => 'nullable',
+        ]);
+
+        $validated['customer_id'] = $customer->id;
+
+        if ($request->has('is_default') || $customer->addresses()->count() === 0) {
+            $customer->addresses()->update(['is_default' => false]);
+            $validated['is_default'] = true;
+        } else {
+            $validated['is_default'] = false;
+        }
+
+        CustomerAddress::create($validated);
+
+        return back()->with('success', 'Dirección agregada correctamente');
+    }
+
+    public function updateAddress(Request $request, $customerId, $addressId)
+    {
+        $address = CustomerAddress::where('customer_id', $customerId)->findOrFail($addressId);
+
+        $validated = $request->validate([
+            'label' => 'required|string|max:255',
+            'street' => 'required|string|max:255',
+            'ext_number' => 'nullable|string|max:20',
+            'int_number' => 'nullable|string|max:20',
+            'colony' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'state' => 'required|string|max:255',
+            'zip' => 'required|string|max:20',
+            'references' => 'nullable|string|max:500',
+            'is_default' => 'nullable',
+        ]);
+
+        if ($request->has('is_default')) {
+            CustomerAddress::where('customer_id', $customerId)->update(['is_default' => false]);
+            $validated['is_default'] = true;
+        } else {
+            $validated['is_default'] = false;
+        }
+
+        $address->update($validated);
+
+        return back()->with('success', 'Dirección actualizada correctamente');
+    }
+
+    public function destroyAddress($customerId, $addressId)
+    {
+        $address = CustomerAddress::where('customer_id', $customerId)->findOrFail($addressId);
+        
+        $wasDefault = $address->is_default;
+        $address->delete();
+
+        if ($wasDefault) {
+            $firstAddress = CustomerAddress::where('customer_id', $customerId)->first();
+            if ($firstAddress) {
+                $firstAddress->update(['is_default' => true]);
+            }
+        }
+
+        return back()->with('success', 'Dirección eliminada correctamente');
+    }
+
+    public function setDefaultAddress($customerId, $addressId)
+    {
+        $address = CustomerAddress::where('customer_id', $customerId)->findOrFail($addressId);
+        $address->setAsDefault();
+
+        return back()->with('success', 'Dirección predeterminada actualizada');
     }
 }
