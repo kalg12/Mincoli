@@ -593,7 +593,29 @@
         input::placeholder { color: #71717a !important; }
     </style>
 
+    <script type="application/json" id="pos-bootstrap">
+    @json([
+        'products' => $products->items(),
+        'categories' => $categories,
+        'paymentMethods' => $paymentMethods,
+        'showIva' => $showIva,
+        'perPage' => $perPage,
+        'currentPage' => $products->currentPage(),
+        'lastPage' => $products->lastPage(),
+        'totalProducts' => $products->total(),
+        'selectedPaymentMethodId' => $paymentMethods->first()->id ?? null,
+        'urls' => [
+            'quotationsStore' => route('dashboard.pos.quotations.store'),
+            'searchProduct' => route('dashboard.pos.searchProduct'),
+            'customersSearch' => route('dashboard.pos.customers.search'),
+            'storeAjax' => route('dashboard.pos.store-ajax'),
+        ],
+        'csrfToken' => csrf_token(),
+    ])
+    </script>
+
     <script>
+        var __POS = JSON.parse(document.getElementById('pos-bootstrap').textContent);
         function posSystem() {
             return {
                 search: '',
@@ -601,24 +623,24 @@
                 activeSubcategoryId: null,
                 isLoading: false,
                 isExporting: false,
-                 products: @json($products->items()),
-                 categories: @json($categories),
-                 cart: [],
-                 showIva: {{ $showIva ? 'true' : 'false' }},
-                 perPage: {{ $perPage }},
-                 currentPage: {{ $products->currentPage() }},
-                 lastPage: {{ $products->lastPage() }},
-                 totalProducts: {{ $products->total() }},
-                 paymentMethods: @json($paymentMethods),
+                products: __POS.products,
+                categories: __POS.categories,
+                cart: [],
+                showIva: __POS.showIva,
+                perPage: __POS.perPage,
+                currentPage: __POS.currentPage,
+                lastPage: __POS.lastPage,
+                totalProducts: __POS.totalProducts,
+                paymentMethods: __POS.paymentMethods,
 
-                 // Customer logic
-                 customerSearch: '',
-                 customerResults: [],
-                 linkedCustomer: null,
-                 manualCustomerMode: false,
-                  manualCustomer: { name: '', phone: '' },
-                  paymentStatus: 'paid',
-                  selectedPaymentMethodId: {{ $paymentMethods->first()->id ?? 'null' }},
+                // Customer logic
+                customerSearch: '',
+                customerResults: [],
+                linkedCustomer: null,
+                manualCustomerMode: false,
+                manualCustomer: { name: '', phone: '' },
+                paymentStatus: 'paid',
+                selectedPaymentMethodId: __POS.selectedPaymentMethodId,
                   transferNumber: '',
                   captureLine: '',
                   paidAmount: null,
@@ -627,11 +649,11 @@
                  // Persistir cotización en el servidor
                 async saveQuotationToServer(shareType) {
                     try {
-                        const response = await fetch("{{ route('dashboard.pos.quotations.store') }}", {
+                        const response = await fetch(__POS.urls.quotationsStore, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                "X-CSRF-TOKEN": __POS.csrfToken
                             },
                             body: JSON.stringify({
                                 items: this.cart,
@@ -809,7 +831,7 @@
                             per_page: this.perPage || 30,
                             page: this.currentPage || 1
                         });
-                        const resp = await fetch(`{{ route('dashboard.pos.searchProduct') }}?${params.toString()}`);
+                        const resp = await fetch(__POS.urls.searchProduct + '?' + params.toString());
                         const result = await resp.json();
 
                         if (result.data) {
@@ -954,7 +976,7 @@
                         return;
                     }
                     try {
-                        const resp = await fetch(`{{ route('dashboard.pos.customers.search') }}?q=${this.customerSearch}`);
+                        const resp = await fetch(__POS.urls.customersSearch + '?q=' + encodeURIComponent(this.customerSearch));
                         this.customerResults = await resp.json();
                     } catch (e) {
                         console.error('Customer search error', e);
@@ -1291,11 +1313,11 @@
                     }
 
                     try {
-                        const response = await fetch("{{ route('dashboard.pos.store-ajax') }}", {
+                        const response = await fetch(__POS.urls.storeAjax, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                "X-CSRF-TOKEN": __POS.csrfToken
                             },
                             body: JSON.stringify({
                                 items: this.cart,
