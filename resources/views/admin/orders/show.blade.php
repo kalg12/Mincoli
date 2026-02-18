@@ -700,7 +700,11 @@
                             getItemMaxForEl(el) {
                                 if (!el) return 0;
                                 const itemRemaining = parseFloat(el.getAttribute('data-item-remaining')) || 0;
-                                return Math.min(itemRemaining, this.amount - this.totalAllocated);
+                                var itemId = el.getAttribute('data-item-id');
+                                var thisItemValue = parseFloat(this.allocations[itemId]) || 0;
+                                var allocatedElsewhere = this.totalAllocated - thisItemValue;
+                                var available = this.amount - allocatedElsewhere;
+                                return Math.min(itemRemaining, Math.max(0, available));
                             },
                             updateTotalAllocated() {
                                 this.totalAllocated = Object.values(this.allocations).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
