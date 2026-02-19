@@ -11,7 +11,13 @@
                 @foreach($banners as $index => $banner)
                 <div class="banner-slide absolute inset-0 transition duration-700 ease-out {{ $loop->first ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0' }}" data-banner-slide="{{ $index }}">
                     @if($banner->image_url)
-                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="w-full h-full object-cover">
+                    <img 
+                        src="{{ $banner->image_url }}" 
+                        alt="{{ $banner->title }}" 
+                        class="w-full h-full object-cover"
+                        @if($loop->first) fetchpriority="high" loading="eager" @else loading="lazy" @endif
+                        decoding="async"
+                    >
                     @else
                     <div class="w-full h-full bg-gradient-to-r from-pink-200 via-amber-100 to-white"></div>
                     @endif
@@ -225,6 +231,35 @@
         </div>
     </div>
 </section>
+
+@push('styles')
+<style>
+    /* Mejorar calidad de renderizado de imágenes del banner en móvil */
+    .banner-slide img {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        /* Optimizar renderizado para fotografías */
+        image-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* Forzar aceleración por hardware */
+        transform: translateZ(0);
+        will-change: transform;
+    }
+    
+    /* En móvil, asegurar que la imagen se renderice con la mejor calidad */
+    @media (max-width: 768px) {
+        .banner-slide img {
+            /* Asegurar que la imagen mantenga su calidad al escalar */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: auto;
+            /* Prevenir pixelación por escalado */
+            -webkit-transform: translateZ(0) scale(1);
+            transform: translateZ(0) scale(1);
+        }
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
