@@ -86,7 +86,7 @@
                                         @csrf
                                         @method('PUT')
                                         <select name="status" onchange="this.form.submit()"
-                                                class="text-xs rounded border-gray-300 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                                class="text-xs rounded-lg border border-zinc-300 px-3 py-2 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-500">
                                             <option value="pending" {{ $item->status === 'pending' ? 'selected' : '' }}>Pendiente</option>
                                             <option value="preparing" {{ $item->status === 'preparing' ? 'selected' : '' }}>En Preparación</option>
                                             <option value="ready_to_ship" {{ $item->status === 'ready_to_ship' ? 'selected' : '' }}>Listo para Enviar</option>
