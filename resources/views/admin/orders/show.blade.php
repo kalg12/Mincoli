@@ -385,13 +385,14 @@
                         </h2>
                     </div>
                     <div class="p-6">
-                        <form action="{{ route('dashboard.orders.items.store', $order->id) }}" method="POST" class="space-y-4">
+                        <form action="{{ route('dashboard.orders.items.store', $order->id) }}" method="POST" class="space-y-6">
                             @csrf
                             <input type="hidden" name="product_id" :value="selectedProduct ? selectedProduct.id : ''">
                             <input type="hidden" name="variant_id" :value="selectedVariant ? selectedVariant.id : ''">
 
-                            <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Buscar producto</label>
+                            <!-- Paso 1: Buscar y seleccionar producto -->
+                            <div class="space-y-3">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Paso 1 · Buscar producto</p>
                                 <div class="relative">
                                     <input type="text"
                                            x-model="searchQuery"
@@ -405,24 +406,19 @@
 
                                     <div x-show="resultsOpen && searchQuery.length >= 2"
                                          @click.away="resultsOpen = false"
-                                         x-transition:enter="transition ease-out duration-100"
-                                         x-transition:enter-start="transform opacity-0 scale-95"
-                                         x-transition:enter-end="transform opacity-100 scale-100"
-                                         x-transition:leave="transition ease-in duration-75"
-                                         x-transition:leave-start="transform opacity-100 scale-100"
-                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                         x-transition
                                          x-cloak
-                                         class="absolute z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800 max-h-72 overflow-y-auto">
+                                         class="absolute z-50 mt-1.5 w-full rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800 max-h-72 overflow-y-auto">
                                         <template x-for="item in filteredProducts" :key="item.uniqueId">
                                             <div>
                                                 <button type="button"
                                                         @click="selectProduct(item.product, item.variant); resultsOpen = false"
-                                                        class="w-full text-left px-4 py-3 hover:bg-pink-50 dark:hover:bg-zinc-700/80 transition-colors border-b border-zinc-100 last:border-0 dark:border-zinc-700">
+                                                        class="w-full text-left px-4 py-3.5 hover:bg-pink-50 dark:hover:bg-zinc-700/80 transition-colors border-b border-zinc-100 last:border-0 dark:border-zinc-700">
                                                     <span class="font-medium text-zinc-900 dark:text-white" x-text="item.product.name"></span>
                                                     <template x-if="item.variant">
                                                         <span class="text-zinc-500 dark:text-zinc-400 text-sm ml-1" x-text="' — ' + item.variant.name"></span>
                                                     </template>
-                                                    <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                                    <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                                                         Stock: <span x-text="item.variant ? item.variant.stock : item.product.stock"></span>
                                                         · $<span x-text="(item.variant ? item.variant.price : item.product.price).toFixed(2)"></span>
                                                     </div>
@@ -432,54 +428,58 @@
                                         <p x-show="filteredProducts.length === 0 && searchQuery.length >= 2" class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
                                             No hay productos que coincidan.
                                         </p>
-                                        <p x-show="searchQuery.length < 2" class="px-4 py-3 text-sm text-zinc-400 dark:text-zinc-500">
-                                            Escribe al menos 2 caracteres.
-                                        </p>
                                     </div>
                                 </div>
 
-                            <div x-show="selectedProduct" x-cloak class="rounded-lg bg-pink-500/10 border border-pink-500/30 dark:border-pink-500/20 p-3">
-                                <p class="text-sm font-medium text-zinc-900 dark:text-white">
-                                    <span x-text="selectedProduct ? selectedProduct.name : ''"></span>
-                                    <template x-if="selectedVariant">
-                                        <span class="text-zinc-500 dark:text-zinc-400" x-text="' — ' + (selectedVariant ? selectedVariant.name : '')"></span>
-                                    </template>
-                                </p>
-                                <button type="button" @click="clearSelection()" class="text-xs text-pink-600 dark:text-pink-400 hover:underline mt-1">
-                                    Cambiar producto
+                                <div x-show="selectedProduct" x-cloak x-transition class="rounded-lg bg-pink-500/10 border border-pink-500/30 dark:border-pink-500/20 p-4 mt-4">
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-white">
+                                        <i class="fas fa-check-circle text-pink-500 mr-2"></i>
+                                        <span x-text="selectedProduct ? selectedProduct.name : ''"></span>
+                                        <template x-if="selectedVariant">
+                                            <span class="text-zinc-500 dark:text-zinc-400" x-text="' — ' + (selectedVariant ? selectedVariant.name : '')"></span>
+                                        </template>
+                                    </p>
+                                    <button type="button" @click="clearSelection()" class="text-xs font-medium text-pink-600 dark:text-pink-400 hover:underline mt-2 inline-block">
+                                        <i class="fas fa-times mr-1"></i> Cambiar producto
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Paso 2: Cantidad y precio (solo si hay producto seleccionado) -->
+                            <div x-show="selectedProduct" x-cloak x-transition class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Paso 2 · Cantidad y precio</p>
+
+                                <div x-show="selectedProduct && selectedProduct.variants && selectedProduct.variants.length > 1" class="space-y-2">
+                                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-300">Variante</label>
+                                    <select x-model="selectedVariantId"
+                                            @change="onVariantChange()"
+                                            class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                        <option :value="null">Sin variante</option>
+                                        <template x-for="v in (selectedProduct ? selectedProduct.variants : [])" :key="v.id">
+                                            <option :value="v.id" x-text="v.name + ' — $' + v.price.toFixed(2) + ' (Stock: ' + v.stock + ')'"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-300">Cantidad</label>
+                                        <input type="number" name="quantity" min="1" x-model.number="quantity" required
+                                               class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-300">Precio unitario</label>
+                                        <input type="number" step="0.01" name="unit_price" x-model="unitPrice" placeholder="Auto"
+                                               class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
+                                    </div>
+                                </div>
+
+                                <button type="submit"
+                                        :disabled="!selectedProduct"
+                                        class="w-full rounded-lg bg-pink-600 px-4 py-3 text-sm font-semibold text-white hover:bg-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                                    <i class="fas fa-cart-plus"></i> Agregar al pedido
                                 </button>
                             </div>
-
-                            <div x-show="selectedProduct && selectedProduct.variants && selectedProduct.variants.length > 1">
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Variante</label>
-                                <select x-model="selectedVariantId"
-                                        @change="onVariantChange()"
-                                        class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
-                                    <option :value="null">Sin variante</option>
-                                    <template x-for="v in (selectedProduct ? selectedProduct.variants : [])" :key="v.id">
-                                        <option :value="v.id" x-text="v.name + ' — $' + v.price.toFixed(2) + ' (Stock: ' + v.stock + ')'"></option>
-                                    </template>
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Cantidad</label>
-                                    <input type="number" name="quantity" min="1" x-model.number="quantity" required
-                                           class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">Precio unit.</label>
-                                    <input type="number" step="0.01" name="unit_price" x-model="unitPrice" placeholder="Auto"
-                                           class="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white">
-                                </div>
-                            </div>
-
-                            <button type="submit"
-                                    :disabled="!selectedProduct"
-                                    class="w-full rounded-lg bg-pink-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                <i class="fas fa-cart-plus mr-2"></i> Agregar al pedido
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -564,8 +564,8 @@
                     });
                 </script>
 
-                <!-- Customer Info -->
-                <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900" x-data="customerLink()">
+                <!-- Cliente (separación clara respecto a Agregar producto) -->
+                <div class="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 mt-10" x-data="customerLink()">
                     <div class="border-b border-zinc-200 px-6 py-4 dark:border-zinc-700 flex justify-between items-center">
                         <h2 class="font-semibold text-zinc-900 dark:text-white">Cliente</h2>
                         @if(!$order->customer_id)
