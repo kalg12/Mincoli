@@ -396,42 +396,47 @@
                                     <input type="text"
                                            x-model="searchQuery"
                                            @focus="resultsOpen = true"
+                                           @input="resultsOpen = true"
                                            placeholder="Escribe nombre del producto…"
                                            class="w-full rounded-lg border border-zinc-300 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm text-zinc-900 placeholder-zinc-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-500">
                                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
                                         <i class="fas fa-search text-sm"></i>
                                     </span>
-                                </div>
 
-                                <div x-show="resultsOpen"
-                                     @click.away="resultsOpen = false"
-                                     x-transition
-                                     x-cloak
-                                     class="absolute z-20 mt-1 left-0 right-0 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800 max-h-56 overflow-y-auto">
-                                    <template x-for="item in filteredProducts" :key="item.uniqueId">
-                                        <div>
-                                            <button type="button"
-                                                    @click="selectProduct(item.product, item.variant); resultsOpen = false"
-                                                    class="w-full text-left px-4 py-3 hover:bg-pink-50 dark:hover:bg-zinc-700/80 transition-colors border-b border-zinc-100 last:border-0 dark:border-zinc-700">
-                                                <span class="font-medium text-zinc-900 dark:text-white" x-text="item.product.name"></span>
-                                                <template x-if="item.variant">
-                                                    <span class="text-zinc-500 dark:text-zinc-400 text-sm ml-1" x-text="' — ' + item.variant.name"></span>
-                                                </template>
-                                                <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                                    Stock: <span x-text="item.variant ? item.variant.stock : item.product.stock"></span>
-                                                    · $<span x-text="(item.variant ? item.variant.price : item.product.price).toFixed(2)"></span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </template>
-                                    <p x-show="filteredProducts.length === 0 && searchQuery.length >= 2" class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
-                                        No hay productos que coincidan.
-                                    </p>
-                                    <p x-show="searchQuery.length < 2" class="px-4 py-3 text-sm text-zinc-400 dark:text-zinc-500">
-                                        Escribe al menos 2 caracteres.
-                                    </p>
+                                    <div x-show="resultsOpen && searchQuery.length >= 2"
+                                         @click.away="resultsOpen = false"
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="transform opacity-0 scale-95"
+                                         x-transition:enter-end="transform opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="transform opacity-100 scale-100"
+                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                         x-cloak
+                                         class="absolute z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800 max-h-72 overflow-y-auto">
+                                        <template x-for="item in filteredProducts" :key="item.uniqueId">
+                                            <div>
+                                                <button type="button"
+                                                        @click="selectProduct(item.product, item.variant); resultsOpen = false"
+                                                        class="w-full text-left px-4 py-3 hover:bg-pink-50 dark:hover:bg-zinc-700/80 transition-colors border-b border-zinc-100 last:border-0 dark:border-zinc-700">
+                                                    <span class="font-medium text-zinc-900 dark:text-white" x-text="item.product.name"></span>
+                                                    <template x-if="item.variant">
+                                                        <span class="text-zinc-500 dark:text-zinc-400 text-sm ml-1" x-text="' — ' + item.variant.name"></span>
+                                                    </template>
+                                                    <div class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                                        Stock: <span x-text="item.variant ? item.variant.stock : item.product.stock"></span>
+                                                        · $<span x-text="(item.variant ? item.variant.price : item.product.price).toFixed(2)"></span>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        </template>
+                                        <p x-show="filteredProducts.length === 0 && searchQuery.length >= 2" class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                                            No hay productos que coincidan.
+                                        </p>
+                                        <p x-show="searchQuery.length < 2" class="px-4 py-3 text-sm text-zinc-400 dark:text-zinc-500">
+                                            Escribe al menos 2 caracteres.
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
 
                             <div x-show="selectedProduct" x-cloak class="rounded-lg bg-pink-500/10 border border-pink-500/30 dark:border-pink-500/20 p-3">
                                 <p class="text-sm font-medium text-zinc-900 dark:text-white">
