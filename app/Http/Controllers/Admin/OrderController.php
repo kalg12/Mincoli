@@ -254,6 +254,46 @@ class OrderController extends Controller
                 }
             }
 
+            // ACTION 2B: RE-RESERVE STOCK WHEN REACTIVATING A CANCELLED/REFUNDED ORDER
+            // Caso de uso: se canceló el pedido con devolución de inventario y luego se vuelve a
+            // poner en pendiente/pagado/enviado/entregado. Necesitamos volver a descontar el stock
+            // y registrar el movimiento de salida para mantener el inventario consistente.
+            if (
+                in_array($oldStatus, ['cancelled', 'refunded']) &&
+                in_array($request->status, ['pending', 'paid', 'shipped', 'delivered'])
+            ) {
+                foreach ($order->items as $item) {
+                    if ($item->variant_id) {
+                        $affected = ProductVariant::where('id', $item->variant_id)
+                            ->where('stock', '>=', $item->quantity)
+                            ->decrement('stock', $item->quantity);
+                    } else {
+                        $affected = Product::where('id', $item->product_id)
+                            ->where('stock', '>=', $item->quantity)
+                            ->decrement('stock', $item->quantity);
+                    }
+
+                    if ($affected === 0) {
+                        throw ValidationException::withMessages([
+                            'status' => 'No hay stock suficiente para reactivar este pedido. Revisa el inventario de los productos.',
+                        ]);
+                    }
+                }
+
+                if (!$this->orderMovementExistsForStatus($statusHistory->id, $movementGroups, 'out')) {
+                    $reason = 'Reactivación de pedido #' . $order->order_number . ' desde estado ' . $oldStatus;
+
+                    $this->recordOrderMovementForStatus(
+                        $order,
+                        $movementGroups,
+                        'out',
+                        $reason,
+                        Auth::id(),
+                        $statusHistory->id
+                    );
+                }
+            }
+
             // ACTION 1B: RECORD MOVEMENT WHEN SHIPPING/DELIVERING (if not already recorded)
             // Some orders go directly to shipped/delivered without passing through paid.
             if (in_array($request->status, ['shipped', 'delivered']) && !$this->orderMovementExistsForStatus($statusHistory->id, $movementGroups, 'out')) {
