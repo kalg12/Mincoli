@@ -101,6 +101,18 @@
                 <span>TOTAL:</span>
                 <span>${{ number_format($order->total, 2) }}</span>
             </div>
+            @if($order->total_paid > 0)
+                <div class="total-row" style="color: #22c55e; font-weight: bold;">
+                    <span>Pagado:</span>
+                    <span>${{ number_format($order->total_paid, 2) }}</span>
+                </div>
+            @endif
+            @if($order->remaining > 0)
+                <div class="total-row" style="color: #ef4444; font-weight: bold;">
+                    <span>Restante:</span>
+                    <span>${{ number_format($order->remaining, 2) }}</span>
+                </div>
+            @endif
         </div>
 
         <div style="text-align: center; margin: 10px 0; font-size: 9px;">
@@ -108,11 +120,17 @@
                 $statusLabels = [
                     'paid' => 'PAGADO',
                     'pending' => 'PENDIENTE',
+                    'partially_paid' => 'PAGO PARCIAL',
                     'cancelled' => 'CANCELADO',
                     'refunded' => 'REEMBOLSADO'
                 ];
             @endphp
             <div class="status-badge">Estado: {{ $statusLabels[$order->status] ?? strtoupper($order->status) }}</div>
+            @if($order->remaining > 0)
+                <div style="margin-top: 5px; color: #ef4444; font-weight: bold; font-size: 8px;">
+                    PAGO PARCIAL - Saldo pendiente: ${{ number_format($order->remaining, 2) }}
+                </div>
+            @endif
         </div>
 
         <div class="footer">

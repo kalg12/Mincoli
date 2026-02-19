@@ -553,6 +553,7 @@ class POSController extends Controller
 
     public function success(Order $order): View
     {
+        $order->load(['payments.method']);
         return view('pos.success', compact('order'));
     }
 
@@ -561,7 +562,7 @@ class POSController extends Controller
         $showIva = (bool) SiteSetting::get('store', 'show_iva', true);
 
         return view('pos.ticket_order', [
-            'order' => $order->load(['items.product', 'items.variant']),
+            'order' => $order->load(['items.product', 'items.variant', 'payments.method']),
             'showIva' => $showIva,
         ]);
     }

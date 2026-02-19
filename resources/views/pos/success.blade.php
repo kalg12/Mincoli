@@ -25,8 +25,14 @@
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Total Pagado</p>
-                        <p class="text-3xl font-black text-pink-500">${{ number_format($order->total, 0) }}</p>
-                        <p class="text-xs text-zinc-500 font-bold uppercase mt-1">Método: Efectivo / POS</p>
+                        <p class="text-3xl font-black text-pink-500">${{ number_format($order->total_paid, 0) }}</p>
+                        @php
+                            $paymentMethod = $order->payments->where('status', 'paid')->first()?->method?->name ?? 'Efectivo / POS';
+                        @endphp
+                        <p class="text-xs text-zinc-500 font-bold uppercase mt-1">Método: {{ $paymentMethod }}</p>
+                        @if($order->remaining > 0)
+                            <p class="text-xs text-red-500 font-bold uppercase mt-2">Restante: ${{ number_format($order->remaining, 0) }}</p>
+                        @endif
                     </div>
                 </div>
 
