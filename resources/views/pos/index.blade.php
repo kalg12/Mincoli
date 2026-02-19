@@ -594,24 +594,26 @@
     </style>
 
     <script type="application/json" id="pos-bootstrap">
-    @json([
-        'products' => $products->items(),
-        'categories' => $categories,
-        'paymentMethods' => $paymentMethods,
-        'showIva' => $showIva,
-        'perPage' => $perPage,
-        'currentPage' => $products->currentPage(),
-        'lastPage' => $products->lastPage(),
-        'totalProducts' => $products->total(),
-        'selectedPaymentMethodId' => $paymentMethods->first()->id ?? null,
-        'urls' => [
-            'quotationsStore' => route('dashboard.pos.quotations.store'),
-            'searchProduct' => route('dashboard.pos.searchProduct'),
-            'customersSearch' => route('dashboard.pos.customers.search'),
-            'storeAjax' => route('dashboard.pos.store-ajax'),
-        ],
-        'csrfToken' => csrf_token(),
-    ])
+    {!!
+        json_encode([
+            'products' => $products->items(),
+            'categories' => $categories,
+            'paymentMethods' => $paymentMethods,
+            'showIva' => $showIva,
+            'perPage' => $perPage,
+            'currentPage' => $products->currentPage(),
+            'lastPage' => $products->lastPage(),
+            'totalProducts' => $products->total(),
+            'selectedPaymentMethodId' => $paymentMethods->first()->id ?? null,
+            'urls' => [
+                'quotationsStore' => route('dashboard.pos.quotations.store'),
+                'searchProduct' => route('dashboard.pos.searchProduct'),
+                'customersSearch' => route('dashboard.pos.customers.search'),
+                'storeAjax' => route('dashboard.pos.store-ajax'),
+            ],
+            'csrfToken' => csrf_token(),
+        ])
+    !!}
     </script>
 
     <script>
