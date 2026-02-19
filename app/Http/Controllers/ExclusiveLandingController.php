@@ -60,13 +60,13 @@ class ExclusiveLandingController extends Controller
         }
 
         $request->validate([
-            'phone' => ['required', 'string', 'min:10', 'max:20'],
+            'phone' => ['required', 'string'],
         ], [], ['phone' => 'número telefónico']);
 
         $normalized = AuthorizedPhone::normalizePhone($request->input('phone'));
         if (strlen($normalized) < 10) {
             throw ValidationException::withMessages([
-                'phone' => ['El número debe incluir lada (ej. 55 1234 5678).'],
+                'phone' => ['El número debe tener al menos 10 dígitos (incluye lada).'],
             ]);
         }
 
